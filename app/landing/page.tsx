@@ -1,0 +1,937 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import { motion } from "framer-motion"
+import {
+  ArrowRight,
+  Calendar,
+  ShoppingBag,
+  Users,
+  Bell,
+  Clock,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+export default function LandingPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index)
+  }
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6 },
+    },
+  }
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Navigation */}
+      <header className="border-b bg-white sticky top-0 z-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <span className="text-2xl font-bold text-amber-500">Luxery</span>
+            </div>
+            <nav className="hidden md:flex space-x-8 items-center">
+              <a href="#features" className="text-gray-600 hover:text-amber-500 transition-colors">
+                Fonctionnalités
+              </a>
+              <a href="#testimonials" className="text-gray-600 hover:text-amber-500 transition-colors">
+                Témoignages
+              </a>
+              <a href="#pricing" className="text-gray-600 hover:text-amber-500 transition-colors">
+                Tarifs
+              </a>
+              <a href="#faq" className="text-gray-600 hover:text-amber-500 transition-colors">
+                FAQ
+              </a>
+              <Button variant="outline" className="ml-4">
+                Se connecter
+              </Button>
+            </nav>
+            <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-amber-50 to-amber-100 py-20 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" animate="visible" variants={fadeIn} className="max-w-2xl">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+                Transformez la gestion de votre salon de coiffure
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Luxery vous offre une solution complète pour gérer vos réservations, votre boutique, votre file
+                d'attente et votre équipe. Augmentez votre chiffre d'affaires et fidélisez vos clients.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button className="bg-amber-500 hover:bg-amber-600 text-white text-lg py-6 px-8">
+                  Commencer maintenant
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button variant="outline" className="text-lg py-6 px-8">
+                  Demander une démo
+                </Button>
+              </div>
+              <div className="mt-8 flex items-center text-sm text-gray-500">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <span>Essai gratuit de 14 jours, aucune carte de crédit requise</span>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/placeholder.svg?height=600&width=800&text=Dashboard+Luxery"
+                  alt="Dashboard Luxery"
+                  width={800}
+                  height={600}
+                  className="rounded-2xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+              </div>
+              <div className="absolute -bottom-6 -right-6 bg-white rounded-lg shadow-lg p-4 w-48">
+                <div className="text-amber-500 font-bold">+32%</div>
+                <div className="text-sm text-gray-600">Augmentation des réservations</div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Logos des clients */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+          <p className="text-center text-gray-500 mb-8">Ils nous font confiance</p>
+          <div className="flex flex-wrap justify-center gap-8 opacity-70">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12">
+                <Image
+                  src={`/placeholder.svg?height=48&width=120&text=Salon+${i}`}
+                  alt={`Salon ${i}`}
+                  width={120}
+                  height={48}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Tout ce dont votre salon a besoin</h2>
+            <p className="text-xl text-gray-600">
+              Une plateforme complète pour gérer tous les aspects de votre salon de coiffure
+            </p>
+          </div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {/* Feature 1 - Réservations */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <Calendar className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Système de réservation intelligent</h3>
+              <p className="text-gray-600 mb-6">
+                Permettez à vos clients de réserver en ligne 24h/24, 7j/7. Réduisez les rendez-vous manqués grâce aux
+                rappels automatiques.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Réservation en ligne 24/7</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Rappels automatiques par SMS</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Gestion des disponibilités</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Feature 2 - Boutique */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <ShoppingBag className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Boutique en ligne intégrée</h3>
+              <p className="text-gray-600 mb-6">
+                Vendez vos produits en ligne et augmentez votre chiffre d'affaires. Gérez facilement votre inventaire et
+                vos commandes.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Catalogue de produits personnalisable</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Gestion des stocks simplifiée</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Paiements sécurisés</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Feature 3 - File d'attente */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <Clock className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Gestion de file d'attente</h3>
+              <p className="text-gray-600 mb-6">
+                Optimisez l'expérience client avec notre système de file d'attente virtuelle. Réduisez les temps
+                d'attente et améliorez la satisfaction.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">File d'attente virtuelle</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Notifications en temps réel</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Estimation des temps d'attente</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Feature 4 - Gestion du staff */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <Users className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Gestion d'équipe efficace</h3>
+              <p className="text-gray-600 mb-6">
+                Gérez facilement les plannings de votre équipe, suivez les performances et optimisez la répartition des
+                tâches.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Plannings automatisés</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Suivi des performances</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Gestion des congés</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Feature 5 - Communication */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <Bell className="h-7 w-7 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Communication client</h3>
+              <p className="text-gray-600 mb-6">
+                Restez en contact avec vos clients grâce à des notifications personnalisées et des campagnes marketing
+                ciblées.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Notifications automatiques</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Campagnes marketing</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Fidélisation client</span>
+                </li>
+              </ul>
+            </motion.div>
+
+            {/* Feature 6 - Analytiques */}
+            <motion.div
+              variants={fadeIn}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
+            >
+              <div className="bg-amber-100 rounded-full w-14 h-14 flex items-center justify-center mb-6">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-7 w-7 text-amber-600"
+                >
+                  <path d="M3 3v18h18"></path>
+                  <path d="M18 17V9"></path>
+                  <path d="M13 17V5"></path>
+                  <path d="M8 17v-3"></path>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Analytiques et rapports</h3>
+              <p className="text-gray-600 mb-6">
+                Prenez des décisions éclairées grâce à des rapports détaillés et des analyses en temps réel de votre
+                activité.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Tableaux de bord personnalisables</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Rapports financiers</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                  <span className="text-gray-600">Analyse des tendances</span>
+                </li>
+              </ul>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-amber-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Des résultats concrets pour votre salon
+            </h2>
+            <p className="text-xl text-gray-600">
+              Nos clients constatent une amélioration significative de leur activité
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 text-center shadow-lg"
+            >
+              <div className="text-4xl font-bold text-amber-500 mb-2">+32%</div>
+              <p className="text-gray-600">Augmentation des réservations</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 text-center shadow-lg"
+            >
+              <div className="text-4xl font-bold text-amber-500 mb-2">-45%</div>
+              <p className="text-gray-600">Réduction des rendez-vous manqués</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 text-center shadow-lg"
+            >
+              <div className="text-4xl font-bold text-amber-500 mb-2">+28%</div>
+              <p className="text-gray-600">Augmentation du chiffre d'affaires</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 text-center shadow-lg"
+            >
+              <div className="text-4xl font-bold text-amber-500 mb-2">+65%</div>
+              <p className="text-gray-600">Amélioration de la satisfaction client</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Ce que nos clients disent</h2>
+            <p className="text-xl text-gray-600">Découvrez comment Luxery a transformé l'activité de ces salons</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Testimonial 1 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100"
+            >
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <Image
+                    src="/placeholder.svg?height=60&width=60&text=S"
+                    alt="Sophie Martin"
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                  />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Sophie Martin</h4>
+                  <p className="text-gray-500">Salon Élégance, Libreville</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-4">
+                "Depuis que nous utilisons Luxery, notre nombre de réservations a augmenté de 40%. Les clients adorent
+                pouvoir réserver en ligne et recevoir des rappels automatiques."
+              </p>
+              <div className="flex text-amber-500">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Testimonial 2 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100"
+            >
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <Image
+                    src="/placeholder.svg?height=60&width=60&text=J"
+                    alt="Jean Dupont"
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                  />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Jean Dupont</h4>
+                  <p className="text-gray-500">Afro Style, Owendo</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-4">
+                "La gestion de notre file d'attente est devenue un jeu d'enfant. Nos clients sont beaucoup plus
+                satisfaits et nous avons pu optimiser notre temps de travail."
+              </p>
+              <div className="flex text-amber-500">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Testimonial 3 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl p-8 shadow-lg border border-gray-100"
+            >
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <Image
+                    src="/placeholder.svg?height=60&width=60&text=M"
+                    alt="Marie Koumba"
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                  />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Marie Koumba</h4>
+                  <p className="text-gray-500">Locks & Beauty, Akanda</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-4">
+                "Notre boutique en ligne nous a permis d'augmenter nos ventes de produits de 35%. C'est une source de
+                revenus supplémentaire que nous n'avions pas exploitée avant."
+              </p>
+              <div className="flex text-amber-500">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                  </svg>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 bg-amber-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Des tarifs adaptés à tous les salons</h2>
+            <p className="text-xl text-gray-600">Choisissez le forfait qui correspond le mieux à vos besoins</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Starter Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100"
+            >
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Starter</h3>
+                <div className="flex items-baseline mb-6">
+                  <span className="text-4xl font-bold text-gray-900">29€</span>
+                  <span className="text-gray-500 ml-1">/mois</span>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Système de réservation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Gestion de file d'attente</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Notifications de base</span>
+                  </li>
+                  <li className="flex items-start text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="mr-2 shrink-0 mt-0.5"
+                    >
+                      <path d="M18 6 6 18"></path>
+                      <path d="m6 6 12 12"></path>
+                    </svg>
+                    <span>Boutique en ligne</span>
+                  </li>
+                  <li className="flex items-start text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="mr-2 shrink-0 mt-0.5"
+                    >
+                      <path d="M18 6 6 18"></path>
+                      <path d="m6 6 12 12"></path>
+                    </svg>
+                    <span>Gestion avancée du staff</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="px-8 pb-8">
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
+              </div>
+            </motion.div>
+
+            {/* Pro Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl overflow-hidden shadow-xl border-2 border-amber-500 relative -mt-4 md:-mt-8"
+            >
+              <div className="bg-amber-500 text-white text-center py-2 font-medium">Recommandé</div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Pro</h3>
+                <div className="flex items-baseline mb-6">
+                  <span className="text-4xl font-bold text-gray-900">59€</span>
+                  <span className="text-gray-500 ml-1">/mois</span>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Tout ce qui est inclus dans Starter</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Boutique en ligne</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Gestion avancée du staff</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Campagnes marketing</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Rapports analytiques</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="px-8 pb-8">
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
+              </div>
+            </motion.div>
+
+            {/* Enterprise Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100"
+            >
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Enterprise</h3>
+                <div className="flex items-baseline mb-6">
+                  <span className="text-4xl font-bold text-gray-900">99€</span>
+                  <span className="text-gray-500 ml-1">/mois</span>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Tout ce qui est inclus dans Pro</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Support prioritaire</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">API personnalisée</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Intégrations avancées</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
+                    <span className="text-gray-600">Formation dédiée</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="px-8 pb-8">
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Contacter les ventes</Button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Questions fréquentes</h2>
+            <p className="text-xl text-gray-600">Tout ce que vous devez savoir sur Luxery</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            {[
+              {
+                question: "Comment fonctionne l'essai gratuit ?",
+                answer:
+                  "Vous pouvez essayer Luxery gratuitement pendant 14 jours sans aucun engagement. Aucune carte de crédit n'est requise pour commencer. À la fin de la période d'essai, vous pouvez choisir le forfait qui vous convient.",
+              },
+              {
+                question: "Est-ce que je peux annuler à tout moment ?",
+                answer:
+                  "Oui, vous pouvez annuler votre abonnement à tout moment. Nous ne vous facturerons pas pour le mois suivant. Vous conserverez l'accès à Luxery jusqu'à la fin de votre période de facturation en cours.",
+              },
+              {
+                question: "Comment Luxery peut-il m'aider à augmenter mes réservations ?",
+                answer:
+                  "Luxery vous permet d'offrir à vos clients la possibilité de réserver en ligne 24h/24, 7j/7. Les rappels automatiques réduisent les rendez-vous manqués, et notre système de file d'attente optimise votre planning pour maximiser le nombre de clients que vous pouvez servir.",
+              },
+              {
+                question: "Puis-je intégrer Luxery à mon site web existant ?",
+                answer:
+                  "Absolument ! Nous fournissons des widgets de réservation que vous pouvez facilement intégrer à votre site web existant. Vous pouvez également partager un lien direct vers votre page de réservation Luxery.",
+              },
+              {
+                question: "Comment fonctionne la boutique en ligne ?",
+                answer:
+                  "La boutique en ligne vous permet de créer un catalogue de produits, de gérer votre inventaire et de vendre directement à vos clients. Vous pouvez accepter les paiements en ligne et suivre vos commandes facilement depuis le tableau de bord Luxery.",
+              },
+            ].map((faq, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="mb-4"
+              >
+                <button
+                  onClick={() => toggleFaq(index)}
+                  className="flex justify-between items-center w-full p-6 bg-white rounded-lg shadow-sm border border-gray-200 hover:border-amber-300 transition-colors"
+                >
+                  <span className="font-medium text-left text-gray-900">{faq.question}</span>
+                  {openFaq === index ? (
+                    <ChevronUp className="h-5 w-5 text-amber-500" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                {openFaq === index && (
+                  <div className="p-6 bg-white rounded-b-lg border border-t-0 border-gray-200">
+                    <p className="text-gray-600">{faq.answer}</p>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6">Prêt à transformer votre salon de coiffure ?</h2>
+            <p className="text-xl mb-8 text-white/90">
+              Rejoignez des milliers de salons qui utilisent Luxery pour développer leur activité et améliorer
+              l'expérience client.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button className="bg-white text-amber-600 hover:bg-gray-100 text-lg py-6 px-8">
+                Commencer l'essai gratuit
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button variant="outline" className="text-white border-white hover:bg-white/10 text-lg py-6 px-8">
+                Demander une démo
+              </Button>
+            </div>
+            <p className="mt-6 text-sm text-white/80">Aucune carte de crédit requise. Essai gratuit de 14 jours.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4">Luxery</h3>
+              <p className="text-gray-400 mb-4">La solution complète pour les salons de coiffure modernes.</p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
+                  </svg>
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"></path>
+                  </svg>
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Produit</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#features" className="text-gray-400 hover:text-white">
+                    Fonctionnalités
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" className="text-gray-400 hover:text-white">
+                    Tarifs
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Témoignages
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Guide d'utilisation
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Ressources</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Tutoriels
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Support
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    API
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Entreprise</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    À propos
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Carrières
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Mentions légales
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+            <p>&copy; {new Date().getFullYear()} Luxery. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

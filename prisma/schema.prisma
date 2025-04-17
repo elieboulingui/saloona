@@ -1,0 +1,362 @@
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  password      String?
+  emailVerified DateTime?
+
+  image         String?
+
+  phone         String?
+  role          Role            @default(BARBER)
+  accounts      Account[]
+  sessions      Session[]
+  Authenticator Authenticator[]
+
+  // Préférences de notification
+  notificationsEnabled Boolean @default(false)
+  pushSubscription     String? // Stocke la subscription push au format JSON
+
+  speciality    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Appointment Appointment[]
+  services      UserService[] // Relation avec les services
+  notifications Notification[] // Relation avec les notifications
+
+  Organization Organization[]
+
+  UserOrganization UserOrganization[]
+}
+
+enum Role {
+  ADMIN
+  BARBER
+  CLIENT
+}
+
+
+model Organization {
+
+  id        String @id @default(cuid())
+  name      String
+  logo      String?
+  address   String
+  description String?
+  imageCover String?
+  phone       String?
+
+  verificationStatus  String @default("pending")
+  ownerId  String
+  owner    User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  users     UserOrganization[]
+  departments OrganizationDepartment[]
+
+  services      Service[]
+  appointments  Appointment[]
+  transactions  Transaction[]
+  products      Product[]
+  categories    Category[]
+  orders        Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+}
+
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  Role           Role     @default(ADMIN)
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, organizationId])
+}
+
+model OrganizationDepartment {
+
+  id             String        @id @default(cuid())
+  organisation   Organization @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  organisationId String
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  departmentId String
+
+  @@unique([organisationId, departmentId]) // pour éviter les doublons
+}
+
+
+model Department {
+  id    String @id @default(cuid())
+  label String
+  icon  String
+
+  organisations OrganizationDepartment[]
+  services      Service[] // un service appartient à un département
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // appointment, transaction, system, etc.
+  read      Boolean  @default(false)
+  data      String?  // Données supplémentaires au format JSON
+  
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Appointment {
+  id          String @id @default(cuid())
+  firstName   String // Prénom du client
+  phoneNumber String // Numéro du client
+
+  service       Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId     String
+  date          DateTime
+
+  startDate     DateTime?
+  endDate       DateTime?
+
+  barber        User? @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  barberId      String?  // Clé étrangère optionnelle
+
+  orderNumber   Int
+  estimatedTime String
+  status        AppointmentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  INCHAIR
+  COMPLETED
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  name        String
+  image        String?
+  description String?
+  price       Int
+  durationMin    Int // Durée en minutes
+  durationMax   Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+  users        UserService[] // Relation avec les users
+
+  departmentId   String
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model UserService {
+  id        String  @id @default(cuid())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, serviceId]) // Empêche la duplication des associations
+}
+
+model Transaction {
+
+  id     String @id @default(cuid())
+  amount Int
+
+  reference        String @unique
+  shortDescription String
+  payerMsisdn      String // Numéro de téléphone du payeur
+  payerEmail       String // Adresse e-mail du payeur
+
+  status                String  @default("pending") //  "failed", "expired", "cancelled", "paid", "processed" , "ready"
+  bill_id               String  @unique
+  server_transaction_id String?
+
+  type          TransactionType
+
+  appointmentId String?
+  orderId       String?
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TransactionType {
+  APPOINTMENT
+  ORDER
+  WITHDRAWAL
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  price       Int
+  stock       Int
+  image       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  products   Product[]
+}
+
+// Ajouter ces champs au modèle Order pour stocker les informations supplémentaires
+model Order {
+  id          String      @id @default(cuid())
+  firstName   String // Prénom du client
+  phoneNumber String // Numéro du client
+  address     String // Adresse de livraison
+  additionalInfo String? // Informations complémentaires
+  locationLat Float? // Latitude de l'adresse
+  locationLng Float? // Longitude de l'adresse
+  totalAmount Int // Montant total de la commande
+  deliveryFee Int @default(2000) // Frais de livraison
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+  transactionID String?
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  quantity  Int
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  COMPLETED
+  CANCELED
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
