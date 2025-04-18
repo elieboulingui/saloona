@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserDialog } from "../../components/user-dialog"
 import {
   ArrowLeft,
   Calendar,
@@ -25,22 +24,37 @@ import {
 import { CalendarView } from "./calendar-view"
 import { StatsView } from "./stats-view"
 import { useSession } from "next-auth/react"
+import { UserDialog } from "../../components/user-dialog"
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function UserDetailsPageClient({ userId }: { userId: string }) {
+interface UserDetailsPageClientProps {
+  userId: string
+  salonId: string
+}
+
+export function UserDetailsPageClient({ userId, salonId }: UserDetailsPageClientProps) {
+
+
+  console.log({userId, salonId})
+
   const router = useRouter()
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState("profile")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // Récupérer les détails de l'utilisateur
-  const { data: user, error, isLoading, mutate } = useSWR(userId ? `/api/users/${userId}` : null, fetcher)
+  const {
+    data: user,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(userId ? `/api/organizations/${salonId}/users/${userId}` : null, fetcher)
 
   // Récupérer les services de l'utilisateur
   const { data: userServices, mutate: mutateServices } = useSWR(
-    userId ? `/api/users/${userId}/services` : null,
+    userId ? `/api/organizations/${salonId}/users/${userId}/services` : null,
     fetcher,
   )
 
@@ -262,11 +276,11 @@ export default function UserDetailsPageClient({ userId }: { userId: string }) {
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-4">
-            <CalendarView userId={userId} />
+            <CalendarView userId={userId} salonId={salonId}/>
           </TabsContent>
 
           <TabsContent value="stats" className="space-y-4">
-            <StatsView userId={userId} />
+            <StatsView userId={userId} salonId={salonId}/>
           </TabsContent>
         </Tabs>
       </main>
@@ -278,10 +292,10 @@ export default function UserDetailsPageClient({ userId }: { userId: string }) {
           onClose={() => setIsDialogOpen(false)}
           user={user}
           mode="edit"
+          salonId={salonId}
           onSuccess={handleUserUpdateSuccess}
         />
       )}
     </div>
   )
 }
-

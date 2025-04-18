@@ -15,6 +15,7 @@ import {
   ChevronUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -68,7 +69,9 @@ export default function LandingPage() {
                 Se connecter
               </Button>
             </nav>
-            <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
+            <Link href="/inscription">
+              <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
+            </Link>
           </div>
         </div>
       </header>

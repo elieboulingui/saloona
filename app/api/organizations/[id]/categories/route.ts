@@ -20,8 +20,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+
   try {
-    const { name } = await request.json()
+
+    const { name, id_organisation } = await request.json()
 
     if (!name) {
       return NextResponse.json({ error: "Le nom de la catégorie est requis" }, { status: 400 })
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
     const category = await prisma.category.create({
       data: {
         name,
+        organizationId : id_organisation
       },
     })
 

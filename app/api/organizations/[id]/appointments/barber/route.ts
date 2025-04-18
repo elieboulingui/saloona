@@ -2,14 +2,21 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { parseISO, startOfDay, endOfDay, format } from "date-fns"
 
-export async function GET(request: Request) {
-  try {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+try {
+
+    const { id } = await params
+  
+
     const { searchParams } = new URL(request.url)
     const dateParam = searchParams.get("date")
     const barberIdParam = searchParams.get("barberId")
+  
 
-    if (!dateParam || !barberIdParam) {
-      return NextResponse.json({ error: "Date et barberId sont requis" }, { status: 400 })
+    if (!dateParam || !barberIdParam || !id) {
+      return NextResponse.json({ error: "Date, barberId et OrganisationId sont requis" }, { status: 400 })
     }
 
     // Convertir le paramètre de date en objet Date
@@ -26,6 +33,8 @@ export async function GET(request: Request) {
       format(dayEnd, "yyyy-MM-dd HH:mm:ss"),
       "pour le coiffeur:",
       barberIdParam,
+      "dans l'organisation:",
+      id,
     )
 
     // Récupérer tous les rendez-vous pour la date et le coiffeur sélectionnés
@@ -36,6 +45,7 @@ export async function GET(request: Request) {
           lte: dayEnd,
         },
         barberId: barberIdParam,
+        organizationId: id,
       },
       include: {
         service: true,
@@ -45,7 +55,9 @@ export async function GET(request: Request) {
       },
     })
 
-    console.log(`Trouvé ${appointments.length} rendez-vous pour la date ${dateParam} et le coiffeur ${barberIdParam}`)
+    console.log(
+      `Trouvé ${appointments.length} rendez-vous pour la date ${dateParam}, le coiffeur ${barberIdParam} et l'organisation ${id}`,
+    )
 
     return NextResponse.json(appointments)
   } catch (error) {
@@ -56,4 +68,3 @@ export async function GET(request: Request) {
     )
   }
 }
-

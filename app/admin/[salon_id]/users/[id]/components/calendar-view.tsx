@@ -17,9 +17,10 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface CalendarViewProps {
   userId: string
+  salonId: string
 }
 
-export function CalendarView({ userId }: CalendarViewProps) {
+export function CalendarView({ userId, salonId }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [searchTerm, setSearchTerm] = useState("")
   const [isCalendarView, setIsCalendarView] = useState(false)
@@ -38,7 +39,7 @@ export function CalendarView({ userId }: CalendarViewProps) {
     mutate,
   } = useSWR(
     selectedDate && userId
-      ? `/api/appointments/barber?date=${formatDateForApi(selectedDate)}&barberId=${userId}`
+      ? `/api/organizations/${salonId}/appointments/barber?date=${formatDateForApi(selectedDate)}&barberId=${userId}`
       : null,
     fetcher,
     {
@@ -48,7 +49,7 @@ export function CalendarView({ userId }: CalendarViewProps) {
 
   // Récupérer tous les rendez-vous pour marquer les dates dans le calendrier
   const { data: allAppointments = [] } = useSWR(
-    userId ? `/api/appointments/barber/all?barberId=${userId}` : null,
+    userId ? `/api/organizations/${salonId}/appointments/barber/all?barberId=${userId}` : null,
     fetcher,
   )
 

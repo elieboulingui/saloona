@@ -18,14 +18,14 @@ interface UserDialogProps {
   onClose: () => void
   user: any
   mode: "create" | "edit"
+  salonId: string
   onSuccess: () => void
 }
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialogProps) {
-  
+export function UserDialog({ isOpen, onClose, user, mode, salonId, onSuccess }: UserDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -107,7 +107,7 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
         }
 
         // Créer un nouvel utilisateur
-        const response = await fetch("/api/users", {
+        const response = await fetch(`/api/organizations/${salonId}/users`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
 
         // Si l'utilisateur est un coiffeur et des services sont sélectionnés, les associer
         if (formData.role === "BARBER" && selectedServices.length > 0) {
-          await fetch(`/api/users/${userData.id}/services`, {
+          await fetch(`/api/organizations/${salonId}/users/${userData.id}/services`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -141,7 +141,7 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
         }
 
         // Mettre à jour un utilisateur existant
-        const response = await fetch(`/api/users/${user.id}`, {
+        const response = await fetch(`/api/organizations/${salonId}/users/${user.id}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -165,7 +165,7 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
 
         // Si l'utilisateur est un coiffeur, mettre à jour ses services
         if (formData.role === "BARBER") {
-          const servicesResponse = await fetch(`/api/users/${user.id}/services`, {
+          const servicesResponse = await fetch(`/api/organizations/${salonId}/users/${user.id}/services`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -192,9 +192,9 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-full w-full max-h-[90vh] overflow-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Créer un utilisateur" : "Modifier l'utilisateur"}</DialogTitle>
+          <DialogTitle>{mode === "create" ? "Ajouter un utilisateur" : "Modifier l'utilisateur"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -332,4 +332,3 @@ export function UserDialog({ isOpen, onClose, user, mode, onSuccess }: UserDialo
     </Dialog>
   )
 }
-

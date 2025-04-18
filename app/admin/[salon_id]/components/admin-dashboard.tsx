@@ -29,12 +29,16 @@ import { StatCard } from "./stat-card"
 import { FinancialChart } from "./financial-chart"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { NotificationButton } from "@/components/notification-button"
+import { UserSheet } from "@/components/user-sheet"
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  salonId: string
+}
+
+export default function AdminDashboard({ salonId }: AdminDashboardProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
   const [dateRange, setDateRange] = useState({
@@ -47,7 +51,7 @@ export default function AdminDashboard() {
 
   // Construire l'URL de l'API avec les filtres
   const getApiUrl = () => {
-    const url = "/api/admin/data"
+    const url = `/api/organizations/${salonId}/data`
     const params = new URLSearchParams()
 
     if (dateRange?.from) {
@@ -168,8 +172,8 @@ export default function AdminDashboard() {
     <div className="flex flex-col min-h-[100dvh]">
       {/* Header */}
       <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-2">
-          <Link href="/">
+        <div className="flex items-center gap-2">
+          <Link href="/admin">
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
               <ArrowLeft className="h-5 w-5 text-white" />
             </motion.div>
@@ -181,19 +185,20 @@ export default function AdminDashboard() {
         </div>
         <div className="flex gap-2">
           <motion.button
-            onClick={() => router.push("/admin/users")}
+            onClick={() => router.push(`/admin/${salonId}/users`)}
             whileTap={{ scale: 0.9 }}
             className="bg-white/20 p-2 rounded-full text-white"
           >
             <Users className="h-5 w-5" />
           </motion.button>
           <motion.button
-            onClick={() => router.push("/admin/waiting")}
+            onClick={() => router.push(`/admin/${salonId}/waiting`)}
             whileTap={{ scale: 0.9 }}
             className="bg-white/20 p-2 rounded-full text-white"
           >
             <ListOrdered className="h-5 w-5" />
           </motion.button>
+          <UserSheet />
         </div>
       </header>
 
@@ -268,7 +273,7 @@ export default function AdminDashboard() {
                     Ce mois
                   </Badge>
                 </div>
-                <FinancialChart />
+                <FinancialChart salonId={salonId} />
               </motion.div>
 
               {/* Transaction summary */}
@@ -324,8 +329,8 @@ export default function AdminDashboard() {
               </motion.div>
             </TabsContent>
 
-            <TabsContent value="transactions" className="mt-4 space-y-4">
-              <motion.div variants={itemVariants} className="space-y-3">
+            <TabsContent value="transactions" className="mt-4">
+              <motion.div variants={itemVariants} className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-bold text-gray-800">Toutes les transactions</h3>
                   <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => exportToCSV(transactions)}>
@@ -389,7 +394,7 @@ export default function AdminDashboard() {
                     variant="ghost"
                     size="sm"
                     className="text-amber-600 hover:text-amber-700 p-0 h-auto"
-                    onClick={() => (window.location.href = "/admin/calendar")}
+                    onClick={() => (window.location.href = `/admin/${salonId}/calendar`)}
                   >
                     Calendrier complet
                     <ChevronRight className="h-4 w-4 ml-1" />
@@ -408,7 +413,7 @@ export default function AdminDashboard() {
       </main>
 
       {/* Withdrawal Dialog */}
-      <WithdrawalDialog />
+      <WithdrawalDialog salonId={salonId} onSuccess={refreshData} />
     </div>
   )
 }
@@ -447,4 +452,3 @@ function exportToCSV(transactions: any[]) {
   link.click()
   document.body.removeChild(link)
 }
-

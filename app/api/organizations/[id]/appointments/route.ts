@@ -2,8 +2,13 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { startOfDay, endOfDay, format } from "date-fns"
 
-export async function GET() {
-  try {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+try {
+
+  const { id } = await params
+  
     // Obtenir la date d'aujourd'hui
     const today = new Date()
 
@@ -26,6 +31,7 @@ export async function GET() {
           gte: dayStart,
           lte: dayEnd,
         },
+        organizationId : id
       },
       include: {
         service: true,
@@ -53,4 +59,3 @@ export async function GET() {
     return NextResponse.json({ error: "Erreur interne" }, { status: 500 })
   }
 }
-

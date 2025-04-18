@@ -12,25 +12,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Clock, Loader2, User, BriefcaseBusiness, ListOrdered, ArrowLeft } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
-import { NotificationButton } from "@/components/notification-button"
+import { UserSheet } from "@/components/user-sheet"
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function BarberDashboard() {
+interface BarberDashboardProps {
+  salonId: string
+}
+
+export default function BarberDashboard({ salonId }: BarberDashboardProps) {
+
   const { data: session } = useSession()
   const userId = session?.user?.id
   const [activeTab, setActiveTab] = useState("appointments")
 
-  // Récupérer les rendez-vous du jour pour ce coiffeur
+  // Récupérer les rendez-vous du jour pour ce coiffeur dans ce salon
   const today = format(new Date(), "yyyy-MM-dd")
   const {
     data: appointments,
     error,
     isLoading,
-  } = useSWR(userId ? `/api/appointments/barber?date=${today}&barberId=${userId}` : null, fetcher, {
-    refreshInterval: 30000, // Rafraîchir toutes les 30 secondes
-  })
+  } = useSWR(
+    userId ? `/api/organizations/${salonId}/appointments/barber?date=${today}&barberId=${userId}` : null,
+    fetcher,
+    {
+      refreshInterval: 30000, // Rafraîchir toutes les 30 secondes
+    },
+  )
 
   // Animation variants
   const containerVariants = {
@@ -121,16 +130,18 @@ export default function BarberDashboard() {
         </div>
 
         <div className="flex gap-2">
-          <Link href={`/admin/users/${userId}`}>
+          <Link href={`/admin/${salonId}/users/${userId}`}>
             <motion.button whileTap={{ scale: 0.9 }} className="bg-white/20 p-2 rounded-full text-white">
               <User className="h-5 w-5" />
+              
             </motion.button>
           </Link>
-          <Link href="/admin/waiting">
+          <Link href={`/admin/${salonId}/waiting`}>
             <motion.button whileTap={{ scale: 0.9 }} className="bg-white/20 p-2 rounded-full text-white">
               <ListOrdered className="h-5 w-5" />
             </motion.button>
           </Link>
+          <UserSheet />
         </div>
       </header>
 
@@ -240,7 +251,7 @@ export default function BarberDashboard() {
                   <Button
                     variant="link"
                     className="mt-2 text-amber-500"
-                    onClick={() => (window.location.href = "/admin/calendar")}
+                    onClick={() => (window.location.href = `/admin/${salonId}/calendar`)}
                   >
                     Voir le calendrier complet
                   </Button>
@@ -250,7 +261,7 @@ export default function BarberDashboard() {
 
             <TabsContent value="services" className="mt-4 space-y-4">
               {/* Services list */}
-              {session?.user?.id && <ServicesTab userId={session.user.id} />}
+              {session?.user?.id && <ServicesTab userId={session.user.id} salonId={salonId} />}
             </TabsContent>
           </Tabs>
         </motion.div>
@@ -260,8 +271,12 @@ export default function BarberDashboard() {
 }
 
 // Composant pour l'onglet des services
-function ServicesTab({ userId }: { userId: string }) {
-  const { data: userServices, error, isLoading } = useSWR(`/api/users/${userId}/services`, fetcher)
+function ServicesTab({ userId, salonId }: { userId: string; salonId: string }) {
+  const {
+    data: userServices,
+    error,
+    isLoading,
+  } = useSWR(`/api/organizations/${salonId}/users/${userId}/services`, fetcher)
 
   if (isLoading) {
     return (
@@ -323,4 +338,3 @@ function ServicesTab({ userId }: { userId: string }) {
     </div>
   )
 }
-

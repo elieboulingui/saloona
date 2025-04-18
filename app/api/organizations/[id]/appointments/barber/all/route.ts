@@ -2,10 +2,20 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { format } from "date-fns"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Récupérer tous les rendez-vous
+    const { searchParams } = new URL(request.url)
+    const barberIdParam = searchParams.get("barberId")
+
+    if (!barberIdParam) {
+      return NextResponse.json({ error: "barberId est requis" }, { status: 400 })
+    }
+
+    // Récupérer tous les rendez-vous du coiffeur
     const appointments = await prisma.appointment.findMany({
+      where: {
+        barberId: barberIdParam,
+      },
       select: {
         date: true,
       },
@@ -19,11 +29,10 @@ export async function GET() {
 
     return NextResponse.json(appointments)
   } catch (error) {
-    console.error("Erreur lors de la récupération des dates de rendez-vous:", error)
+    console.error("Erreur lors de la récupération des dates de rendez-vous par coiffeur:", error)
     return NextResponse.json(
       { error: "Une erreur est survenue lors de la récupération des dates de rendez-vous" },
       { status: 500 },
     )
   }
 }
-

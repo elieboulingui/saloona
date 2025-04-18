@@ -53,9 +53,6 @@ interface Salon {
   phoneNumber: string
   website?: string
   departments: Department[]
-  stylists: Stylist[]
-  reviews: Review[]
-  gallery: string[]
 }
 
 interface Department {
@@ -236,60 +233,7 @@ const MOCK_SALON: Salon = {
         },
       ],
     },
-  ],
-  stylists: [
-    {
-      id: "st1",
-      name: "Marie Koné",
-      role: "Fondatrice & Spécialiste Dreads",
-      image: "/placeholder.svg?height=100&width=100&text=Marie",
-      rating: 4.9,
-      reviewCount: 87,
-    },
-    {
-      id: "st2",
-      name: "Jean Kouassi",
-      role: "Coiffeur Senior",
-      image: "/placeholder.svg?height=100&width=100&text=Jean",
-      rating: 4.7,
-      reviewCount: 62,
-    },
-  ],
-  reviews: [
-    {
-      id: "r1",
-      userName: "Sophie Martin",
-      userImage: "/placeholder.svg?height=50&width=50&text=SM",
-      rating: 5,
-      date: "2023-04-15",
-      comment:
-        "Service exceptionnel ! Mes dreads sont magnifiques et tiennent parfaitement. Je recommande vivement ce salon pour la qualité du travail et l'ambiance chaleureuse.",
-    },
-    {
-      id: "r2",
-      userName: "Thomas Dubois",
-      userImage: "/placeholder.svg?height=50&width=50&text=TD",
-      rating: 4,
-      date: "2023-03-22",
-      comment:
-        "Très satisfait de mes locks. Le personnel est professionnel et attentif. Seul bémol : l'attente peut être longue les jours d'affluence.",
-    },
-    {
-      id: "r3",
-      userName: "Emma Petit",
-      userImage: "/placeholder.svg?height=50&width=50&text=EP",
-      rating: 5,
-      date: "2023-02-10",
-      comment:
-        "Excellente expérience ! Marie a su exactement ce dont j'avais besoin pour mes dreads. Le salon est propre et l'ambiance est agréable.",
-    },
-  ],
-  gallery: [
-    "/dreads-background.png",
-    "/placeholder.svg?height=200&width=300&text=Gallery+1",
-    "/placeholder.svg?height=200&width=300&text=Gallery+2",
-    "/placeholder.svg?height=200&width=300&text=Gallery+3",
-  ],
+  ]
 }
 
 export default function SalonDetailPage({ params }: { params: { id: string } }) {
@@ -433,8 +377,8 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
      
       {/* Image de couverture avec header flottant */}
-      <div className="relative h-64">
-        <Image src={"/marley.jpg"} alt={salon.name} fill className="object-cover" />
+      <div className="relative h-64 container mx-auto max-w-6xl lg:mt-3 mt-0">
+        <Image src={"/marley.jpg"} alt={salon.name} fill className="object-cover lg:rounded-2xl rounded-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
         {/* Header flottant */}
@@ -500,7 +444,7 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 px-4 py-4 container mx-auto max-w-6xl">
         {/* Boutons d'action */}
         <div className="flex gap-2 mb-6">
           <Button className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-full" onClick={() => setShowCart(true)}>
@@ -642,31 +586,6 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
                 ))}
             </AnimatePresence>
           </div>
-        </div>
-
-        {/* Galerie photos */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold mb-3">Galerie photos</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {salon.gallery.slice(0, 4).map((image, index) => (
-              <div
-                key={index}
-                className={cn("relative rounded-lg overflow-hidden", index === 0 ? "col-span-2 h-40" : "h-24")}
-              >
-                <Image
-                  src={image || "/placeholder.svg"}
-                  alt={`${salon.name} gallery ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-          {salon.gallery.length > 4 && (
-            <Button variant="outline" className="w-full mt-2" onClick={() => {}}>
-              Voir toutes les photos
-            </Button>
-          )}
         </div>
 
         {/* Informations de contact */}

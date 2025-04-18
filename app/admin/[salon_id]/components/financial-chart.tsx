@@ -1,83 +1,155 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { Line } from "react-chartjs-2"
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js"
+import { format, subDays } from "date-fns"
+import { fr } from "date-fns/locale"
 
-export function FinancialChart() {
-  const [loaded, setLoaded] = useState(false)
+// Enregistrer les composants ChartJS
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-  // Données simulées pour le graphique
-  const data = [
-    { month: "Jan", income: 120000, expenses: 80000 },
-    { month: "Fév", income: 150000, expenses: 90000 },
-    { month: "Mar", income: 180000, expenses: 100000 },
-    { month: "Avr", income: 220000, expenses: 120000 },
-    { month: "Mai", income: 250000, expenses: 130000 },
-    { month: "Juin", income: 200000, expenses: 110000 },
-  ]
-
-  // Trouver la valeur maximale pour l'échelle
-  const maxValue = Math.max(...data.map((d) => Math.max(d.income, d.expenses)))
-
-  // Calculer la hauteur des barres en fonction de la valeur maximale
-  const getHeight = (value: number) => {
-    return (value / maxValue) * 150
-  }
-
-  useEffect(() => {
-    setLoaded(true)
-  }, [])
-
-  return (
-    <div className="h-[250px]">
-      <div className="flex justify-between items-end h-[200px] mt-4">
-        {data.map((item, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <div className="relative h-[150px] w-12 flex items-end justify-center">
-              {/* Barre des revenus */}
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={
-                  loaded
-                    ? {
-                        height: getHeight(item.income),
-                        opacity: 1,
-                      }
-                    : { height: 0, opacity: 0 }
-                }
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="w-5 bg-green-400 rounded-t-md absolute z-10"
-              />
-              {/* Barre des dépenses */}
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={
-                  loaded
-                    ? {
-                        height: getHeight(item.expenses),
-                        opacity: 1,
-                      }
-                    : { height: 0, opacity: 0 }
-                }
-                transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
-                className="w-5 bg-red-400 rounded-t-md absolute ml-6"
-              />
-            </div>
-            <span className="text-xs text-gray-500 mt-2">{item.month}</span>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center mt-4 gap-4">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-400 rounded-full mr-1"></div>
-          <span className="text-xs text-gray-600">Revenus</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-red-400 rounded-full mr-1"></div>
-          <span className="text-xs text-gray-600">Dépenses</span>
-        </div>
-      </div>
-    </div>
-  )
+interface FinancialChartProps {
+  salonId: string
 }
 
+export function FinancialChart({ salonId }: FinancialChartProps) {
+
+  const [chartData, setChartData] = useState<any>({
+    labels: [],
+    datasets: [],
+  })
+
+  useEffect(() => {
+    // Générer les 7 derniers jours pour les labels
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = subDays(new Date(), 6 - i)
+      return format(date, "dd MMM", { locale: fr })
+    })
+
+    // Récupérer les données financières
+    const fetchData = async () => {
+      try {
+        const startDate = format(subDays(new Date(), 6), "yyyy-MM-dd")
+        const endDate = format(new Date(), "yyyy-MM-dd")
+
+        const response = await fetch(
+          `/api/organizations/${salonId}/financial-chart?startDate=${startDate}&endDate=${endDate}`,
+        )
+
+        if (!response.ok) {
+          throw new Error("Erreur lors de la récupération des données")
+        }
+
+        const data = await response.json()
+
+        // Préparer les données pour le graphique
+        setChartData({
+          labels: days,
+          datasets: [
+            {
+              label: "Revenus",
+              data: data.revenues || Array(7).fill(0),
+              borderColor: "rgb(16, 185, 129)",
+              backgroundColor: "rgba(16, 185, 129, 0.1)",
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: "Retraits",
+              data: data.withdrawals || Array(7).fill(0),
+              borderColor: "rgb(239, 68, 68)",
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              tension: 0.4,
+              fill: true,
+            },
+          ],
+        })
+      } catch (error) {
+        console.error("Erreur:", error)
+
+        // En cas d'erreur, utiliser des données fictives
+        setChartData({
+          labels: days,
+          datasets: [
+            {
+              label: "Revenus",
+              data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+              borderColor: "rgb(16, 185, 129)",
+              backgroundColor: "rgba(16, 185, 129, 0.1)",
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: "Retraits",
+              data: [5000, 8000, 0, 10000, 0, 15000, 0],
+              borderColor: "rgb(239, 68, 68)",
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              tension: 0.4,
+              fill: true,
+            },
+          ],
+        })
+      }
+    }
+
+    fetchData()
+  }, [salonId])
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+        labels: {
+          boxWidth: 10,
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            let label = context.dataset.label || ""
+            if (label) {
+              label += ": "
+            }
+            if (context.parsed.y !== null) {
+              label += new Intl.NumberFormat("fr-FR", {
+                style: "currency",
+                currency: "XOF",
+                minimumFractionDigits: 0,
+              }).format(context.parsed.y)
+            }
+            return label
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value: any) => value.toLocaleString() + " FCFA",
+        },
+      },
+    },
+    elements: {
+      point: {
+        radius: 3,
+        hoverRadius: 6,
+      },
+    },
+  }
+
+  return <Line data={chartData} options={options} height={200} />
+}

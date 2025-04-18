@@ -6,13 +6,18 @@ import { motion } from "framer-motion"
 import { Wallet, Calendar, BriefcaseBusiness, Store, Users, ListOrdered, Home, Settings } from "lucide-react"
 import { useSession } from "next-auth/react"
 
-export function MobileAdminNav() {
+interface MobileAdminNavProps {
+  salon_id : string
+}
+
+export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
+  
   const pathname = usePathname()
   const { data: session } = useSession()
   const userRole = session?.user?.role
 
   // Ne pas afficher la navigation dans les pages de boutique
-  if (pathname.includes("/admin/boutique")) {
+  if (pathname.includes(`/admin/${salon_id}/boutique`)) {
     return null
   }
 
@@ -22,37 +27,37 @@ export function MobileAdminNav() {
     // Éléments uniquement pour les ADMIN
     {
       name: "Dashboard",
-      href: "/admin",
+      href: `/admin/${salon_id}`,
       icon: <Wallet className="h-6 w-6" />,
-      active: pathname === "/admin",
+      active: pathname === `/admin/${salon_id}`,
       roles: ["ADMIN", "BARBER"],
     },
     {
       name: "Calendrier",
-      href: "/admin/calendar",
+      href: `/admin/${salon_id}/calendar`,
       icon: <Calendar className="h-6 w-6" />,
-      active: pathname === "/admin/calendar",
+      active: pathname === `/admin/${salon_id}/calendar`,
       roles: ["ADMIN", "BARBER"],
     },
     {
       name: "Services",
-      href: "/admin/services",
+      href: `/admin/${salon_id}/services`,
       icon: <BriefcaseBusiness className="h-6 w-6" />,
-      active: pathname === "/admin/services",
+      active: pathname === `/admin/${salon_id}/services`,
       roles: ["ADMIN", "BARBER"],
     },
     {
       name: "Boutique",
-      href: "/admin/boutique",
+      href: `/admin/${salon_id}/boutique`,
       icon: <Store className="h-6 w-6" />,
-      active: pathname === "/admin/boutique",
+      active: pathname === `/admin/${salon_id}/boutique`,
       roles: ["ADMIN", "BARBER"],
     },
     {
       name: "Parametres",
-      href: "/admin/settings",
+      href: `/admin/${salon_id}/settings`,
       icon: <Settings className="h-6 w-6" />,
-      active: pathname === "/admin/settings",
+      active: pathname === `/admin/${salon_id}/settings`,
       roles: ["ADMIN", "BARBER"],
     }
   ]

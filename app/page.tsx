@@ -215,23 +215,24 @@ export default function SalonsPage() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
-     
-
+    
       {/* Header */}
-      <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          
-          <div>
-            <h1 className="text-white font-bold text-xl">Salons de Coiffure</h1>
-            <p className="text-white/80 text-xs">Trouvez le salon parfait pour vous</p>
+      <header className="bg-amber-500 sticky top-0 z-10  shadow-md">
+       <div className="p-4 container mx-auto max-w-6xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            
+            <div>
+              <h1 className="text-white font-bold text-xl">Salons de Coiffure</h1>
+              <p className="text-white/80 text-xs">Trouvez le salon parfait pour vous</p>
+            </div>
           </div>
-        </div>
-        <motion.button whileTap={{ scale: 0.9 }} className="bg-white/20 p-2 rounded-full text-white" onClick={() => {}}>
-          <Filter className="h-5 w-5" />
-        </motion.button>
+          <motion.button whileTap={{ scale: 0.9 }} className="bg-white/20 p-2 rounded-full text-white" onClick={() => {}}>
+            <Filter className="h-5 w-5" />
+          </motion.button>
+       </div>
       </header>
 
-      <main className="flex-1 px-4 py-4 overflow-auto">
+      <main className="flex-1 px-4 py-4 overflow-auto container mx-auto max-w-6xl">
         {/* Barre de recherche */}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -296,7 +297,7 @@ export default function SalonsPage() {
             </Button>
           </div>
         ) : (
-          <motion.div className="space-y-4" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div className="grid lg:grid-cols-3 grid-cols-1 gap-3" variants={containerVariants} initial="hidden" animate="visible">
             <AnimatePresence>
               {filteredSalons.map((salon) => (
                 <motion.div

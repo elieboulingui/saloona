@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function WaitingPage() {
+  
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<string | null>(null)
 
@@ -306,4 +307,3 @@ export default function WaitingPage() {
     </div>
   )
 }
-

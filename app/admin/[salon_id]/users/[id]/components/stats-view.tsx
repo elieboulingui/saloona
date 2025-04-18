@@ -16,9 +16,10 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface StatsViewProps {
   userId: string
+  salonId : string
 }
 
-export function StatsView({ userId }: StatsViewProps) {
+export function StatsView({ userId,salonId }: StatsViewProps) {
   const [dateRange, setDateRange] = useState({
     from: subDays(new Date(), 30),
     to: new Date(),
@@ -27,7 +28,7 @@ export function StatsView({ userId }: StatsViewProps) {
 
   // Construire l'URL de l'API avec les filtres de date
   const getApiUrl = () => {
-    const url = `/api/users/${userId}/stats`
+    const url = `/api/organizations/${salonId}/users/${userId}/stats`
     const params = new URLSearchParams()
 
     if (dateRange?.from) {

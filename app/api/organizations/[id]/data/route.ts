@@ -2,8 +2,13 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { startOfDay, endOfDay, parseISO, format } from "date-fns"
 
-export async function GET(request: Request) {
-  try {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+try {
+
+  const { id } = await params
+  
     const { searchParams } = new URL(request.url)
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
@@ -11,7 +16,9 @@ export async function GET(request: Request) {
     const statusParam = searchParams.get("status")
 
     // Construire les conditions de filtrage
-    const where: any = {}
+    const where: any = {
+      organizationId: id,
+    }
 
     // Filtrage par date
     if (startDateParam && endDateParam) {
@@ -88,6 +95,7 @@ export async function GET(request: Request) {
     // Calculer le cash flow total (entrées d'argent)
     const cashFlowTotal = await prisma.transaction.aggregate({
       where: {
+        organizationId: id,
         type: { in: ["APPOINTMENT", "ORDER"] },
         status: { in: ["paid", "processed"] },
       },
@@ -99,6 +107,7 @@ export async function GET(request: Request) {
     // Calculer le total des retraits
     const withdrawalsTotal = await prisma.transaction.aggregate({
       where: {
+        organizationId: id,
         type: "WITHDRAWAL",
         status: { in: ["paid", "processed"] },
       },
@@ -115,6 +124,7 @@ export async function GET(request: Request) {
     // Récupérer les statistiques par type de transaction
     const appointmentStats = await prisma.transaction.aggregate({
       where: {
+        organizationId: id,
         type: "APPOINTMENT",
         status: { in: ["paid", "processed"] },
       },
@@ -126,6 +136,7 @@ export async function GET(request: Request) {
 
     const orderStats = await prisma.transaction.aggregate({
       where: {
+        organizationId: id,
         type: "ORDER",
         status: { in: ["paid", "processed"] },
       },
@@ -137,6 +148,7 @@ export async function GET(request: Request) {
 
     const withdrawalStats = await prisma.transaction.aggregate({
       where: {
+        organizationId: id,
         type: "WITHDRAWAL",
         status: { in: ["paid", "processed"] },
       },
@@ -150,7 +162,10 @@ export async function GET(request: Request) {
     const statusStats = await Promise.all(
       ["pending", "paid", "processed", "failed", "expired", "cancelled"].map(async (status) => {
         const stats = await prisma.transaction.aggregate({
-          where: { status },
+          where: {
+            organizationId: id,
+            status,
+          },
           _sum: {
             amount: true,
           },
@@ -204,4 +219,3 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Une erreur est survenue lors de la récupération des données" }, { status: 500 })
   }
 }
-

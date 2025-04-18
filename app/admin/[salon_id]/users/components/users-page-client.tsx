@@ -15,23 +15,28 @@ import Link from "next/link"
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-export default function UsersPageClient() {
+interface UsersPageClientProps {
+  salonId: string
+}
 
+export default function UsersPageClient({ salonId }: UsersPageClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create")
 
   // Récupérer les utilisateurs
-  const { data: users = [], error, isLoading, mutate } = useSWR("/api/users", fetcher)
+  const { data: users = [], error, isLoading, mutate } = useSWR(`/api/organizations/${salonId}/users`, fetcher)
 
   // Filtrer les utilisateurs en fonction de la recherche
-  const filteredUsers = users && users.filter(
-    (user: any) =>
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone?.includes(searchTerm),
-  )
+  const filteredUsers =
+    users &&
+    users.filter(
+      (user: any) =>
+        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phone?.includes(searchTerm),
+    )
 
   // Fonction pour ouvrir le dialogue de création d'utilisateur
   const handleCreateUser = () => {
@@ -51,7 +56,7 @@ export default function UsersPageClient() {
   const handleDeleteUser = async (userId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
       try {
-        await fetch(`/api/users/${userId}`, {
+        await fetch(`/api/organizations/${salonId}/users/${userId}`, {
           method: "DELETE",
         })
         mutate()
@@ -118,7 +123,7 @@ export default function UsersPageClient() {
       {/* Header */}
       <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-2">
-          <Link href="/admin">
+          <Link href={`/admin/${salonId}`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
               <ArrowLeft className="h-5 w-5 text-white" />
             </motion.div>
@@ -190,13 +195,19 @@ export default function UsersPageClient() {
                                 <Badge variant="outline" className={`ml-2 text-xs ${getRoleColor(user.role)}`}>
                                   {getRoleLabel(user.role)}
                                 </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className={`ml-2 text-xs ${getRoleColor(user.organizationRole)}`}
+                                >
+                                  {getRoleLabel(user.organizationRole)}
+                                </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">{user.email}</p>
                               {user.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Link href={`/admin/users/${user.id}`}>
+                            <Link href={`/admin/${salonId}/users/${user.id}`}>
                               <Button variant="outline" size="sm" className="h-8 px-2">
                                 Détails
                               </Button>
@@ -262,6 +273,7 @@ export default function UsersPageClient() {
         onClose={() => setIsDialogOpen(false)}
         user={selectedUser}
         mode={dialogMode}
+        salonId={salonId}
         onSuccess={() => {
           setIsDialogOpen(false)
           mutate()
@@ -277,4 +289,3 @@ export default function UsersPageClient() {
     </div>
   )
 }
-
