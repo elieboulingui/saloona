@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
-import { createService, updateService } from "../actions"
 import { ImageUpload } from "@/components/image-upload"
 
 interface ServiceDialogProps {
@@ -17,10 +17,12 @@ interface ServiceDialogProps {
   onClose: () => void
   service: any
   mode: "create" | "edit"
-  onSuccess: () => void
+  salonId: string
+  departments: any[]
+  onSuccess: (service: any, mode: "create" | "edit") => void
 }
 
-export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: ServiceDialogProps) {
+export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departments, onSuccess }: ServiceDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -28,6 +30,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
     durationMin: "",
     durationMax: "",
     image: "",
+    departmentId: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -42,6 +45,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
         durationMin: service.durationMin?.toString() || "",
         durationMax: service.durationMax?.toString() || "",
         image: service.image || "",
+        departmentId: service.departmentId || service.department?.id || "",
       })
     } else {
       // Réinitialiser le formulaire en mode création
@@ -52,13 +56,18 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
         durationMin: "",
         durationMax: "",
         image: "",
+        departmentId: departments && departments.length > 0 ? departments[0].id : "",
       })
     }
-  }, [service, mode, isOpen])
+  }, [service, mode, isOpen, departments])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleDepartmentChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, departmentId: value }))
   }
 
   const handleImageChange = (url: string) => {
@@ -72,32 +81,66 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
 
     try {
       // Validation
-      if (!formData.name || !formData.price || !formData.durationMin || !formData.durationMax) {
+      if (
+        !formData.name ||
+        !formData.price ||
+        !formData.durationMin ||
+        !formData.durationMax ||
+        !formData.departmentId
+      ) {
         setError("Veuillez remplir tous les champs obligatoires")
         setIsLoading(false)
         return
       }
 
-      const serviceData = {
-        ...formData,
-        price: Number.parseInt(formData.price),
-        durationMin: Number.parseInt(formData.durationMin),
-        durationMax: Number.parseInt(formData.durationMax),
-      }
-
-      let result
+      let response, updatedService
 
       if (mode === "create") {
-        result = await createService(serviceData)
+        // Créer un nouveau service
+        response = await fetch(`/api/organizations/${salonId}/services`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            price: Number(formData.price),
+            durationMin: Number(formData.durationMin),
+            durationMax: Number(formData.durationMax),
+          }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || "Erreur lors de la création du service")
+        }
+
+        updatedService = await response.json()
       } else {
-        result = await updateService(service.id, serviceData)
+        // Mettre à jour un service existant
+        response = await fetch(`/api/organizations/${salonId}/services/${service.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            price: Number(formData.price),
+            durationMin: Number(formData.durationMin),
+            durationMax: Number(formData.durationMax),
+          }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || "Erreur lors de la mise à jour du service")
+        }
+
+        updatedService = await response.json()
       }
 
-      if (result.success) {
-        onSuccess()
-      } else {
-        setError(result.error || "Une erreur est survenue")
-      }
+      // Succès
+      onSuccess(updatedService, mode)
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue")
     } finally {
@@ -145,7 +188,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Prix (FCFA) *</Label>
               <Input
@@ -154,12 +197,30 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
                 type="number"
                 value={formData.price}
                 onChange={handleChange}
-                placeholder="Ex: 15000"
+                placeholder="Ex: 5000"
                 required
                 disabled={isFormDisabled}
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="departmentId">Département *</Label>
+              <Select value={formData.departmentId} onValueChange={handleDepartmentChange} disabled={isFormDisabled}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments?.map((department: any) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="durationMin">Durée min (min) *</Label>
               <Input
@@ -190,7 +251,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
           </div>
 
           <div className="space-y-2">
-            <Label>Image du service</Label>
+            <Label htmlFor="image">Image du service</Label>
             <ImageUpload
               value={formData.image}
               onChange={handleImageChange}
@@ -210,7 +271,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
                   Chargement...
                 </>
               ) : mode === "create" ? (
-                "Ajouter"
+                "Créer"
               ) : (
                 "Mettre à jour"
               )}
@@ -221,4 +282,3 @@ export function ServiceDialog({ isOpen, onClose, service, mode, onSuccess }: Ser
     </Dialog>
   )
 }
-

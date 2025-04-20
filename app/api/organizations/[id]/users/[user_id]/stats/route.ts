@@ -2,20 +2,17 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { startOfDay, endOfDay, parseISO, subDays } from "date-fns"
 
-export async function GET(request: Request,
-    { params }: { params: Promise<{ id: string , user_id : string}> }
-  ) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-  
-      const { id , user_id} = await params
-
+    const { id } = await params
+    
     const { searchParams } = new URL(request.url)
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
 
     // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({
-      where: { id: user_id },
+      where: { id: id },
     })
 
     if (!user) {
@@ -37,7 +34,12 @@ export async function GET(request: Request,
         },
       },
       include: {
-        service: true,
+        services: {
+          // Include the AppointmentService model
+          include: {
+            service: true, // Include the Service details
+          },
+        },
       },
     })
 
@@ -54,23 +56,26 @@ export async function GET(request: Request,
     > = {}
 
     appointments.forEach((appointment) => {
-      const serviceId = appointment.serviceId
+      appointment.services.forEach((appointmentService) => {
+        // Iterate through AppointmentServices
+        const serviceId = appointmentService.serviceId // Access serviceId from AppointmentService
 
-      if (!serviceStats[serviceId]) {
-        serviceStats[serviceId] = {
-          count: 0,
-          totalDuration: 0,
-          avgDuration: 0,
-          serviceName: appointment.service.name,
-          serviceId: serviceId,
+        if (!serviceStats[serviceId]) {
+          serviceStats[serviceId] = {
+            count: 0,
+            totalDuration: 0,
+            avgDuration: 0,
+            serviceName: appointmentService.service.name, // Access service name from AppointmentService
+            serviceId: serviceId,
+          }
         }
-      }
 
-      // Calculer la durée moyenne entre min et max du service
-      const avgServiceDuration = (appointment.service.durationMin + appointment.service.durationMax) / 2
+        // Calculer la durée moyenne entre min et max du service
+        const avgServiceDuration = (appointmentService.service.durationMin + appointmentService.service.durationMax) / 2 // Access duration from AppointmentService
 
-      serviceStats[serviceId].count += 1
-      serviceStats[serviceId].totalDuration += avgServiceDuration
+        serviceStats[serviceId].count += 1
+        serviceStats[serviceId].totalDuration += avgServiceDuration
+      })
     })
 
     // Calculer la durée moyenne pour chaque service

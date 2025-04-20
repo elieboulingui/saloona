@@ -68,7 +68,7 @@ try {
         if (transaction.appointmentId) {
           appointmentData = await prisma.appointment.findUnique({
             where: { id: transaction.appointmentId },
-            include: { service: true },
+            include: { services : true },
           })
         }
 

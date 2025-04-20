@@ -136,18 +136,12 @@ model Notification {
 
 model Appointment {
   id          String @id @default(cuid())
-  firstName   String // Prénom du client
-  phoneNumber String // Numéro du client
+  firstName   String
+  phoneNumber String
+  date        DateTime
 
-  service       Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId     String
-  date          DateTime
-
-  startDate     DateTime?
-  endDate       DateTime?
-
-  barber        User? @relation(fields: [barberId], references: [id], onDelete: SetNull)
-  barberId      String?  // Clé étrangère optionnelle
+  startDate   DateTime?
+  endDate     DateTime?
 
   orderNumber   Int
   estimatedTime String
@@ -158,6 +152,24 @@ model Appointment {
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  barber        User? @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  barberId      String?
+
+  services      AppointmentService[] // ✅ nouvelle relation
+}
+
+model AppointmentService {
+  id            String      @id @default(cuid())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  appointmentId String
+  service       Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([appointmentId, serviceId])
 }
 
 enum AppointmentStatus {
@@ -170,23 +182,23 @@ enum AppointmentStatus {
 model Service {
   id          String  @id @default(cuid())
   name        String
-  image        String?
+  image       String?
   description String?
   price       Int
-  durationMin    Int // Durée en minutes
-  durationMax   Int
+  durationMin Int
+  durationMax Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  appointments Appointment[]
-  users        UserService[] // Relation avec les users
 
   departmentId   String
   department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  users     UserService[] // Relation avec les users
+  services  AppointmentService[] // ✅ nouvelle relation
 }
 
 model UserService {

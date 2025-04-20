@@ -1,61 +1,212 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { checkOrganizationMembership } from "@/lib/check-organization-membership"
+import { auth } from "@/auth"
 import { prisma } from "@/utils/prisma"
-import { startOfDay, endOfDay, format } from "date-fns"
 
+// GET /api/organizations/[id]/appointments
 export async function GET(request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
 try {
 
-  const { id } = await params
+    const { id } = await params
   
-    // Obtenir la date d'aujourd'hui
-    const today = new Date()
+    const session = await auth()
 
-    // Utiliser date-fns pour obtenir le début et la fin de la journée
-    const dayStart = startOfDay(today)
-    const dayEnd = endOfDay(today)
+    // Vérifier si l'utilisateur est connecté
+    if (!session?.user) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+    }
 
-    console.log(
-      "Recherche des rendez-vous entre:",
-      format(dayStart, "yyyy-MM-dd HH:mm:ss"),
-      "et",
-      format(dayEnd, "yyyy-MM-dd HH:mm:ss"),
-    )
+    // Vérifier si l'utilisateur est membre de l'organisation
+    const organizationId = id
+    const canAccess = await checkOrganizationMembership(session.user.id)
 
+    if (!canAccess) {
+      return NextResponse.json({ error: "Accès refusé" }, { status: 403 })
+    }
+
+    // Récupérer tous les rendez-vous de l'organisation
     const appointments = await prisma.appointment.findMany({
       where: {
-        status: { in: ["CONFIRMED", "INCHAIR", "COMPLETED"] },
-        // Utiliser une plage de dates pour capturer tous les rendez-vous du jour
-        date: {
-          gte: dayStart,
-          lte: dayEnd,
-        },
-        organizationId : id
+        organizationId: organizationId,
       },
       include: {
-        service: true,
+        barber: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        services: {
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                durationMin: true,
+                durationMax: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
-      orderBy: { orderNumber: "asc" }, // Trier par ordre de passage
+      orderBy: {
+        date: "asc",
+      },
     })
 
-    console.log("Rendez-vous trouvés:", appointments.length)
+    // Transformer les données pour faciliter l'utilisation côté client
+    const formattedAppointments = appointments.map((appointment) => ({
+      id: appointment.id,
+      firstName: appointment.firstName,
+      phoneNumber: appointment.phoneNumber,
+      date: appointment.date,
+      startDate: appointment.startDate,
+      endDate: appointment.endDate,
+      orderNumber: appointment.orderNumber,
+      estimatedTime: appointment.estimatedTime,
+      status: appointment.status,
+      createdAt: appointment.createdAt,
+      updatedAt: appointment.updatedAt,
+      organizationId: appointment.organizationId,
+      barberId: appointment.barberId,
+      services: appointment.services.map((as) => as.service),
+    }))
 
-    // Afficher les dates des rendez-vous trouvés pour le débogage
-    appointments.forEach((appointment, index) => {
-      console.log(
-        `Rendez-vous ${index + 1}:`,
-        format(new Date(appointment.date), "yyyy-MM-dd HH:mm:ss"),
-        "Status:",
-        appointment.status,
-        "Ordre:",
-        appointment.orderNumber,
-      )
-    })
-
-    return NextResponse.json(appointments)
+    return NextResponse.json(formattedAppointments)
   } catch (error) {
-    console.error("Erreur API /appointments:", error)
-    return NextResponse.json({ error: "Erreur interne" }, { status: 500 })
+    console.error("Erreur lors de la récupération des rendez-vous:", error)
+    return NextResponse.json({ error: "Erreur lors de la récupération des rendez-vous" }, { status: 500 })
+  }
+}
+
+// POST /api/organizations/[id]/appointments
+export async function POST(request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+try {
+
+    const { id } = await params
+  
+    const session = await auth()
+
+    // Vérifier si l'utilisateur est connecté
+    if (!session?.user) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+    }
+
+    // Vérifier si l'utilisateur est membre de l'organisation
+    const organizationId = id
+    const canAccess = await checkOrganizationMembership(session.user.id)
+
+    if (!canAccess) {
+      return NextResponse.json({ error: "Accès refusé" }, { status: 403 })
+    }
+
+    const data = await request.json()
+
+    // Validation des données
+    if (!data.firstName || !data.phoneNumber || !data.date || !data.serviceIds || data.serviceIds.length === 0) {
+      return NextResponse.json({ error: "Données manquantes pour créer un rendez-vous" }, { status: 400 })
+    }
+
+    // Calculer le numéro d'ordre pour la journée
+    const appointmentsCount = await prisma.appointment.count({
+      where: {
+        organizationId: organizationId,
+        date: {
+          gte: new Date(new Date(data.date).setHours(0, 0, 0, 0)),
+          lt: new Date(new Date(data.date).setHours(23, 59, 59, 999)),
+        },
+      },
+    })
+
+    // Créer le rendez-vous
+    const appointment = await prisma.appointment.create({
+      data: {
+        firstName: data.firstName,
+        phoneNumber: data.phoneNumber,
+        date: new Date(data.date),
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        orderNumber: appointmentsCount + 1,
+        estimatedTime: data.estimatedTime || "30min",
+        status: data.status || "PENDING",
+        organization: {
+          connect: { id: organizationId },
+        },
+        barber: data.barberId
+          ? {
+              connect: { id: data.barberId },
+            }
+          : undefined,
+      },
+    })
+
+    // Ajouter les services au rendez-vous
+    const serviceConnections = await Promise.all(
+      data.serviceIds.map((serviceId: string) =>
+        prisma.appointmentService.create({
+          data: {
+            appointment: {
+              connect: { id: appointment.id },
+            },
+            service: {
+              connect: { id: serviceId },
+            },
+          },
+          include: {
+            service: true,
+          },
+        }),
+      ),
+    )
+
+    // Récupérer le rendez-vous complet avec ses relations
+    const completeAppointment = await prisma.appointment.findUnique({
+      where: {
+        id: appointment.id,
+      },
+      include: {
+        barber: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+        services: {
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                durationMin: true,
+                durationMax: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    // Transformer les données pour faciliter l'utilisation côté client
+    const formattedAppointment = {
+      ...completeAppointment,
+      services: completeAppointment?.services.map((as) => as.service) || [],
+    }
+
+    return NextResponse.json(formattedAppointment)
+  } catch (error) {
+    console.error("Erreur lors de la création du rendez-vous:", error)
+    return NextResponse.json({ error: "Erreur lors de la création du rendez-vous" }, { status: 500 })
   }
 }

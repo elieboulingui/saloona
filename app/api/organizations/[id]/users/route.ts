@@ -5,15 +5,17 @@ import bcrypt from "bcryptjs"
 import { inngest } from "@/inngest/client"
 
 // Récupérer tous les membres d'une organisation
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+
+    const {id  : organizationId } = await params
 
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
-
-    const organizationId = params.id
 
     // Vérifier si l'utilisateur est membre de l'organisation
     const userMembership = await prisma.userOrganization.findFirst({
@@ -75,14 +77,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 // Ajouter un nouveau membre à l'organisation
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }>}) {
   try {
+    
+    const {id  : organizationId } = await params
+
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const organizationId = params.id
     const body = await request.json()
     const { name, email, phone, role, password, speciality, image, organizationRole } = body
 

@@ -3,26 +3,23 @@ import { prisma } from "@/utils/prisma"
 import { parseISO, startOfDay, endOfDay, format } from "date-fns"
 
 export async function GET(request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-try {
-
-    const { id } = await params
+    { params }: { params: Promise<{ id: string }> }
+  ) {
+  try {
   
+    const { id } = await params
 
     const { searchParams } = new URL(request.url)
     const dateParam = searchParams.get("date")
-    const barberIdParam = searchParams.get("barberId")
-  
 
-    if (!dateParam || !barberIdParam || !id) {
-      return NextResponse.json({ error: "Date, barberId et OrganisationId sont requis" }, { status: 400 })
+    if (!dateParam) {
+      return NextResponse.json({ error: "Date parameter is required" }, { status: 400 })
     }
 
-    // Convertir le paramètre de date en objet Date
+    // Convertir le paramètre de date en objet Date avec date-fns
     const selectedDate = parseISO(dateParam)
 
-    // Obtenir le début et la fin de la journée
+    // Utiliser date-fns pour obtenir le début et la fin de la journée
     const dayStart = startOfDay(selectedDate)
     const dayEnd = endOfDay(selectedDate)
 
@@ -31,27 +28,22 @@ try {
       format(dayStart, "yyyy-MM-dd HH:mm:ss"),
       "et",
       format(dayEnd, "yyyy-MM-dd HH:mm:ss"),
-      "pour le coiffeur:",
-      barberIdParam,
-      "dans l'organisation:",
-      id,
     )
 
-    // Récupérer tous les rendez-vous pour la date et le coiffeur sélectionnés
+    // Récupérer tous les rendez-vous pour la date sélectionnée
     const appointments = await prisma.appointment.findMany({
       where: {
+        organizationId: id,
         date: {
           gte: dayStart,
           lte: dayEnd,
         },
-        barberId: barberIdParam,
-        organizationId: id,
       },
       include: {
-        services : {
-          include : {
-            service: true
-          }
+        services: {
+            include :{
+                service : true
+            }
         },
       },
       orderBy: {
@@ -59,13 +51,21 @@ try {
       },
     })
 
-    console.log(
-      `Trouvé ${appointments.length} rendez-vous pour la date ${dateParam}, le coiffeur ${barberIdParam} et l'organisation ${id}`,
-    )
+    console.log(`Trouvé ${appointments.length} rendez-vous pour la date ${dateParam}`)
+
+    // Afficher les dates des rendez-vous trouvés pour le débogage
+    appointments.forEach((appointment, index) => {
+      console.log(
+        `Rendez-vous ${index + 1}:`,
+        format(new Date(appointment.date), "yyyy-MM-dd HH:mm:ss"),
+        "Status:",
+        appointment.status,
+      )
+    })
 
     return NextResponse.json(appointments)
   } catch (error) {
-    console.error("Erreur lors de la récupération des rendez-vous par coiffeur:", error)
+    console.error("Erreur lors de la récupération des rendez-vous par date:", error)
     return NextResponse.json(
       { error: "Une erreur est survenue lors de la récupération des rendez-vous" },
       { status: 500 },

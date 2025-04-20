@@ -2,15 +2,20 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { auth } from "@/auth"
 
-export async function GET(request: Request, { params }: { params: { id: string; user_id: string } }) {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string, user_id : string }> }
+) {
   try {
+
+    const { id , user_id} = await params
+
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const organizationId = params.id
-    const userId = params.user_id
+    const organizationId = id
+    const userId = user_id
 
     // Vérifier si l'utilisateur actuel est membre de l'organisation
     const currentUserMembership = await prisma.userOrganization.findFirst({
