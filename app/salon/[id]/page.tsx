@@ -237,7 +237,7 @@ export default function OrganizationDetailsPage() {
       </div>
     </div>
       {/* Boutons d'action */}
-      <div className="flex mb-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+      <div className="flex mb-6 sticky top-0 z-50 bg-white">
         <Button className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-none border-none" onClick={() => setShowCart(true)}>
           <Calendar className="h-4 w-4" />
           Réserver
@@ -266,19 +266,25 @@ export default function OrganizationDetailsPage() {
       {/* Départements */}
       <div className="mb-6 sticky top-0 z-50 bg-gray-50">
         <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3">
+        <div className="grid grid-cols-3 gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3">
           {organization.departments.map((dept) => (
             <motion.div
               key={dept.id}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex items-center justify-center flex-nowrap p-2 rounded-xl cursor-pointer w-auto",
+                "flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer w-auto",
                 selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
               )}
               onClick={() => setSelectedDepartment(dept.id)}
             >
-              
-              <span className="text-sm font-medium text-center text-nowrap">{dept.label}</span>
+              <Image
+                src={`/${dept.icon}` || "/placeholder.svg"}
+                alt={dept.label}
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              /> 
+              <span className="text-sm font-medium text-center">{dept.label}</span>
             </motion.div>
           ))}
         </div>
