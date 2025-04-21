@@ -79,7 +79,7 @@ export default async function AdminPage() {
                             <p className="text-white/80 text-xs">Gerer l'ensemble de vos organisations</p>
                         </div>
                     </div>
-                    <UserSheet />
+                    <UserSheet salonId={""} />
                 </div>
             </header>
 

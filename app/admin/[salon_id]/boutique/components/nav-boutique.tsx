@@ -32,7 +32,7 @@ const NavBoutique = ({salonId}:NavBoutiqueProps) => {
 
     <>
           {/* Header */}
-          <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
+    <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-2">
           <Link href={`/admin/${salonId}`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">

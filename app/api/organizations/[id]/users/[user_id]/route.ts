@@ -89,15 +89,19 @@ export async function GET(request: Request,
 }
 
 // Mettre à jour un membre
-export async function PATCH(request: Request, { params }: { params: { id: string; user_id: string } }) {
-  try {
+export async function PATCH(request: Request,
+  { params }: { params: Promise<{ id: string , user_id : string}> }
+) {
+try {
+
+  const { id : organizationId, user_id : userId } = await params
+    
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const organizationId = params.id
-    const userId = params.user_id
+
     const body = await request.json()
     const { name, email, phone, role, password, speciality, image, organizationRole } = body
 
@@ -186,15 +190,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 // Supprimer un membre de l'organisation
-export async function DELETE(request: Request, { params }: { params: { id: string; user_id: string } }) {
-  try {
+export async function DELETE(request: Request,
+  { params }: { params: Promise<{ id: string , user_id : string}> }
+) {
+try {
+
+    const { id : organizationId, user_id : userId } = await params
+
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
-
-    const organizationId = params.id
-    const userId = params.user_id
 
     // Vérifier si l'utilisateur actuel est administrateur de l'organisation
     const currentUserMembership = await prisma.userOrganization.findFirst({

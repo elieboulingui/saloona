@@ -94,7 +94,7 @@ const MOCK_PRODUCTS: Product[] = [
 // Catégories uniques
 const CATEGORIES = Array.from(new Set(MOCK_PRODUCTS.map((p) => p.category)))
 
-export default function BoutiquePage({ params }: { params: { id: string } }) {
+export default function BoutiquePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
@@ -182,7 +182,7 @@ export default function BoutiquePage({ params }: { params: { id: string } }) {
   const proceedToCheckout = () => {
     // Stocker le panier dans le localStorage ou un état global
     localStorage.setItem("shoppingCart", JSON.stringify(cart))
-    router.push(`/salons/${params.id}/boutique/checkout`)
+    router.push(`/salons/boutique/checkout`)
   }
 
   return (
@@ -190,7 +190,7 @@ export default function BoutiquePage({ params }: { params: { id: string } }) {
       {/* Header */}
       <header className="bg-white p-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <Link href={`/salon/${params.id}`}>
+          <Link href={`/salon`}>
             <motion.div whileTap={{ scale: 0.9 }} className="p-2 rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </motion.div>

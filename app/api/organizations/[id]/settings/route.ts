@@ -2,14 +2,16 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { auth } from "@/auth"
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request,  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+
+    const {id  : organizationId } = await params
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const organizationId = params.id
     const body = await request.json()
     const { name, description, address, phone, logoUrl, imageCover } = body
 

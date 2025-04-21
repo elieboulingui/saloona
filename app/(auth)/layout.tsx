@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import HeaderAuth from "./components/header-auth";
 
 export const metadata: Metadata = {
-  title: "DREADS IN GABON ",
+  title: "Saloona Authentification",
   description: "Page d'authentification",
 };
 

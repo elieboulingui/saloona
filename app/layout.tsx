@@ -14,14 +14,14 @@ import Script from "next/script"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "DreadsLock - Salon de Coiffure Spécialisé",
-  description: "Le meilleur salon spécialisé en dreads locks pour sublimer votre style et votre beauté.",
+  title: "Saloona - Annuaire de salons de coiffure",
+  description: "Trouvez les meilleurs salon spécialise et reserver votre place pour sublimer votre style et votre beauté.",
   manifest: "/manifest.json",
   themeColor: "#F59E0B",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Dread In Gabon",
+    title: "Saloona",
   },
   viewport: {
     width: "device-width",

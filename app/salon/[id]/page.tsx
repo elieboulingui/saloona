@@ -236,7 +236,7 @@ const MOCK_SALON: Salon = {
   ]
 }
 
-export default function SalonDetailPage({ params }: { params: { id: string } }) {
+export default function SalonDetailPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [salon, setSalon] = useState<Salon | null>(null)
@@ -259,7 +259,7 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [params.id])
+  }, [])
 
   // Gérer les favoris
   const toggleFavorite = () => {
@@ -327,7 +327,7 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
 
   // Procéder à la réservation
   const proceedToBooking = () => {
-    router.push(`/salons/${params.id}/booking`)
+    router.push(`/salons/booking`)
   }
 
   if (isLoading) {

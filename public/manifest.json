@@ -1,6 +1,6 @@
 {
-    "name": "Luxery-salon - Salon de beauté, Spa",
-    "short_name": "Luxery-salon",
+    "name": "saloona - Salon de beauté, Spa",
+    "short_name": "saloona",
     "description": "Trouvez les meilleurs salons prés de vous.",
     "start_url": "/",
     "display": "standalone",

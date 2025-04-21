@@ -86,7 +86,7 @@ const MOCK_QUEUE_DATA: QueueClient[] = [
   },
 ]
 
-export default function SalonQueuePage({ params }: { params: { id: string } }) {
+export default function SalonQueuePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [queueData, setQueueData] = useState<QueueClient[]>([])
@@ -101,7 +101,7 @@ export default function SalonQueuePage({ params }: { params: { id: string } }) {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [params.id])
+  }, [])
 
   // Rafraîchir les données toutes les 30 secondes
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function SalonQueuePage({ params }: { params: { id: string } }) {
       {/* Header */}
       <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
-          <Link href={`/salon/${params.id}`}>
+          <Link href={`/salon`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
               <ArrowLeft className="h-5 w-5 text-white" />
             </motion.div>

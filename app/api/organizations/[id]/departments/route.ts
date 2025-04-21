@@ -8,7 +8,8 @@ export async function GET(request: Request,
   ) {
   try {
   
-      const { id : organizationId } = await params
+    const { id : organizationId } = await params
+
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
@@ -68,7 +69,7 @@ try {
     )
 
     revalidatePath(`/admin/${organizationId}/services/departments`)
-    
+
     return NextResponse.json(created)
   } catch (error) {
     console.error("[ORGANIZATION_DEPARTMENTS_POST]", error)
