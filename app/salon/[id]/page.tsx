@@ -150,10 +150,6 @@ export default function OrganizationDetailsPage() {
   ? organization.services.filter(service => service.departmentId === selectedDepartment)
   : organization.services;
 
-  console.log(selectedDepartment)
-
-  console.log(organization.services)
-
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
      
@@ -240,18 +236,16 @@ export default function OrganizationDetailsPage() {
         </div>
       </div>
     </div>
-
-    <main className="flex-1 px-4 py-4 container mx-auto max-w-6xl">
       {/* Boutons d'action */}
-      <div className="flex gap-2 mb-6">
-        <Button className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-full" onClick={() => setShowCart(true)}>
+      <div className="flex mb-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200">
+        <Button className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-none border-none" onClick={() => setShowCart(true)}>
           <Calendar className="h-4 w-4" />
           Réserver
           {cart.length > 0 && <Badge className="ml-2 bg-white text-amber-500">{cart.length}</Badge>}
         </Button>
         <Button
           variant="outline"
-          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50  rounded-full"
+          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50  rounded-none border-none"
           onClick={() => router.push("/salon/saji/boutique")}
         >
           <ShoppingBasket className="h-4 w-4" />
@@ -259,17 +253,19 @@ export default function OrganizationDetailsPage() {
         </Button>
         <Button
           variant="outline"
-          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-full"
+          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none"
           onClick={() => router.push("/salon/sadji/queue")}
         >
           <ListOrdered className="h-4 w-4" />
-          Attente
+          Fil d'attente
         </Button>
       </div>
+    <main className="flex-1 px-4 py-4 container mx-auto max-w-6xl">
+
   
       {/* Départements */}
       <div className="mb-6 sticky top-0 z-50 bg-gray-50">
-        <h2 className="text-lg font-bold py-2.5 mb-3">Que souhaitez vous faire ?</h2>
+        <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
         <div className="flex gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3">
           {organization.departments.map((dept) => (
             <motion.div
