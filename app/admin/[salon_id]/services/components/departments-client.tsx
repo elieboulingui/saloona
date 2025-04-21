@@ -115,6 +115,10 @@ export default function DepartmentsClient({ salonId, initialDepartments }: Depar
               </CardContent>
             </Card>
           ))}
+           <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter des départements
+            </Button>
         </div>
       )}
 

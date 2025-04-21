@@ -1,51 +1,40 @@
-import { NextResponse } from "next/server"
-import { auth } from "@/auth"
-import { prisma } from "@/utils/prisma"
+import { NextResponse } from "next/server";
+import { prisma } from "@/utils/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-    }
-
-    const userId = session.user.id
-
-    // Récupérer les organisations dont l'utilisateur est membre en utilisant UserOrganization
-    const userOrganizations = await prisma.userOrganization.findMany({
-      where: {
-        userId,
+    const organizations = await prisma.organization.findMany({
+      where :{
+        verificationStatus : "verified"
       },
       include: {
-        organization: {
-          include: {
-            departments: {
-              include: {
-                department: true,
+        departments: {
+          select: {
+            department: {
+              select: {
+                label: true, // Only get the department name
               },
             },
           },
         },
+        OrganizationAvailability: true,
       },
-    })
+    });
 
-    // Formater les données pour le frontend
-    const organizations = userOrganizations.map((membership) => ({
-      id: membership.organization.id,
-      name: membership.organization.name,
-      address: membership.organization.address,
-      description: membership.organization.description,
-      logoUrl: membership.organization.logo,
-      departments: membership.organization.departments.map((od) => ({
-        id: od.department.id,
-        name: od.department.label,
-      })),
-    }))
+    const formattedOrganizations = organizations.map((organization) => ({
+      ...organization,
+      departments: organization.departments.map(
+        (department) => department.department
+      ),
+    }));
 
-    return NextResponse.json(organizations)
-  } catch (error) {
-    console.error("Erreur lors de la récupération des organisations:", error)
-    return NextResponse.json({ error: "Erreur lors de la récupération des organisations" }, { status: 500 })
+    // Log the formatted organizations for debugging
+    formattedOrganizations.forEach((org, index) => {
+      console.log(`Organization ${index + 1}:`, org);
+    });
+
+    return NextResponse.json(formattedOrganizations);
+  } catch (error: any) {
+    return new NextResponse(error, { status: 500 });
   }
 }
