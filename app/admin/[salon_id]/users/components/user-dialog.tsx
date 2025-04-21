@@ -41,7 +41,7 @@ export function UserDialog({ isOpen, onClose, user, mode, salonId, onSuccess }: 
   const [error, setError] = useState<string | null>(null)
 
   // Récupérer tous les services disponibles
-  const { data: servicesData } = useSWR("/api/services", fetcher)
+  const { data: servicesData } = useSWR(`/api/organizations/${salonId}/services`, fetcher)
   const services = servicesData || []
 
   useEffect(() => {
@@ -93,6 +93,7 @@ export function UserDialog({ isOpen, onClose, user, mode, salonId, onSuccess }: 
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    
     e.preventDefault()
     setError(null)
     setIsLoading(true)

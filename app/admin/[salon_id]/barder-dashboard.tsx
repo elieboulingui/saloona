@@ -141,7 +141,7 @@ export default function BarberDashboard({ salonId }: BarberDashboardProps) {
               <ListOrdered className="h-5 w-5" />
             </motion.button>
           </Link>
-          <UserSheet />
+          <UserSheet salonId={salonId}/>
         </div>
       </header>
 

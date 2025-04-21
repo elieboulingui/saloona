@@ -56,10 +56,11 @@ export async function createProduct(data: {
     stock: number
     categoryId: string
     image?: string
+    organizationId: string
 }) {
     try {
 
-        const { name, description, price, stock, categoryId, image } = data
+        const { name, description, price, stock, categoryId, image, organizationId } = data
 
         if (!name || !price || !categoryId || !stock) {
             return {
@@ -76,6 +77,7 @@ export async function createProduct(data: {
                 stock,
                 categoryId,
                 image,
+                organizationId
             },
             include: {
                 category: true,

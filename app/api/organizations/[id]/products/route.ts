@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
+import { auth } from "@/auth"
 
-export async function GET() {
-  try {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string}> }
+) {
+try {
+
+    const { id } = await params
+
     const products = await prisma.product.findMany({
+      where: {
+        organizationId: id,
+      },
       include: {
         category: true,
       },
@@ -28,8 +37,29 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
-  try {
+export async function POST(request: Request,
+  { params }: { params: Promise<{ id: string}> }
+){
+try {
+
+    const { id } = await params
+
+    const session = await auth()
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
+    }
+    // Vérifier si l'utilisateur est membre de l'organisation
+    const userMembership = await prisma.userOrganization.findFirst({
+      where: {
+        userId: session.user.id,
+        organizationId: id,
+      },
+    })
+    if (!userMembership) {
+      return NextResponse.json({ error: "Accès non autorisé à cette organisation" }, { status: 403 })
+    }
+    // Récupérer les données du produit à partir de la requête
     const { name, description, price, stock, categoryId, image } = await request.json()
 
     const product = await prisma.product.create({
@@ -40,6 +70,7 @@ export async function POST(request: Request) {
         stock,
         categoryId,
         image,
+        organizationId: id,
       },
       include: {
         category: true,

@@ -20,11 +20,6 @@ export async function GET(request: Request,
       distinct: ["date"],
     })
 
-    // Afficher les dates des rendez-vous trouvés pour le débogage
-    appointments.forEach((appointment, index) => {
-      console.log(`Date ${index + 1}:`, format(new Date(appointment.date), "yyyy-MM-dd"))
-    })
-
     return NextResponse.json(appointments)
   } catch (error) {
     console.error("Erreur lors de la récupération des dates de rendez-vous par coiffeur:", error)

@@ -29,7 +29,7 @@ export default async function CalendarPage({ params }: { params: Promise<{ salon
       </header>
 
       {/* Main content */}
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-0">
         <CalendarPageClient salonId={salon_id} />
       </main>
     </div>

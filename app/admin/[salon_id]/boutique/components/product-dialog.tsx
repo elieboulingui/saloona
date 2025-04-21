@@ -20,9 +20,10 @@ interface ProductDialogProps {
   mode: "create" | "edit"
   categories: any[]
   onSuccess: () => void
+  salonId : string
 }
 
-export function ProductDialog({ isOpen, onClose, product, mode, categories, onSuccess }: ProductDialogProps) {
+export function ProductDialog({ isOpen, onClose, product, mode, categories, onSuccess, salonId }: ProductDialogProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -88,6 +89,7 @@ export function ProductDialog({ isOpen, onClose, product, mode, categories, onSu
         ...formData,
         price: Number.parseInt(formData.price),
         stock: Number.parseInt(formData.stock),
+        organizationId : salonId 
       }
 
       let result

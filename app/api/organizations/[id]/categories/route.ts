@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 
-export async function GET() {
-  try {
+export async function GET(request: Request,
+  { params }: { params: Promise<{ id: string}> }
+) {
+try {
+
+    const { id } = await params
+
     const categories = await prisma.category.findMany({
+      where: {
+        organizationId: id,
+      },
       orderBy: {
         name: "asc",
       },
@@ -19,11 +27,14 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request,
+  { params }: { params: Promise<{ id: string}> }
+) {
+try {
 
-  try {
+    const { id } = await params
 
-    const { name, id_organisation } = await request.json()
+    const { name } = await request.json()
 
     if (!name) {
       return NextResponse.json({ error: "Le nom de la catégorie est requis" }, { status: 400 })
@@ -32,7 +43,7 @@ export async function POST(request: Request) {
     const category = await prisma.category.create({
       data: {
         name,
-        organizationId : id_organisation
+        organizationId : id
       },
     })
 

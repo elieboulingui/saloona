@@ -1,416 +1,314 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useTransition, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import useSWR from "swr"
-import { motion } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Search, Loader2, CheckCircle, XCircle } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { AppointmentDialog } from "../../components/appointment-dialog"
-import { format, isToday, isPast, parseISO } from "date-fns"
+import { Users, Loader2, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
+import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import type { AppointmentStatus } from "@prisma/client"
+import { Input } from "@/components/ui/input"
 
-// Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface WaitingPageClientProps {
   salonId: string
 }
 
-export function WaitingPageClient({ salonId }: WaitingPageClientProps) {
-  const router = useRouter()
+export default function WaitingPage({salonId}: WaitingPageClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("today")
-  const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [filterStatus, setFilterStatus] = useState<string | null>(null)
 
-  // Récupérer les rendez-vous du salon
+  const today = format(new Date(), "yyyy-MM-dd")
   const {
-    data: appointments,
-    error,
-    isLoading,
+    data: waitingClients = [],
     mutate,
-  } = useSWR(`/api/organizations/${salonId}/appointments`, fetcher, {
+    isLoading,
+  } = useSWR(`/api/organizations/${salonId}/appointments/date?date=${today}`, fetcher, {
     refreshInterval: 30000, // Rafraîchir toutes les 30 secondes
+    revalidateOnFocus: true,
   })
 
-  // Filtrer les rendez-vous en fonction de l'onglet actif et du terme de recherche
-  const filteredAppointments = appointments
-    ? appointments.filter((appointment: any) => {
-        const appointmentDate = parseISO(appointment.date)
-        const matchesTab =
-          (activeTab === "today" && isToday(appointmentDate)) ||
-          (activeTab === "upcoming" && !isToday(appointmentDate) && !isPast(appointmentDate)) ||
-          activeTab === "all"
+  const [isPending, startTransition] = useTransition()
 
-        const matchesSearch =
-          searchTerm === "" ||
-          appointment.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          appointment.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          appointment.barber?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          appointment.services?.some((service: any) => service.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Filtrer les clients en fonction de la recherche et du statut
+  const filteredClients = waitingClients.filter((client: any) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.phoneNumber.includes(searchTerm) ||
+      client.service?.name.toLowerCase().includes(searchTerm.toLowerCase())
 
-        return matchesTab && matchesSearch
-      })
-    : []
+    const matchesStatus = filterStatus === null || client.status === filterStatus
 
-  // Trier les rendez-vous par date
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    const dateA = new Date(a.date)
-    const dateB = new Date(b.date)
-    return dateA.getTime() - dateB.getTime()
+    return matchesSearch && matchesStatus && !client.removed
   })
 
-  // Gérer l'ouverture du dialogue de rendez-vous
-  const handleAppointmentClick = (appointment: any) => {
-    setSelectedAppointment(appointment)
-    setIsDialogOpen(true)
+  const getNextStatus = (currentStatus: AppointmentStatus) => {
+    switch (currentStatus) {
+      case "CONFIRMED":
+        return "INCHAIR"
+      case "INCHAIR":
+        return "COMPLETED"
+      default:
+        return null
+    }
   }
 
-  // Gérer la fermeture du dialogue de rendez-vous
-  const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    setSelectedAppointment(null)
-  }
+  const handleClientStatusChange = async (clientId: string, currentStatus: AppointmentStatus) => {
+    const nextStatus = getNextStatus(currentStatus)
+    if (!nextStatus) return
 
-  // Gérer le succès de la mise à jour du rendez-vous
-  const handleAppointmentSuccess = () => {
-    setIsDialogOpen(false)
-    setSelectedAppointment(null)
-    mutate()
-  }
-
-  // Gérer le changement de statut du rendez-vous
-  const handleStatusChange = async (appointmentId: string, status: string) => {
-    try {
-      const response = await fetch(`/api/organizations/${salonId}/appointments/${appointmentId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la mise à jour du statut")
+    startTransition(async () => {
+      try {
+        await fetch(`/api/appointments/${clientId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: nextStatus }),
+        })
+        mutate()
+      } catch (error) {
+        console.error("Erreur lors du changement de statut:", error)
       }
+    })
+  }
 
-      mutate()
+  // Fonction pour formater la date
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return format(date, "dd MMMM yyyy", { locale: fr })
     } catch (error) {
-      console.error("Erreur:", error)
+      console.error("Erreur lors du formatage de la date:", error)
+      return "Date invalide"
     }
   }
 
-  // Obtenir la couleur du badge en fonction du statut
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200"
-      case "CONFIRMED":
-        return "bg-green-50 text-green-700 border-green-200"
-      case "CANCELLED":
-        return "bg-red-50 text-red-700 border-red-200"
-      case "COMPLETED":
-        return "bg-blue-50 text-blue-700 border-blue-200"
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-200"
-    }
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
   }
 
-  // Obtenir le libellé du statut
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return "En attente"
-      case "CONFIRMED":
-        return "Confirmé"
-      case "CANCELLED":
-        return "Annulé"
-      case "COMPLETED":
-        return "Terminé"
-      default:
-        return status
-    }
-  }
-
-  // Calculer le prix total des services
-  const calculateTotalPrice = (services: any[]) => {
-    return services.reduce((total, service) => total + service.price, 0)
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 24,
+      },
+    },
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-full py-20">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1, ease: "linear" }}
-        >
-          <Loader2 className="h-8 w-8 text-amber-500" />
-        </motion.div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-full py-20">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Erreur lors du chargement des rendez-vous</p>
-          <Button onClick={() => router.refresh()} className="bg-amber-500 hover:bg-amber-600">
-            Réessayer
-          </Button>
+      <div className="flex justify-center items-center py-8">
+        <div className="flex flex-col items-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Number.POSITIVE_INFINITY, duration: 1, ease: "linear" }}
+          >
+            <Loader2 className="h-12 w-12 text-amber-500" />
+          </motion.div>
+          <p className="mt-4 text-gray-500">Chargement des clients en attente...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Liste d'attente</h1>
-        <p className="text-gray-500">Gérez les rendez-vous et la liste d'attente du salon</p>
-      </div>
-
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Rechercher un client, coiffeur ou service..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div className="flex flex-col min-h-[100dvh]">
+      {/* Header */}
+      <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
+        <div>
+          <h1 className="text-white font-bold text-xl">File d'attente</h1>
+          <p className="text-white/80 text-xs">{format(new Date(), "EEEE d MMMM yyyy", { locale: fr })}</p>
         </div>
-      </div>
+        <div className="flex gap-2">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="bg-white/20 p-2 rounded-full text-white"
+            onClick={() => mutate()}
+          >
+            <Clock className="h-5 w-5" />
+          </motion.button>
+        </div>
+      </header>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-3 bg-gray-100 p-1 rounded-xl">
-          <TabsTrigger
-            value="today"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600"
-          >
-            Aujourd'hui
-          </TabsTrigger>
-          <TabsTrigger
-            value="upcoming"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600"
-          >
-            À venir
-          </TabsTrigger>
-          <TabsTrigger
-            value="all"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600"
-          >
-            Tous
-          </TabsTrigger>
-        </TabsList>
+      <main className="flex-1 p-4">
+        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
+          {/* Search and filters */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Rechercher un client..."
+              className="pl-10 bg-white"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        <TabsContent value="today" className="space-y-4">
-          {sortedAppointments.length > 0 ? (
-            sortedAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onClick={() => handleAppointmentClick(appointment)}
-                onStatusChange={handleStatusChange}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
-                calculateTotalPrice={calculateTotalPrice}
-              />
-            ))
+          {/* Status filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <Badge
+              variant="outline"
+              className={`cursor-pointer whitespace-nowrap ${
+                filterStatus === null ? "bg-amber-100 text-amber-800" : ""
+              }`}
+              onClick={() => setFilterStatus(null)}
+            >
+              Tous
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer whitespace-nowrap ${
+                filterStatus === "CONFIRMED" ? "bg-amber-100 text-amber-800" : ""
+              }`}
+              onClick={() => setFilterStatus("CONFIRMED")}
+            >
+              En attente
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer whitespace-nowrap ${
+                filterStatus === "INCHAIR" ? "bg-green-100 text-green-800" : ""
+              }`}
+              onClick={() => setFilterStatus("INCHAIR")}
+            >
+              En service
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer whitespace-nowrap ${
+                filterStatus === "COMPLETED" ? "bg-gray-100 text-gray-800" : ""
+              }`}
+              onClick={() => setFilterStatus("COMPLETED")}
+            >
+              Terminés
+            </Badge>
+          </div>
+
+          {/* Client list */}
+          {filteredClients.length > 0 ? (
+            <div className="space-y-3">
+              <AnimatePresence>
+                {filteredClients.map((client: any, index: number) => {
+                  const nextStatus = getNextStatus(client.status)
+                  const buttonText =
+                    client.status === "CONFIRMED"
+                      ? "En chaise"
+                      : client.status === "INCHAIR"
+                        ? "Terminer"
+                        : "✅ Terminé"
+
+                  const buttonColor =
+                    client.status === "CONFIRMED"
+                      ? "bg-amber-500 hover:bg-amber-600"
+                      : client.status === "INCHAIR"
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-gray-400 cursor-not-allowed"
+
+                  const statusIcon =
+                    client.status === "CONFIRMED" ? (
+                      <Clock className="h-5 w-5 text-amber-500" />
+                    ) : client.status === "INCHAIR" ? (
+                      <AlertCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <CheckCircle className="h-5 w-5 text-gray-500" />
+                    )
+
+                  return (
+                    <motion.div key={client.id} variants={itemVariants} layout exit={{ opacity: 0, y: -20 }}>
+                      <Card
+                        className={`overflow-hidden border py-0 ${
+                          client.status === "INCHAIR"
+                            ? "border-green-500 bg-green-50"
+                            : client.status === "COMPLETED"
+                              ? "border-gray-300 bg-gray-100"
+                              : "border-amber-200"
+                        }`}
+                      >
+                        <div className="p-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                  client.status === "INCHAIR"
+                                    ? "bg-green-100"
+                                    : client.status === "COMPLETED"
+                                      ? "bg-gray-100"
+                                      : "bg-amber-100"
+                                }`}
+                              >
+                                {statusIcon}
+                              </div>
+                              <div>
+                                <div className="flex items-center">
+                                  <span className="font-bold text-sm mr-2">DIG-{client.orderNumber}</span>
+                                  <span className="text-sm">{client.firstName}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground">{client.phoneNumber}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(client.date)} - {client.estimatedTime}
+                                </p>
+                                <p className="text-xs text-muted-foreground">Service: {client.service.name}</p>
+                              </div>
+                            </div>
+
+                            {nextStatus ? (
+                              <motion.div whileTap={{ scale: 0.95 }}>
+                                <Button
+                                  size="sm"
+                                  className={`${buttonColor} text-white`}
+                                  onClick={() => handleClientStatusChange(client.id, client.status)}
+                                  disabled={isPending}
+                                >
+                                  {isPending ? "Mise à jour..." : buttonText}
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <span className="text-sm text-gray-500">Terminé</span>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  )
+                })}
+              </AnimatePresence>
+            </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">Aucun rendez-vous pour aujourd'hui</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4"
+              >
+                <Users className="h-8 w-8 text-gray-400" />
+              </motion.div>
+              <p>Aucun client en attente</p>
+              {searchTerm && (
+                <Button variant="link" className="mt-2 text-amber-500" onClick={() => setSearchTerm("")}>
+                  Effacer la recherche
+                </Button>
+              )}
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="upcoming" className="space-y-4">
-          {sortedAppointments.length > 0 ? (
-            sortedAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onClick={() => handleAppointmentClick(appointment)}
-                onStatusChange={handleStatusChange}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
-                calculateTotalPrice={calculateTotalPrice}
-              />
-            ))
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">Aucun rendez-vous à venir</p>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="all" className="space-y-4">
-          {sortedAppointments.length > 0 ? (
-            sortedAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onClick={() => handleAppointmentClick(appointment)}
-                onStatusChange={handleStatusChange}
-                getStatusColor={getStatusColor}
-                getStatusLabel={getStatusLabel}
-                calculateTotalPrice={calculateTotalPrice}
-              />
-            ))
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">Aucun rendez-vous trouvé</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Dialogue de rendez-vous */}
-      {selectedAppointment && (
-        <AppointmentDialog
-          isOpen={isDialogOpen}
-          onClose={handleDialogClose}
-          appointment={selectedAppointment}
-          mode="edit"
-          salonId={salonId}
-          onSuccess={handleAppointmentSuccess}
-        />
-      )}
+        </motion.div>
+      </main>
     </div>
   )
 }
 
-// Composant de carte de rendez-vous
-interface AppointmentCardProps {
-  appointment: any
-  onClick: () => void
-  onStatusChange: (appointmentId: string, status: string) => void
-  getStatusColor: (status: string) => string
-  getStatusLabel: (status: string) => string
-  calculateTotalPrice: (services: any[]) => number
-}
-
-function AppointmentCard({
-  appointment,
-  onClick,
-  onStatusChange,
-  getStatusColor,
-  getStatusLabel,
-  calculateTotalPrice,
-}: AppointmentCardProps) {
-  const appointmentDate = parseISO(appointment.date)
-  const formattedDate = format(appointmentDate, "EEEE d MMMM yyyy", { locale: fr })
-  const formattedTime = appointment.startDate
-    ? format(parseISO(appointment.startDate.toString()), "HH:mm")
-    : "Non défini"
-
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer" onClick={onClick}>
-      <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/4 bg-gray-50 p-4 flex flex-col justify-center items-center">
-            <div className="text-center">
-              <p className="text-sm text-gray-500">{formattedDate}</p>
-              <p className="text-xl font-bold">{formattedTime}</p>
-              <Badge className="mt-2">{`N° ${appointment.orderNumber}`}</Badge>
-            </div>
-          </div>
-          <div className="w-full md:w-3/4 p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h3 className="font-bold">{appointment.firstName || "Client inconnu"}</h3>
-                <p className="text-sm text-gray-500">{appointment.phoneNumber || "Téléphone non renseigné"}</p>
-              </div>
-              <Badge variant="outline" className={getStatusColor(appointment.status)}>
-                {getStatusLabel(appointment.status)}
-              </Badge>
-            </div>
-            <div className="flex items-center text-sm text-gray-500 mb-3">
-              <User className="h-4 w-4 mr-1" />
-              <span>{appointment.barber?.name || "Coiffeur non assigné"}</span>
-            </div>
-
-            {/* Liste des services */}
-            <div className="mt-2 mb-3">
-              <p className="text-xs text-gray-500 mb-1">Services:</p>
-              <div className="flex flex-wrap gap-1">
-                {appointment.services && appointment.services.length > 0 ? (
-                  appointment.services.map((service: any) => (
-                    <Badge key={service.id} variant="outline" className="bg-amber-50 text-amber-700">
-                      {service.name} - {service.price} €
-                    </Badge>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">Aucun service sélectionné</p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex items-center space-x-2">
-                <div>
-                  <p className="text-xs text-gray-500">Prix total</p>
-                  <p className="font-medium">
-                    {appointment.services && appointment.services.length > 0
-                      ? `${calculateTotalPrice(appointment.services)} €`
-                      : "0 €"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                {appointment.status === "PENDING" && (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-600 border-green-200 hover:bg-green-50"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onStatusChange(appointment.id, "CONFIRMED")
-                      }}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Confirmer
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onStatusChange(appointment.id, "CANCELLED")
-                      }}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Annuler
-                    </Button>
-                  </>
-                )}
-                {appointment.status === "CONFIRMED" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onStatusChange(appointment.id, "COMPLETED")
-                    }}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Terminer
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}

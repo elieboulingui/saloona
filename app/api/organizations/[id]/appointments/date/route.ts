@@ -51,19 +51,8 @@ export async function GET(request: Request,
       },
     })
 
-    console.log(`Trouvé ${appointments.length} rendez-vous pour la date ${dateParam}`)
-
-    // Afficher les dates des rendez-vous trouvés pour le débogage
-    appointments.forEach((appointment, index) => {
-      console.log(
-        `Rendez-vous ${index + 1}:`,
-        format(new Date(appointment.date), "yyyy-MM-dd HH:mm:ss"),
-        "Status:",
-        appointment.status,
-      )
-    })
-
     return NextResponse.json(appointments)
+    
   } catch (error) {
     console.error("Erreur lors de la récupération des rendez-vous par date:", error)
     return NextResponse.json(

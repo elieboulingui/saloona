@@ -3,9 +3,9 @@ import { ServicesClient } from "./components/service-client"
 import { prisma } from "@/utils/prisma"
 import { departments } from "@/data"
 
-export default async function ServicesAdminPage({ params }: { params:Promise<{ salon_id: string }>}) {
+export default async function ServicesAdminPage({ params }: { params: Promise<{ salon_id: string }> }) {
 
-  const {salon_id : salonId } = await params
+  const { salon_id: salonId } = await params
 
   // Récupérer les services de l'organisation côté serveur
   const services = await prisma.service.findMany({
@@ -33,16 +33,12 @@ export default async function ServicesAdminPage({ params }: { params:Promise<{ s
     },
   })
 
-  return (
-    <div className="container mx-auto p-4 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Services</h1>
-        <p className="text-gray-500">Gérez les services proposés par votre salon</p>
-      </div>
 
-      <Suspense fallback={<div>Chargement des services...</div>}>
-        <ServicesClient initialServices={services} departments={departments} salonId={salonId} />
-      </Suspense>
-    </div>
+  return (
+      <div id="services">
+        <Suspense fallback={<div>Chargement des services...</div>}>
+          <ServicesClient initialServices={services} departments={departments} salonId={salonId} />
+        </Suspense>
+      </div>
   )
 }

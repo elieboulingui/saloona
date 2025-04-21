@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { User, Shield, LogOut, Settings } from "lucide-react"
+import { User, LogOut, Settings, ListOrdered } from "lucide-react"
 import { signOut, useSession } from "next-auth/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/sheet"
 import Link from "next/link"
 
-export function UserSheet() {
+interface UserSheetProps {
+  salonId : string
+}
+
+export function UserSheet({salonId}: UserSheetProps) {
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -32,21 +36,27 @@ export function UserSheet() {
 
   const menuItems = [
     {
-      icon: User,
-      label: "Mon compte",
-      href: "/profile",
+      icon: ListOrdered,
+      label: "Fil d'attente",
+      href: `/admin/${salonId}/waiting`,
     },
     {
-      icon: Shield,
-      label: "Sécurité",
-      href: "/profile/security",
+      icon: Settings,
+      label: "Notifications",
+      href: `/admin/${salonId}/notifications`,
+    },
+    {
+      icon: User,
+      label: "Mon compte",
+      href: `/admin/${salonId}/profil`,
     },
     {
       icon: Settings,
       label: "Paramètres",
-      href: "/profile/settings",
+      href: `/admin/${salonId}/settings`,
     },
   ]
+
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>

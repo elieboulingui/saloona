@@ -76,8 +76,48 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+
+  OrganizationAvailability OrganizationAvailability[]
 }
 
+
+model OrganizationAvailability {
+  id             String @id @default(cuid())
+  
+  // Jours d'ouverture (true = ouvert, false = fermé)
+  mondayOpen     Boolean @default(true)
+  tuesdayOpen    Boolean @default(true)
+  wednesdayOpen  Boolean @default(true)
+  thursdayOpen   Boolean @default(true)
+  fridayOpen     Boolean @default(true)
+  saturdayOpen   Boolean @default(true)
+  sundayOpen     Boolean @default(false)
+  
+  // Heures d'ouverture (format 24h, stocké en minutes depuis minuit)
+  // Par exemple: 9h00 = 540 minutes, 18h00 = 1080 minutes
+  openingTime    Int @default(540)  // 9h00 par défaut
+  closingTime    Int @default(1080) // 18h00 par défaut
+  
+  // Pause déjeuner (optionnel)
+  lunchBreakStart Int? // En minutes depuis minuit
+  lunchBreakEnd   Int? // En minutes depuis minuit
+  
+  // Intervalle entre les rendez-vous en minutes
+  appointmentInterval Int @default(15)
+  
+  // Temps de préparation avant le premier rendez-vous en minutes
+  preparationTime Int @default(0)
+  
+  // Temps de nettoyage après le dernier rendez-vous en minutes
+  cleanupTime    Int @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relation avec l'organisation (one-to-one)
+  organizationId String @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
 
 model UserOrganization {
 
@@ -107,7 +147,6 @@ model OrganizationDepartment {
   @@unique([organisationId, departmentId]) // pour éviter les doublons
 }
 
-
 model Department {
   id    String @id @default(cuid())
   label String
@@ -132,7 +171,6 @@ model Notification {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Appointment {
   id          String @id @default(cuid())

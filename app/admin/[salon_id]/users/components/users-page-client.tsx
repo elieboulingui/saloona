@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
@@ -8,9 +8,10 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { UserDialog } from "./user-dialog"
-import { Users, Loader2, Search, Plus, UserPlus, UserCog, MoreVertical, Trash2, Edit, ArrowLeft } from "lucide-react"
+import { Users, Loader2, Search, Plus, UserPlus, UserCog, MoreVertical, Trash2, Edit, ArrowLeft, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -20,6 +21,8 @@ interface UsersPageClientProps {
 }
 
 export default function UsersPageClient({ salonId }: UsersPageClientProps) {
+
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<any>(null)
@@ -129,7 +132,7 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
             </motion.div>
           </Link>
           <div>
-            <h1 className="text-white font-bold text-xl">Utilisateurs</h1>
+            <h1 className="text-white font-bold text-xl">Gestion du Staff</h1>
             <p className="text-white/80 text-xs">Gestion des comptes utilisateurs</p>
           </div>
         </div>
@@ -148,7 +151,7 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Rechercher un utilisateur..."
+              placeholder="Recherche..."
               className="pl-10 bg-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -178,23 +181,11 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
                       <div className="p-3">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                              {user.image ? (
-                                <img
-                                  src={user.image || "/placeholder.svg"}
-                                  alt={user.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <UserCog className="h-5 w-5 text-gray-500" />
-                              )}
-                            </div>
+                            
                             <div>
                               <div className="flex items-center">
                                 <span className="font-bold text-sm">{user.name || "Sans nom"}</span>
-                                <Badge variant="outline" className={`ml-2 text-xs ${getRoleColor(user.role)}`}>
-                                  {getRoleLabel(user.role)}
-                                </Badge>
+                                
                                 <Badge
                                   variant="outline"
                                   className={`ml-2 text-xs ${getRoleColor(user.organizationRole)}`}
@@ -207,11 +198,7 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Link href={`/admin/${salonId}/users/${user.id}`}>
-                              <Button variant="outline" size="sm" className="h-8 px-2">
-                                Détails
-                              </Button>
-                            </Link>
+
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <motion.button whileTap={{ scale: 0.9 }} className="p-2 rounded-full hover:bg-gray-100">
@@ -219,6 +206,11 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
                                 </motion.button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                               
+                                <DropdownMenuItem onClick={() => router.push(`/admin/${salonId}/users/${user.id}`)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Details
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Modifier

@@ -79,10 +79,11 @@ export async function GET(request: Request,
 // Ajouter un nouveau membre à l'organisation
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }>}) {
   try {
-    
+
     const {id  : organizationId } = await params
 
     const session = await auth()
+    
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }

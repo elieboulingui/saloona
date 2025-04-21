@@ -202,7 +202,7 @@ export function UserDetailsPageClient({ userId, salonId }: UserDetailsPageClient
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
-            <Card className="overflow-hidden border shadow-sm">
+            <Card className="overflow-hidden border shadow-sm py-0">
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row">
                   <div className="w-full md:w-1/3 p-6 flex flex-col items-center justify-center bg-gray-50">

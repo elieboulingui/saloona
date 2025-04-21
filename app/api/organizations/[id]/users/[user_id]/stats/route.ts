@@ -2,9 +2,9 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 import { startOfDay, endOfDay, parseISO, subDays } from "date-fns"
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string , user_id : string}> }) {
   try {
-    const { id } = await params
+    const { id , user_id} = await params
     
     const { searchParams } = new URL(request.url)
     const startDateParam = searchParams.get("startDate")
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({
-      where: { id: id },
+      where: { id: user_id },
     })
 
     if (!user) {
@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // Récupérer tous les rendez-vous terminés pour l'utilisateur dans la période
     const appointments = await prisma.appointment.findMany({
       where: {
-        barberId: id,
+        barberId: user_id,
         status: "COMPLETED",
         date: {
           gte: startOfDay(startDate),
@@ -117,6 +117,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       serviceStats: serviceStatsArray,
       dailyStats: dailyStatsArray,
     })
+    
   } catch (error) {
     console.error("Erreur lors de la récupération des statistiques de l'utilisateur:", error)
     return NextResponse.json(

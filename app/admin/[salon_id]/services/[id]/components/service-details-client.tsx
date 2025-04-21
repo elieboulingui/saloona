@@ -144,6 +144,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
 
   // Handle assigning a user to the service
   const handleAssignUser = async () => {
+
     if (!selectedUser) return
 
     try {
@@ -198,7 +199,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
                 <div className="p-6 text-white">
                   <h1 className="font-bold text-2xl">{currentService.name}</h1>
                   <Badge className="mt-2 bg-white/20 text-white border-white/10">
-                    {currentService.department?.name || "Département non spécifié"}
+                    {currentService.department?.label || "Département non spécifié"}
                   </Badge>
                 </div>
               </div>
@@ -230,7 +231,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
         <div className="lg:col-span-3">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Prix</p>
@@ -247,7 +248,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
             </Card>
 
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Staff assigné</p>
@@ -268,7 +269,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
             </Card>
 
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Rendez-vous à venir</p>
@@ -289,7 +290,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
             </Card>
 
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">Taux de complétion</p>
@@ -489,7 +490,7 @@ export function ServiceDetailsClient({ dashboardData, departments, salonId }: Se
                         </div>
                         <div>
                           <h4 className="text-sm font-medium text-gray-500 mb-1">Département</h4>
-                          <p className="text-gray-700">{currentService.department?.name || "Non spécifié"}</p>
+                          <p className="text-gray-700">{currentService.department?.label || "Non spécifié"}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">

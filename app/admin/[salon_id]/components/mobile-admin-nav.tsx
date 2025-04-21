@@ -54,11 +54,11 @@ export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
       roles: ["ADMIN", "BARBER"],
     },
     {
-      name: "Parametres",
-      href: `/admin/${salon_id}/settings`,
-      icon: <Settings className="h-6 w-6" />,
-      active: pathname === `/admin/${salon_id}/settings`,
-      roles: ["ADMIN", "BARBER"],
+      name: "Staff",
+      href: `/admin/${salon_id}/users`,
+      icon: <Users className="h-6 w-6"/>,
+      active: pathname === `/admin/${salon_id}/users`,
+      roles: ["ADMIN"],
     }
   ]
 
@@ -66,7 +66,7 @@ export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
   const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole || ""))
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-4 shadow-lg z-10">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-2 shadow-lg z-10">
       {filteredNavItems.map((item) => (
         <Link key={item.href} href={item.href} className="flex flex-col items-center p-2">
           <motion.div

@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache"
 
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id_category: string }> }
+    { params }: { params: Promise<{ id_category: string, id : string }> }
 ) {
   try {
-    const { id_category } = await params
+
+    const { id_category , id} = await params
 
     // Vérifier si la catégorie existe
     const category = await prisma.category.findUnique({
@@ -34,9 +35,9 @@ export async function DELETE(
       where: { id : id_category },
     })
 
-    revalidatePath("/admin/boutique/category")
-    revalidatePath("/admin/boutique")
-    revalidatePath("/boutique")
+    revalidatePath(`/admin/${id}/boutique/category`)
+    revalidatePath(`/admin/${id}/boutique`)
+    revalidatePath(`/${id}/boutique`)
 
     return NextResponse.json({ success: true })
   } catch (error) {

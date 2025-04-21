@@ -22,6 +22,7 @@ import {
   Users,
   ListOrdered,
   ArrowLeft,
+  Home,
 } from "lucide-react"
 import { DateRangePicker } from "./date-range-picker"
 import { TransactionItem } from "./transaction-item"
@@ -39,6 +40,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ salonId }: AdminDashboardProps) {
+
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
   const [dateRange, setDateRange] = useState({
@@ -175,7 +177,7 @@ export default function AdminDashboard({ salonId }: AdminDashboardProps) {
         <div className="flex items-center gap-2">
           <Link href="/admin">
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <Home className="h-5 w-5 text-white" />
             </motion.div>
           </Link>
           <div>
@@ -184,21 +186,7 @@ export default function AdminDashboard({ salonId }: AdminDashboardProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <motion.button
-            onClick={() => router.push(`/admin/${salonId}/users`)}
-            whileTap={{ scale: 0.9 }}
-            className="bg-white/20 p-2 rounded-full text-white"
-          >
-            <Users className="h-5 w-5" />
-          </motion.button>
-          <motion.button
-            onClick={() => router.push(`/admin/${salonId}/waiting`)}
-            whileTap={{ scale: 0.9 }}
-            className="bg-white/20 p-2 rounded-full text-white"
-          >
-            <ListOrdered className="h-5 w-5" />
-          </motion.button>
-          <UserSheet />
+          <UserSheet salonId={salonId} />
         </div>
       </header>
 

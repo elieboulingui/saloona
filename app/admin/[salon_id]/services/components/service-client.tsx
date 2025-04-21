@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Search, Plus, Loader2, Scissors, Clock, Edit, Trash2 } from "lucide-react"
+import { Search, Plus, Loader2, Scissors, Clock, Edit, Trash2, UserPlus, PlusIcon, Filter } from "lucide-react"
 import { ServiceDialog } from "./service-dialog"
 import { AlertModal } from "./alert-modal"
 import { convertMinutes } from "@/lib/utils"
@@ -129,7 +129,7 @@ export function ServicesClient({ initialServices, departments, salonId }: Servic
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6 gap-2">
+      <div className="flex justify-between items-center mb-1 gap-2 py-4 px-0">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <Input
@@ -140,8 +140,9 @@ export function ServicesClient({ initialServices, departments, salonId }: Servic
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={handleCreateService} className="bg-amber-500 hover:bg-amber-600 text-white">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={handleCreateService}
+ className="bg-amber-500 hover:bg-amber-600 text-white">
+          <PlusIcon className="h-4 w-4 mr-2" />
           Ajouter
         </Button>
       </div>
@@ -160,7 +161,7 @@ export function ServicesClient({ initialServices, departments, salonId }: Servic
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <AnimatePresence>
             {filteredServices.map((service: any) => (

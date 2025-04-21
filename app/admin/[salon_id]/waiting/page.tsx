@@ -1,4 +1,4 @@
-import { WaitingPageClient } from "./components/waiting-page-client"
+import WaitingPageClient from "./components/waiting-page-client"
 
 export default async function WaitingPage({ params }: { params: Promise<{ salon_id: string }> }) {
 
