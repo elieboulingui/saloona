@@ -22,6 +22,9 @@ try {
     })
 
     const categories = await prisma.category.findMany({
+      where: {
+        organizationId: id,
+      },
       orderBy: {
         name: "asc",
       },
