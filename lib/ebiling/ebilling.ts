@@ -55,6 +55,8 @@ interface PropertyName {
 
 export async function CreateInvoice(data: InvoiceData) {
   try {
+
+
     const { payer_msisdn, amount, short_description, payer_email, description, external_reference, expiry_period } =
       data
 
@@ -68,15 +70,13 @@ export async function CreateInvoice(data: InvoiceData) {
       expiry_period,
     })
 
+    console.log(response.data)
+
     return response.data
+
   } catch (error) {
-    if (error instanceof AxiosError) {
-      console.error("Erreur lors de la creation de la facture :", error.response?.data)
-      throw error.response?.data
-    } else {
-      console.error("Erreur inattendue :", error)
-      throw error
-    }
+    console.log("errreeeeeeuuu")
+    console.log(error)
   }
 }
 

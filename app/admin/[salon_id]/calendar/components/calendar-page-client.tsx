@@ -331,7 +331,17 @@ export function CalendarPageClient({ salonId }: CalendarPageClientProps) {
                                     {appointment.estimatedTime}
                                   </Badge>
                                 </div>
-                                <p className="text-xs text-muted-foreground">{appointment.service.name}</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {appointment.services.map((appointmentService: any) => (
+                                    <Badge
+                                      key={appointmentService.id}
+                                      variant="outline"
+                                      className="text-xs bg-amber-50 text-amber-700 border-amber-200"
+                                    >
+                                      {appointmentService.service.name}
+                                    </Badge>
+                                  ))}
+                                </div>
                                 <p className="text-xs text-muted-foreground">{appointment.phoneNumber}</p>
                                 <p className="text-xs font-medium text-muted-foreground">
                                   {formatStatus(appointment.status)}

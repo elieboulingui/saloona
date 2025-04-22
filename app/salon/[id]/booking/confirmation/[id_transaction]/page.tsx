@@ -1,7 +1,6 @@
-// @ts-nocheck
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle, ArrowLeft, XCircle, Clock } from "lucide-react"
+import { CheckCircle, ArrowLeft, XCircle, Clock } from 'lucide-react'
 import { prisma } from "@/utils/prisma"
 import { ReceiptDownloadButton } from "./receipt-download-button"
 
@@ -40,10 +39,15 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
 
   const { appointmentId, status, amount, createdAt } = transaction
 
+  // Modifier la requête Prisma pour récupérer correctement les services avec leurs détails
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
     include: {
-      service: true,
+      services: {
+        include: {
+          service: true, // Inclure les détails complets du service
+        },
+      },
     },
   })
 
@@ -59,7 +63,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
     )
   }
 
-  const { orderNumber, estimatedTime, date, service, firstName } = appointment
+  const { orderNumber, estimatedTime, date, firstName } = appointment
 
   // Vérification des statuts de succès
   const isSuccess = status === "processed" || status === "paid"
@@ -151,9 +155,17 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
                   <span className="text-gray-500">Heure estimée:</span>
                   <span className="font-medium">{estimatedTime}</span>
                 </div>
+                {/* Modifier l'affichage des services dans la carte des détails du rendez-vous */}
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Service:</span>
-                  <span className="font-medium">{service?.name}</span>
+                  <span className="text-gray-500">Services:</span>
+                  <div className="text-right">
+                    {appointment.services.map((appointmentService, index) => (
+                      <div key={appointmentService.id} className="font-medium">
+                        {appointmentService.service.name}
+                        {index < appointment.services.length - 1 ? ", " : ""}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Date:</span>
@@ -163,10 +175,14 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
             </CardContent>
           </Card>
         )}
-
-        <ReceiptDownloadButton transaction={transaction} appointment={appointment} service={service} />
+        {/** On fait passer les services */}
+        {/* Modifier la façon dont nous passons les services au composant ReceiptDownloadButton */}
+        <ReceiptDownloadButton 
+          transaction={transaction} 
+          appointment={appointment} 
+          services={appointment.services.map(as => as.service)} 
+        />
       </main>
     </div>
   )
 }
-

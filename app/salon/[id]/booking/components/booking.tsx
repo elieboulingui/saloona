@@ -162,37 +162,41 @@ export default function BookingPageClient({ id }: BookingContentProps) {
 
     try {
 
+      if(!appointmentId){
+        console.log("hello")
+        return
+      }
+
       // 1. Créer une facture
       const invoiceData = {
         amount: 500, // Ajouter les frais de service
         payer_msisdn: transactionPhone,
         payer_email: "gabinmoundziegou@gmail.com", // Idéalement, vous auriez l'email du client
         short_description: `Réservation salon - ${fullName}`,
-        external_reference: generateRandomCode(),
+        description : `Réservation salon - ${fullName}`,
+        external_reference: appointmentId,
       }
 
-      const invoiceResponse = await CreateInvoice(invoiceData)
 
-      if (!invoiceResponse || !invoiceResponse.bill_id) {
+      const invoiceResponse = await CreateInvoice(invoiceData)
+    
+      if (!invoiceResponse || !invoiceResponse.e_bill.bill_id) {
+        console.log("echeccccccc")
         setPaymentModalStatus("failed")
         setPaymentMessage("Échec de la création de la facture. Veuillez réessayer.")
         return
       }
 
-     if(!appointmentId){
-      return 
-     }
-
       // 2. Enregistrer la transaction dans la base de données
       const transactionData = {
         amount: 500,
-        reference: invoiceResponse.external_reference,
+        reference: invoiceResponse.e_bill.external_reference,
         shortDescription: `Réservation salon - ${fullName}`,
         payerMsisdn: transactionPhone,
         payerEmail: "gabinmoundziegou@gmail.com",
         type: "APPOINTMENT" as const, // Explicitly set type to "APPOINTMENT"
         appointmentId: appointmentId,
-        bill_id: invoiceResponse.bill_id,
+        bill_id: invoiceResponse.e_bill.bill_id,
         status: "pending",
         organizationId: id,
       }
@@ -212,29 +216,33 @@ export default function BookingPageClient({ id }: BookingContentProps) {
       )
 
       const pushData = {
-        bill_id: invoiceResponse.bill_id,
+        bill_id: invoiceResponse.e_bill.bill_id,
         payer_msisdn: transactionPhone,
+        payment_system_name:"airtelmoney"
       }
+
+      console.log("luchhh push")
+      console.log(pushData)
 
       await MakePushUSSD(pushData)
 
       // 4. Vérifier le statut du paiement toutes les 15 secondes
       let attempts = 0
-      const maxAttempts = 4 // 4 tentatives = 60 secondes
+      const maxAttempts = 6 // 4 tentatives = 90 secondes
 
       const checkInterval = setInterval(async () => {
         attempts++
         setPaymentCheckCount(attempts)
 
-        const invoiceStatus = await GetInvoice(invoiceResponse.bill_id)
+        const invoiceStatus = await GetInvoice(invoiceResponse.e_bill.bill_id)
 
-        if (invoiceStatus && (invoiceStatus.status === "paid" || invoiceStatus.status === "processed")) {
+        if (invoiceStatus && (invoiceStatus.state === "paid" || invoiceStatus.state === "processed")) {
           clearInterval(checkInterval)
 
           // Mettre à jour le statut de la transaction et du rendez-vous
           await updateTransactionStatus(
             transactionResponse.data.id,
-            invoiceStatus.status,
+            invoiceStatus.state,
             appointmentId!,
             fullName,
             phone,
@@ -548,14 +556,7 @@ export default function BookingPageClient({ id }: BookingContentProps) {
               transition={pageTransition}
               className="space-y-6"
             >
-              <div className="text-center mb-6">
-                <div className="bg-green-100 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
-                </div>
-                <h2 className="text-xl font-bold">Réservation confirmée</h2>
-                <p className="text-gray-500 text-sm mt-1">Votre rendez-vous a été enregistré avec succès</p>
-              </div>
-
+             
               <Card className="overflow-hidden border-none shadow-sm">
                 <CardContent className="p-4 space-y-4">
                   <div className="flex justify-between items-center pb-3 border-b">

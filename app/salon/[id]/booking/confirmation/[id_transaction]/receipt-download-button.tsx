@@ -2,17 +2,17 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Download, Loader2 } from "lucide-react"
+import { Download, Loader2 } from 'lucide-react'
 import { jsPDF } from "jspdf"
 import QRCode from "qrcode"
 
 interface ReceiptDownloadButtonProps {
   transaction: any
   appointment: any
-  service: any
+  services: any[] // Changer pour accepter un tableau de services
 }
 
-export function ReceiptDownloadButton({ transaction, appointment, service }: ReceiptDownloadButtonProps) {
+export function ReceiptDownloadButton({ transaction, appointment, services }: ReceiptDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
 
   const handleDownload = async () => {
@@ -28,7 +28,7 @@ export function ReceiptDownloadButton({ transaction, appointment, service }: Rec
       // Ajouter le logo et l'en-tête
       doc.setFontSize(22)
       doc.setTextColor(245, 158, 11) // Couleur ambre
-      doc.text("SALOONA", 105, 20, { align: "center" })
+      doc.text("DREAD IN GABON", 105, 20, { align: "center" })
 
       doc.setFontSize(12)
       doc.setTextColor(0, 0, 0)
@@ -112,9 +112,33 @@ export function ReceiptDownloadButton({ transaction, appointment, service }: Rec
       doc.text("Heure estimée:", 20, y)
       doc.text(appointment.estimatedTime, 70, y)
 
+      // Afficher tous les services
       y += 8
-      doc.text("Service:", 20, y)
-      doc.text(service.name, 70, y)
+      doc.text("Services:", 20, y)
+      if (services && services.length > 0) {
+        let serviceText = "";
+        services.forEach((service, index) => {
+          serviceText += service.name;
+          if (index < services.length - 1) {
+            serviceText += ", ";
+          }
+        });
+        doc.text(serviceText, 70, y);
+        
+        // Si la liste est trop longue, ajouter une nouvelle ligne pour les prix
+        y += 8;
+        doc.text("Prix des services:", 20, y);
+        let priceText = "";
+        services.forEach((service, index) => {
+          priceText += `${service.price} FCFA`;
+          if (index < services.length - 1) {
+            priceText += ", ";
+          }
+        });
+        doc.text(priceText, 70, y);
+      } else {
+        doc.text("Aucun service spécifié", 70, y);
+      }
 
       y += 8
       doc.text("Date:", 20, y)
@@ -129,7 +153,9 @@ export function ReceiptDownloadButton({ transaction, appointment, service }: Rec
       // Générer le QR code avec l'URL de confirmation
       const baseUrl = "https://sadji.vercel.app"
 
-      const confirmationUrl = `${baseUrl}/services/${service.id}/booking/confirmation/${transaction.id}`
+      // Modifier l'URL pour utiliser le premier service s'il existe
+      const serviceId = services && services.length > 0 ? services[0].id : "service";
+      const confirmationUrl = `${baseUrl}/services/${serviceId}/booking/confirmation/${transaction.id}`
 
       const qrCodeDataUrl = await QRCode.toDataURL(confirmationUrl, {
         width: 150,
@@ -181,4 +207,3 @@ export function ReceiptDownloadButton({ transaction, appointment, service }: Rec
     </Button>
   )
 }
-

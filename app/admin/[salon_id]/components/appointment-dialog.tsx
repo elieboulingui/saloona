@@ -59,7 +59,9 @@ export function AppointmentDialog({ isOpen, onClose, appointment, mode, salonId,
         startDate: appointment.startDate ? new Date(appointment.startDate) : null,
         endDate: appointment.endDate ? new Date(appointment.endDate) : null,
         barberId: appointment.barber?.id || "",
-        serviceIds: appointment.services ? appointment.services.map((service: any) => service.id) : [],
+        serviceIds: appointment.services
+          ? appointment.services.map((appointmentService: any) => appointmentService.service.id)
+          : [],
         status: appointment.status || "PENDING",
         estimatedTime: appointment.estimatedTime || "30min",
         notes: appointment.notes || "",
