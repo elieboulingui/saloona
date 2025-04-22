@@ -156,7 +156,7 @@ export default function OrganizationDetailsPage() {
       {/* Header flottant */}
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
         <Link href="/">
-          <motion.div whileTap={{ scale: 0.9 }} className="bg-black/30 border-2 border-gray-900 p-3 rounded-full backdrop-blur-sm">
+          <motion.div whileTap={{ scale: 0.9 }} className="bg-black/30 p-3 rounded-full backdrop-blur-sm">
             <Home className="h-5 w-5 text-white" />
           </motion.div>
         </Link>
@@ -164,7 +164,7 @@ export default function OrganizationDetailsPage() {
         <div className="flex gap-2">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className="bg-black/30 p-3 rounded-full backdrop-blur-sm border-2 border-gray-900"
+            className="bg-black/30 p-3 rounded-full backdrop-blur-sm"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
@@ -180,7 +180,7 @@ export default function OrganizationDetailsPage() {
 
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className={cn("p-3 rounded-full backdrop-blur-sm border-2 border-gray-900 bg-white")}
+            className={cn("p-3 rounded-full backdrop-blur-sm bg-white")}
           >
             <Phone className="h-5 w-5 text-black" />
           </motion.button>
@@ -242,7 +242,7 @@ export default function OrganizationDetailsPage() {
         <Button
           variant="outline"
           className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none"
-          onClick={() => router.push("/salon/sadji/queue")}
+          onClick={() => router.push(`/salon/${id}/queue`)}
         >
           <ListOrdered className="h-4 w-4" />
           Fil d'attente
@@ -261,7 +261,7 @@ export default function OrganizationDetailsPage() {
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer w-auto",
-                selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm border-2 border-amber-600" : "bg-white/60 border-2 border-gray-900",
+                selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm border-2 border-amber-600" : "bg-white/60",
               )}
               onClick={() => setSelectedDepartment(dept.id)}
             >
@@ -279,7 +279,7 @@ export default function OrganizationDetailsPage() {
       </div>
 
       {/* Onglets */}
-      <div className="mb-6">
+      <div className="mb-20">
         <div className="mt-4 space-y-3">
           <AnimatePresence>
             {filteredServices.map((service) => (

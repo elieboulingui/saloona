@@ -57,7 +57,7 @@ export default function SalonQueuePage() {
   // Trier les rendez-vous par statut et heure estimée
   const sortedAppointments = [...(filteredAppointments || [])].sort((a, b) => {
     // D'abord par statut (INCHAIR, CONFIRMED, PENDING, COMPLETED)
-    const statusOrder: Record<'INCHAIR' | 'CONFIRMED' | 'PENDING' | 'COMPLETED', number> = {
+    const statusOrder: Record<"INCHAIR" | "CONFIRMED" | "PENDING" | "COMPLETED", number> = {
       INCHAIR: 0,
       CONFIRMED: 1,
       PENDING: 2,
@@ -222,7 +222,7 @@ export default function SalonQueuePage() {
             Dernière mise à jour: <span className="font-medium">{formatLastUpdated()}</span>
           </p>
           <Badge variant="outline" className="bg-amber-50 text-amber-700">
-            {sortedAppointments?.length || 0} client{(sortedAppointments?.length || 0) !== 1 ? "s" : ""}
+            {appointments ? appointments.length : 0} client{(appointments?.length || 0) !== 1 ? "s" : ""}
           </Badge>
         </div>
 
