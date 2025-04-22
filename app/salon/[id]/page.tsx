@@ -5,13 +5,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import useSWR from "swr";
-import { Calendar, ChevronDown, ChevronUp, Clock, Home, ListOrdered, MapPin, Minus, Phone, Plus, Share2, ShoppingBag, ShoppingBasket, Star, Trash2 } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, Home, ListOrdered, MapPin, Minus, Package, Phone, Plus, Share2, ShoppingBag, ShoppingBasket, Star, Trash2 } from "lucide-react";
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useCartStore } from "@/store/cart-service-store";
+
 
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -54,7 +56,15 @@ interface CartItem {
 export default function OrganizationDetailsPage() {
 
   const { id } = useParams();
-  
+  const {
+    items: cart,
+    addItem,
+    removeItem,
+    total,
+    totalDuration,
+    clearCart,
+  } = useCartStore();
+
   const {
     data: organization,
     error,
@@ -66,47 +76,34 @@ export default function OrganizationDetailsPage() {
 
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null)
 
-  const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState(false)
 
   
-    // Gérer l'expansion des services
-    const toggleServiceExpansion = (serviceId: string) => {
-      setExpandedService(expandedService === serviceId ? null : serviceId)
-    }
+  // Gérer l'expansion des services
+  const toggleServiceExpansion = (serviceId: string) => {
+    setExpandedService(expandedService === serviceId ? null : serviceId)
+  }
+
+  const addToCart = (service: Service) => {
+    addItem({
+      serviceId: service.id,
+      serviceName: service.name,
+      price: parseFloat(service.price),
+      duration: parseInt(service.durationMin, 10),
+    });
+  };
   
-    // Ajouter un service au panier
-    const addToCart = (service: Service) => {
-      setCart([
-        ...cart,
-        {
-          serviceId: service.id,
-          serviceName: service.name,
-          price: parseFloat(service.price),
-          duration: parseInt(service.durationMin, 10),
-        },
-      ])
-    }
+  const removeFromCart = (serviceId: string) => {
+    removeItem(serviceId);
+  };
   
-    // Supprimer un service du panier
-    const removeFromCart = (serviceId: string) => {
-      setCart(cart.filter((item) => item.serviceId !== serviceId))
-    }
+  // Vérifier si un service est dans le panier
+  const isInCart = (serviceId: string) => {
+    return cart.some((item) => item.serviceId === serviceId)
+  }
   
-    // Vérifier si un service est dans le panier
-    const isInCart = (serviceId: string) => {
-      return cart.some((item) => item.serviceId === serviceId)
-    }
-  
-    // Calculer le total du panier
-    const calculateTotal = () => {
-      return cart.reduce((total, item) => total + item.price, 0)
-    }
-  
-    // Calculer la durée totale
-    const calculateTotalDuration = () => {
-      return cart.reduce((total, item) => total + item.duration, 0)
-    }
+  const calculateTotal = () => total();
+  const calculateTotalDuration = () => totalDuration();
 
       // Formater la durée en heures et minutes
   const formatDuration = (minutes: number) => {
@@ -121,10 +118,8 @@ export default function OrganizationDetailsPage() {
 
   // Procéder à la réservation
   const proceedToBooking = () => {
-    router.push(`/salons/booking`)
+    router.push(`/salon/${id}/booking`)
   }
-
-
 
   if (isLoading) {
     return (
@@ -151,7 +146,7 @@ export default function OrganizationDetailsPage() {
   : organization.services;
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gray-50">
+    <div className="flex relative flex-col min-h-[100dvh] bg-gray-50">
      
     {/* Image de couverture avec header flottant */}
     <div className="relative h-64 container mx-auto max-w-6xl lg:mt-3 mt-0">
@@ -161,7 +156,7 @@ export default function OrganizationDetailsPage() {
       {/* Header flottant */}
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
         <Link href="/">
-          <motion.div whileTap={{ scale: 0.9 }} className="bg-black/30 p-3 rounded-full backdrop-blur-sm">
+          <motion.div whileTap={{ scale: 0.9 }} className="bg-black/30 border-2 border-gray-900 p-3 rounded-full backdrop-blur-sm">
             <Home className="h-5 w-5 text-white" />
           </motion.div>
         </Link>
@@ -169,7 +164,7 @@ export default function OrganizationDetailsPage() {
         <div className="flex gap-2">
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className="bg-black/30 p-3 rounded-full backdrop-blur-sm"
+            className="bg-black/30 p-3 rounded-full backdrop-blur-sm border-2 border-gray-900"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
@@ -185,7 +180,7 @@ export default function OrganizationDetailsPage() {
 
           <motion.button
             whileTap={{ scale: 0.9 }}
-            className={cn("p-3 rounded-full backdrop-blur-sm bg-white")}
+            className={cn("p-3 rounded-full backdrop-blur-sm border-2 border-gray-900 bg-white")}
           >
             <Phone className="h-5 w-5 text-black" />
           </motion.button>
@@ -220,15 +215,8 @@ export default function OrganizationDetailsPage() {
               <>
                 <Clock className="h-4 w-4 mr-1" />
                 <span>
-                  {new Date(organization.OrganizationAvailability[0].openingTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  -{" "}
-                  {new Date(organization.OrganizationAvailability[0].closingTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                   {formatTime(organization.OrganizationAvailability[0].openingTime)}
+                    - {formatTime(organization.OrganizationAvailability[0].closingTime)}
                 </span>
               </>
             )}
@@ -237,16 +225,16 @@ export default function OrganizationDetailsPage() {
       </div>
     </div>
       {/* Boutons d'action */}
-      <div className="flex mb-6 sticky top-0 z-50 bg-white">
-        <Button className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-none border-none" onClick={() => setShowCart(true)}>
-          <Calendar className="h-4 w-4" />
-          Réserver
+      <div className="flex mb-6 sticky top-0 z-[999] bg-white">
+        <Button className="flex-1 bg-amber-500 hover:bg-amber-600 text-black rounded-none border-none" onClick={() => setShowCart(true)}>
+          <Package className="h-4 w-4" />
+          Services
           {cart.length > 0 && <Badge className="ml-2 bg-white text-amber-500">{cart.length}</Badge>}
         </Button>
         <Button
           variant="outline"
           className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50  rounded-none border-none"
-          onClick={() => router.push("/salon/saji/boutique")}
+          onClick={() => router.push(`/salon/${id}/boutique`)}
         >
           <ShoppingBasket className="h-4 w-4" />
           Boutique
@@ -264,7 +252,7 @@ export default function OrganizationDetailsPage() {
 
   
       {/* Départements */}
-      <div className="mb-6 sticky top-0 z-50 bg-gray-50">
+      <div className="mb-6 bg-gray-50">
         <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
         <div className="grid grid-cols-3 gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3">
           {organization.departments.map((dept) => (
@@ -273,7 +261,7 @@ export default function OrganizationDetailsPage() {
               whileTap={{ scale: 0.95 }}
               className={cn(
                 "flex flex-col items-center gap-2 p-2 rounded-xl cursor-pointer w-auto",
-                selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
+                selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm border-2 border-amber-600" : "bg-white/60 border-2 border-gray-900",
               )}
               onClick={() => setSelectedDepartment(dept.id)}
             >

@@ -31,6 +31,7 @@ try {
       products,
       categories,
     })
+    
   } catch (error) {
     console.error("Erreur lors de la récupération des produits:", error)
     return NextResponse.json({ error: "Une erreur est survenue lors de la récupération des produits" }, { status: 500 })

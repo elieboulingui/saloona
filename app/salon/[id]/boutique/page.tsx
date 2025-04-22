@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Search, ShoppingBag, Plus, Minus, X, ShoppingCart, ChevronRight } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { ArrowLeft, Search, ShoppingBag, Plus, Minus, X, ShoppingCart, ChevronRight, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -13,163 +13,84 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { useProductCartStore } from "@/store/cart-store"
+import type { Product, Category } from "@/types/product"
 
-// Types
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category: string
-  stock: number
-}
-
-interface CartItem {
-  productId: string
-  name: string
-  price: number
-  quantity: number
-  image: string
-}
-
-// Données de démonstration
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    name: "Huile nourrissante",
-    description: "Huile naturelle pour nourrir et hydrater vos dreads locks.",
-    price: 5000,
-    image: "/placeholder.svg?height=200&width=200&text=Huile",
-    category: "Soins",
-    stock: 15,
-  },
-  {
-    id: "p2",
-    name: "Shampoing spécial dreads",
-    description: "Shampoing doux spécialement formulé pour nettoyer les dreads sans les abîmer.",
-    price: 7500,
-    image: "/placeholder.svg?height=200&width=200&text=Shampoing",
-    category: "Soins",
-    stock: 10,
-  },
-  {
-    id: "p3",
-    name: "Cire de maintien",
-    description: "Cire naturelle pour maintenir vos dreads en place et leur donner une belle finition.",
-    price: 4500,
-    image: "/placeholder.svg?height=200&width=200&text=Cire",
-    category: "Styling",
-    stock: 20,
-  },
-  {
-    id: "p4",
-    name: "Bijoux pour dreads",
-    description: "Ensemble de bijoux décoratifs pour personnaliser vos dreads locks.",
-    price: 3000,
-    image: "/placeholder.svg?height=200&width=200&text=Bijoux",
-    category: "Accessoires",
-    stock: 30,
-  },
-  {
-    id: "p5",
-    name: "Bonnet en satin",
-    description: "Bonnet en satin pour protéger vos dreads pendant la nuit.",
-    price: 6000,
-    image: "/placeholder.svg?height=200&width=200&text=Bonnet",
-    category: "Accessoires",
-    stock: 8,
-  },
-  {
-    id: "p6",
-    name: "Spray hydratant",
-    description: "Spray hydratant pour rafraîchir vos dreads au quotidien.",
-    price: 4000,
-    image: "/placeholder.svg?height=200&width=200&text=Spray",
-    category: "Soins",
-    stock: 12,
-  },
-]
-
-// Catégories uniques
-const CATEGORIES = Array.from(new Set(MOCK_PRODUCTS.map((p) => p.category)))
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function BoutiquePage() {
+
+  const { id } = useParams();
+
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showProductDetail, setShowProductDetail] = useState(false)
 
-  // Simuler le chargement des données
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts(MOCK_PRODUCTS)
-      setIsLoading(false)
-    }, 1000)
+  // Utiliser le store Zustand pour le panier
+  const {
+    items: cart,
+    addItem,
+    updateQuantity,
+    removeItem,
+    isInCart,
+    getQuantity,
+    total,
+    totalItems,
+    clearCart,
+  } = useProductCartStore()
 
-    return () => clearTimeout(timer)
-  }, [])
+  // Récupérer les produits et catégories depuis l'API
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        // Dans une application réelle, remplacez ces URLs par vos endpoints API
+        const productsResponse = await fetch(`/api/organizations/${id}/products`)
+
+        if (!productsResponse.ok) throw new Error("Erreur lors du chargement des produits")
+
+        const responses = await productsResponse.json()
+
+        setProducts(responses.products)
+        setCategories(responses.categories)
+      } catch (err) {
+        console.error("Erreur de chargement:", err)
+        setError("Impossible de charger les produits. Veuillez réessayer plus tard.")
+
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [id])
 
   // Filtrer les produits
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products.length > 0 &&  products?.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory ? product.category === selectedCategory : true
+    const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true
 
     return matchesSearch && matchesCategory
-  })
+  }) || []
 
   // Ajouter au panier
-  const addToCart = (product: Product) => {
-    const existingItem = cart.find((item) => item.productId === product.id)
-
-    if (existingItem) {
-      setCart(cart.map((item) => (item.productId === product.id ? { ...item, quantity: item.quantity + 1 } : item)))
-    } else {
-      setCart([
-        ...cart,
-        {
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-          image: product.image,
-        },
-      ])
-    }
-  }
-
-  // Retirer du panier
-  const removeFromCart = (productId: string) => {
-    const existingItem = cart.find((item) => item.productId === productId)
-
-    if (existingItem && existingItem.quantity > 1) {
-      setCart(cart.map((item) => (item.productId === productId ? { ...item, quantity: item.quantity - 1 } : item)))
-    } else {
-      setCart(cart.filter((item) => item.productId !== productId))
-    }
-  }
-
-  // Supprimer du panier
-  const deleteFromCart = (productId: string) => {
-    setCart(cart.filter((item) => item.productId !== productId))
-  }
-
-  // Obtenir la quantité dans le panier
-  const getCartQuantity = (productId: string) => {
-    const item = cart.find((item) => item.productId === productId)
-    return item ? item.quantity : 0
-  }
-
-  // Calculer le total du panier
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0)
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image || "/placeholder.svg",
+    })
   }
 
   // Afficher les détails du produit
@@ -180,9 +101,7 @@ export default function BoutiquePage() {
 
   // Procéder au paiement
   const proceedToCheckout = () => {
-    // Stocker le panier dans le localStorage ou un état global
-    localStorage.setItem("shoppingCart", JSON.stringify(cart))
-    router.push(`/salons/boutique/checkout`)
+    router.push(`/salon/${id}/boutique/checkout`)
   }
 
   return (
@@ -190,14 +109,14 @@ export default function BoutiquePage() {
       {/* Header */}
       <header className="bg-white p-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <Link href={`/salon`}>
+          <Link href={`/salon/${id}`}>
             <motion.div whileTap={{ scale: 0.9 }} className="p-2 rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </motion.div>
           </Link>
           <div>
             <h1 className="text-black font-bold text-xl">Boutique</h1>
-            <p className="text-black/80 text-xs">Bienvenue au store de : Sadji Dread lock</p>
+            <p className="text-black/80 text-xs">Découvrez nos produits de qualité</p>
           </div>
         </div>
 
@@ -208,9 +127,9 @@ export default function BoutiquePage() {
             onClick={() => setShowCart(true)}
           >
             <ShoppingBag className="h-5 w-5" />
-            {cart.length > 0 && (
+            {totalItems() > 0 && (
               <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-amber-500 text-white">
-                {cart.reduce((total, item) => total + item.quantity, 0)}
+                {totalItems()}
               </Badge>
             )}
           </motion.button>
@@ -241,17 +160,17 @@ export default function BoutiquePage() {
           >
             Tous
           </Badge>
-          {CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <Badge
-              key={category}
+              key={category.id}
               variant="outline"
               className={cn(
                 "cursor-pointer whitespace-nowrap",
-                selectedCategory === category ? "bg-amber-100 text-amber-800" : "",
+                selectedCategory === category.id ? "bg-amber-100 text-amber-800" : "",
               )}
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory(category.id)}
             >
-              {category}
+              {category.name}
             </Badge>
           ))}
         </div>
@@ -266,6 +185,16 @@ export default function BoutiquePage() {
                 <Skeleton className="h-4 w-1/2" />
               </div>
             ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+            <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
+            <h3 className="text-lg font-bold mb-2">Erreur de chargement</h3>
+            <p className="text-gray-500 text-center mb-4">{error}</p>
+            <Button variant="outline" onClick={() => window.location.reload()} className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Réessayer
+            </Button>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
@@ -304,7 +233,7 @@ export default function BoutiquePage() {
                         fill
                         className="object-cover"
                       />
-                      <Badge className="absolute top-2 right-2 bg-amber-500">
+                      <Badge className="absolute top-2 right-2 bg-blue-500">
                         {product.price.toLocaleString()} FCFA
                       </Badge>
                     </div>
@@ -312,25 +241,24 @@ export default function BoutiquePage() {
                       <h3 className="font-bold text-sm mb-1 cursor-pointer" onClick={() => showProductDetails(product)}>
                         {product.name}
                       </h3>
-                      <p className="text-xs text-gray-500 mb-2 line-clamp-2 flex-1">{product.description}</p>
 
-                      {getCartQuantity(product.id) > 0 ? (
+                      {getQuantity(product.id) > 0 ? (
                         <div className="flex items-center justify-between">
                           <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 rounded-full"
-                            onClick={() => removeFromCart(product.id)}
+                            onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <span className="font-medium">{getCartQuantity(product.id)}</span>
+                          <span className="font-medium">{getQuantity(product.id)}</span>
                           <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8 rounded-full"
-                            onClick={() => addToCart(product)}
-                            disabled={getCartQuantity(product.id) >= product.stock}
+                            onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
+                            disabled={getQuantity(product.id) >= product.stock}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -338,7 +266,7 @@ export default function BoutiquePage() {
                       ) : (
                         <Button
                           className="w-full bg-amber-500 hover:bg-amber-600 mt-auto"
-                          onClick={() => addToCart(product)}
+                          onClick={() => handleAddToCart(product)}
                         >
                           <ShoppingBag className="h-4 w-4 mr-2" />
                           Ajouter
@@ -407,7 +335,7 @@ export default function BoutiquePage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 rounded-full"
-                                onClick={() => removeFromCart(item.productId)}
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
@@ -416,10 +344,7 @@ export default function BoutiquePage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-6 w-6 rounded-full"
-                                onClick={() => {
-                                  const product = products.find((p) => p.id === item.productId)
-                                  if (product) addToCart(product)
-                                }}
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -429,7 +354,7 @@ export default function BoutiquePage() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600"
-                              onClick={() => deleteFromCart(item.productId)}
+                              onClick={() => removeItem(item.productId)}
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -442,7 +367,7 @@ export default function BoutiquePage() {
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Sous-total:</span>
-                      <span className="font-bold">{calculateTotal().toLocaleString()} FCFA</span>
+                      <span className="font-bold">{total().toLocaleString()} FCFA</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Livraison:</span>
@@ -450,9 +375,7 @@ export default function BoutiquePage() {
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span className="font-bold">Total:</span>
-                      <span className="font-bold text-amber-600">
-                        {(calculateTotal() + 2000).toLocaleString()} FCFA
-                      </span>
+                      <span className="font-bold text-amber-600">{(total() + 2000).toLocaleString()} FCFA</span>
                     </div>
                   </div>
 
@@ -488,7 +411,7 @@ export default function BoutiquePage() {
                 <div>
                   <h3 className="font-bold text-lg">{selectedProduct.name}</h3>
                   <div className="flex justify-between items-center mt-1">
-                    <Badge>{selectedProduct.category}</Badge>
+                    <Badge>{selectedProduct.category.name}</Badge>
                     <span className="font-bold text-amber-600">{selectedProduct.price.toLocaleString()} FCFA</span>
                   </div>
                 </div>
@@ -502,24 +425,30 @@ export default function BoutiquePage() {
                   </Badge>
                 </div>
 
-                {getCartQuantity(selectedProduct.id) > 0 ? (
+                {getQuantity(selectedProduct.id) > 0 ? (
                   <div className="flex items-center justify-between">
-                    <Button variant="outline" onClick={() => removeFromCart(selectedProduct.id)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => updateQuantity(selectedProduct.id, getQuantity(selectedProduct.id) - 1)}
+                    >
                       <Minus className="h-4 w-4 mr-2" />
                       Retirer
                     </Button>
-                    <span className="font-medium">{getCartQuantity(selectedProduct.id)}</span>
+                    <span className="font-medium">{getQuantity(selectedProduct.id)}</span>
                     <Button
                       variant="outline"
-                      onClick={() => addToCart(selectedProduct)}
-                      disabled={getCartQuantity(selectedProduct.id) >= selectedProduct.stock}
+                      onClick={() => updateQuantity(selectedProduct.id, getQuantity(selectedProduct.id) + 1)}
+                      disabled={getQuantity(selectedProduct.id) >= selectedProduct.stock}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Ajouter
                     </Button>
                   </div>
                 ) : (
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600" onClick={() => addToCart(selectedProduct)}>
+                  <Button
+                    className="w-full bg-amber-500 hover:bg-amber-600"
+                    onClick={() => handleAddToCart(selectedProduct)}
+                  >
                     <ShoppingBag className="h-4 w-4 mr-2" />
                     Ajouter au panier
                   </Button>
@@ -541,9 +470,7 @@ export default function BoutiquePage() {
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg">
           <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-full" onClick={() => setShowCart(true)}>
             <ShoppingBag className="h-4 w-4 mr-2" />
-            {cart.reduce((total, item) => total + item.quantity, 0)} article
-            {cart.reduce((total, item) => total + item.quantity, 0) > 1 ? "s" : ""} •{" "}
-            {calculateTotal().toLocaleString()} FCFA
+            {totalItems()} article{totalItems() > 1 ? "s" : ""} • {total().toLocaleString()} FCFA
             <ChevronRight className="ml-auto h-5 w-5" />
           </Button>
         </div>
