@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Clock, CheckCircle, Users, RefreshCw, AlertCircle, Calendar, User, Search } from "lucide-react"
+import { useRouter, useParams } from "next/navigation"
+import { ArrowLeft, Clock, CheckCircle, Users, RefreshCw, AlertCircle, User, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,131 +12,70 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import useSWR from "swr"
 
-// Types
-interface QueueClient {
-  id: string
-  name: string
-  service: string
-  time: string
-  orderNumber: number
-  status: "waiting" | "inService" | "completed"
-  estimatedDuration: number
-  stylist?: string
-}
-
-// Données de démonstration
-const MOCK_QUEUE_DATA: QueueClient[] = [
-  {
-    id: "q1",
-    name: "Sophie Martin",
-    service: "Démarrage Dreads",
-    time: "09:00",
-    orderNumber: 1,
-    status: "inService",
-    estimatedDuration: 120,
-    stylist: "Marie Koné",
-  },
-  {
-    id: "q2",
-    name: "Thomas Dubois",
-    service: "Réparation",
-    time: "10:00",
-    orderNumber: 2,
-    status: "waiting",
-    estimatedDuration: 45,
-  },
-  {
-    id: "q3",
-    name: "Emma Petit",
-    service: "Entretien & Reprise",
-    time: "11:00",
-    orderNumber: 3,
-    status: "waiting",
-    estimatedDuration: 60,
-  },
-  {
-    id: "q4",
-    name: "Lucas Bernard",
-    service: "Coloration Dreads",
-    time: "13:30",
-    orderNumber: 4,
-    status: "waiting",
-    estimatedDuration: 90,
-  },
-  {
-    id: "q5",
-    name: "Camille Leroy",
-    service: "Démarrage Dreads",
-    time: "08:30",
-    orderNumber: 5,
-    status: "completed",
-    estimatedDuration: 120,
-    stylist: "Jean Kouassi",
-  },
-  {
-    id: "q6",
-    name: "Antoine Moreau",
-    service: "Coupe Entretien",
-    time: "09:45",
-    orderNumber: 6,
-    status: "completed",
-    estimatedDuration: 30,
-    stylist: "Marie Koné",
-  },
-]
+// Fetcher pour SWR
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function SalonQueuePage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [queueData, setQueueData] = useState<QueueClient[]>([])
+  const { id } = useParams()
   const [searchTerm, setSearchTerm] = useState("")
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-  // Simuler le chargement des données
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setQueueData(MOCK_QUEUE_DATA)
-      setIsLoading(false)
-    }, 1000)
+  // Formater la date actuelle pour l'API
+  const today = format(new Date(), "yyyy-MM-dd")
 
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Rafraîchir les données toutes les 30 secondes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Dans une application réelle, nous ferions un appel API ici
-      // Pour la démo, nous allons juste mettre à jour la date de dernière mise à jour
-      setLastUpdated(new Date())
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  // Filtrer les clients en fonction de la recherche
-  const filteredClients = queueData.filter(
-    (client) =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.orderNumber.toString().includes(searchTerm),
-  )
-
-  // Trier les clients par statut et ordre de passage
-  const sortedClients = [...filteredClients].sort((a, b) => {
-    // D'abord par statut (inService, waiting, completed)
-    const statusOrder = { inService: 0, waiting: 1, completed: 2 }
-    if (statusOrder[a.status] !== statusOrder[b.status]) {
-      return statusOrder[a.status] - statusOrder[b.status]
-    }
-    // Ensuite par ordre de passage
-    return a.orderNumber - b.orderNumber
+  // Récupérer les rendez-vous du jour avec SWR
+  const {
+    data: appointments,
+    error,
+    isLoading,
+    mutate,
+  } = useSWR(`/api/organizations/${id}/appointments/date?date=${today}`, fetcher, {
+    refreshInterval: 30000, // Rafraîchir toutes les 30 secondes
   })
 
-  // Grouper les clients par statut
-  const clientsInService = sortedClients.filter((client) => client.status === "inService")
-  const clientsWaiting = sortedClients.filter((client) => client.status === "waiting")
-  const clientsCompleted = sortedClients.filter((client) => client.status === "completed")
+  // Rafraîchir les données manuellement
+  const refreshData = () => {
+    setLastUpdated(new Date())
+    mutate()
+  }
+
+  // Filtrer les rendez-vous en fonction de la recherche
+  const filteredAppointments = appointments
+    ? appointments.filter(
+        (appointment: any) =>
+          appointment.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          appointment.phoneNumber.includes(searchTerm) ||
+          appointment.services.some((service: any) =>
+            service.service.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          ),
+      )
+    : []
+
+  // Trier les rendez-vous par statut et heure estimée
+  const sortedAppointments = [...(filteredAppointments || [])].sort((a, b) => {
+    // D'abord par statut (INCHAIR, CONFIRMED, PENDING, COMPLETED)
+    const statusOrder: Record<'INCHAIR' | 'CONFIRMED' | 'PENDING' | 'COMPLETED', number> = {
+      INCHAIR: 0,
+      CONFIRMED: 1,
+      PENDING: 2,
+      COMPLETED: 3,
+    }
+    if (statusOrder[a.status as keyof typeof statusOrder] !== statusOrder[b.status as keyof typeof statusOrder]) {
+      return statusOrder[a.status as keyof typeof statusOrder] - statusOrder[b.status as keyof typeof statusOrder]
+    }
+    // Ensuite par heure estimée
+    return a.estimatedTime.localeCompare(b.estimatedTime)
+  })
+
+  // Grouper les rendez-vous par statut
+  const clientsInService = sortedAppointments.filter((client) => client.status === "INCHAIR")
+  const clientsWaiting = sortedAppointments.filter(
+    (client) => client.status === "PENDING" || client.status === "CONFIRMED",
+  )
+  const clientsCompleted = sortedAppointments.filter((client) => client.status === "COMPLETED")
 
   // Formater l'heure de dernière mise à jour
   const formatLastUpdated = () => {
@@ -167,13 +106,84 @@ export default function SalonQueuePage() {
     },
   }
 
+  // Fonction pour obtenir la couleur du statut
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "border-yellow-200 hover:border-yellow-500 bg-yellow-50"
+      case "CONFIRMED":
+        return "border-amber-200 hover:border-amber-500"
+      case "INCHAIR":
+        return "border-green-200 hover:border-green-500 bg-green-50"
+      case "COMPLETED":
+        return "border-gray-200 hover:border-gray-500 bg-gray-50"
+      default:
+        return "border-red-200 hover:border-red-500 bg-red-50"
+    }
+  }
+
+  // Fonction pour obtenir la couleur de l'icône
+  const getIconColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-600"
+      case "CONFIRMED":
+        return "bg-amber-100 text-amber-600"
+      case "INCHAIR":
+        return "bg-green-100 text-green-600"
+      case "COMPLETED":
+        return "bg-gray-100 text-gray-600"
+      default:
+        return "bg-red-100 text-red-600"
+    }
+  }
+
+  // Fonction pour obtenir la couleur du badge
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-yellow-50 text-yellow-700 border-yellow-200"
+      case "CONFIRMED":
+        return "bg-amber-50 text-amber-700 border-amber-200"
+      case "INCHAIR":
+        return "bg-green-50 text-green-700 border-green-200"
+      case "COMPLETED":
+        return "bg-gray-50 text-gray-700 border-gray-200"
+      default:
+        return "bg-red-50 text-red-700 border-red-200"
+    }
+  }
+
+  // Fonction pour formater le statut
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "En attente"
+      case "CONFIRMED":
+        return "Confirmé"
+      case "INCHAIR":
+        return "En service"
+      case "COMPLETED":
+        return "Terminé"
+      default:
+        return status
+    }
+  }
+
+  // Fonction pour obtenir les services d'un rendez-vous
+  const getServiceNames = (appointment: any) => {
+    if (!appointment.services || appointment.services.length === 0) {
+      return "Aucun service"
+    }
+    return appointment.services.map((service: any) => service.service.name).join(", ")
+  }
+
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
-    
       {/* Header */}
       <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-3">
-          <Link href={`/salon`}>
+          <Link href={`/salon/${id}`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
               <ArrowLeft className="h-5 w-5 text-white" />
             </motion.div>
@@ -187,14 +197,7 @@ export default function SalonQueuePage() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             className="bg-white/20 p-2 rounded-full text-white"
-            onClick={() => {
-              setIsLoading(true)
-              setTimeout(() => {
-                setQueueData(MOCK_QUEUE_DATA)
-                setLastUpdated(new Date())
-                setIsLoading(false)
-              }, 500)
-            }}
+            onClick={refreshData}
           >
             <RefreshCw className="h-5 w-5" />
           </motion.button>
@@ -219,7 +222,7 @@ export default function SalonQueuePage() {
             Dernière mise à jour: <span className="font-medium">{formatLastUpdated()}</span>
           </p>
           <Badge variant="outline" className="bg-amber-50 text-amber-700">
-            {queueData.length} client{queueData.length !== 1 ? "s" : ""}
+            {sortedAppointments?.length || 0} client{(sortedAppointments?.length || 0) !== 1 ? "s" : ""}
           </Badge>
         </div>
 
@@ -229,14 +232,24 @@ export default function SalonQueuePage() {
               <Skeleton key={i} className="h-24 w-full rounded-lg" />
             ))}
           </div>
-        ) : filteredClients.length === 0 ? (
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+            <AlertCircle className="h-16 w-16 mb-4 text-red-300" />
+            <p className="text-lg font-medium mb-2">Erreur de chargement</p>
+            <p className="text-sm text-center mb-4">Une erreur est survenue lors du chargement des rendez-vous</p>
+            <Button variant="outline" onClick={refreshData}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Réessayer
+            </Button>
+          </div>
+        ) : filteredAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
             <Users className="h-16 w-16 mb-4 text-gray-300" />
             <p className="text-lg font-medium mb-2">Aucun client trouvé</p>
             <p className="text-sm text-center mb-4">
               {searchTerm
                 ? "Essayez de modifier vos critères de recherche"
-                : "Il n'y a aucun client dans la file d'attente pour le moment"}
+                : "Il n'y a aucun client dans la file d'attente pour aujourd'hui"}
             </p>
             {searchTerm && (
               <Button variant="outline" onClick={() => setSearchTerm("")}>
@@ -262,30 +275,31 @@ export default function SalonQueuePage() {
                       exit={{ opacity: 0, y: -20 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Card className="overflow-hidden border-green-200 bg-green-50">
+                      <Card className={`overflow-hidden ${getStatusColor(client.status)}`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex items-start gap-3">
-                              <div className="bg-green-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                <User className="h-5 w-5 text-green-600" />
+                              <div
+                                className={`rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 ${getIconColor(client.status)}`}
+                              >
+                                <User className="h-5 w-5" />
                               </div>
                               <div>
                                 <div className="flex items-center">
-                                  <h3 className="font-bold">{client.name}</h3>
-                                  <Badge className="ml-2 bg-green-500">En service</Badge>
+                                  <h3 className="font-bold">{client.firstName}</h3>
+                                  <Badge className={`ml-2 ${getBadgeColor(client.status)}`}>
+                                    {client.estimatedTime}
+                                  </Badge>
                                 </div>
-                                <p className="text-sm text-gray-600">{client.service}</p>
+                                <p className="text-sm text-gray-600">{getServiceNames(client)}</p>
                                 <div className="flex items-center text-xs text-gray-500 mt-1">
                                   <Clock className="h-3 w-3 mr-1" />
-                                  <span>
-                                    {client.time} • {client.estimatedDuration} min
-                                  </span>
+                                  <span>{client.estimatedTime}</span>
                                 </div>
-                                {client.stylist && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Coiffeur: <span className="font-medium">{client.stylist}</span>
-                                  </p>
-                                )}
+                                <p className="text-xs text-gray-500 mt-1">{client.phoneNumber}</p>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  {formatStatus(client.status)}
+                                </p>
                               </div>
                             </div>
                             <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center shadow-sm">
@@ -316,27 +330,31 @@ export default function SalonQueuePage() {
                       exit={{ opacity: 0, y: -20 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Card className="overflow-hidden border-amber-200">
+                      <Card className={`overflow-hidden ${getStatusColor(client.status)}`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex items-start gap-3">
-                              <div className="bg-amber-100 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                <User className="h-5 w-5 text-amber-600" />
+                              <div
+                                className={`rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 ${getIconColor(client.status)}`}
+                              >
+                                <User className="h-5 w-5" />
                               </div>
                               <div>
                                 <div className="flex items-center">
-                                  <h3 className="font-bold">{client.name}</h3>
-                                  <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700">
-                                    En attente
+                                  <h3 className="font-bold">{client.firstName}</h3>
+                                  <Badge variant="outline" className={`ml-2 ${getBadgeColor(client.status)}`}>
+                                    {client.estimatedTime}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-600">{client.service}</p>
+                                <p className="text-sm text-gray-600">{getServiceNames(client)}</p>
                                 <div className="flex items-center text-xs text-gray-500 mt-1">
                                   <Clock className="h-3 w-3 mr-1" />
-                                  <span>
-                                    {client.time} • {client.estimatedDuration} min
-                                  </span>
+                                  <span>{client.estimatedTime}</span>
                                 </div>
+                                <p className="text-xs text-gray-500 mt-1">{client.phoneNumber}</p>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  {formatStatus(client.status)}
+                                </p>
                               </div>
                             </div>
                             <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center shadow-sm">
@@ -367,32 +385,31 @@ export default function SalonQueuePage() {
                       exit={{ opacity: 0, y: -20 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Card className="overflow-hidden border-gray-200 bg-gray-50">
+                      <Card className={`overflow-hidden ${getStatusColor(client.status)}`}>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex items-start gap-3">
-                              <div className="bg-gray-200 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0">
-                                <User className="h-5 w-5 text-gray-600" />
+                              <div
+                                className={`rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 ${getIconColor(client.status)}`}
+                              >
+                                <User className="h-5 w-5" />
                               </div>
                               <div>
                                 <div className="flex items-center">
-                                  <h3 className="font-bold">{client.name}</h3>
-                                  <Badge variant="outline" className="ml-2 bg-gray-100 text-gray-700">
-                                    Terminé
+                                  <h3 className="font-bold">{client.firstName}</h3>
+                                  <Badge variant="outline" className={`ml-2 ${getBadgeColor(client.status)}`}>
+                                    {client.estimatedTime}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-600">{client.service}</p>
+                                <p className="text-sm text-gray-600">{getServiceNames(client)}</p>
                                 <div className="flex items-center text-xs text-gray-500 mt-1">
                                   <Clock className="h-3 w-3 mr-1" />
-                                  <span>
-                                    {client.time} • {client.estimatedDuration} min
-                                  </span>
+                                  <span>{client.estimatedTime}</span>
                                 </div>
-                                {client.stylist && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Coiffeur: <span className="font-medium">{client.stylist}</span>
-                                  </p>
-                                )}
+                                <p className="text-xs text-gray-500 mt-1">{client.phoneNumber}</p>
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  {formatStatus(client.status)}
+                                </p>
                               </div>
                             </div>
                             <div className="bg-white rounded-full h-8 w-8 flex items-center justify-center shadow-sm">
