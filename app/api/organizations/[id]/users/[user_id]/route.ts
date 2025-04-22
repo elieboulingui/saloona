@@ -201,7 +201,7 @@ try {
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
-
+    
     // Vérifier si l'utilisateur actuel est administrateur de l'organisation
     const currentUserMembership = await prisma.userOrganization.findFirst({
       where: {
