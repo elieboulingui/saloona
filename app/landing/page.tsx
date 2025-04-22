@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function LandingPage() {
+
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const toggleFaq = (index: number) => {
@@ -50,7 +51,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <span className="text-2xl font-bold text-amber-500">Luxery</span>
+              <span className="text-2xl font-bold text-amber-500">Saloona</span>
             </div>
             <nav className="hidden md:flex space-x-8 items-center">
               <a href="#features" className="text-gray-600 hover:text-amber-500 transition-colors">
@@ -65,13 +66,18 @@ export default function LandingPage() {
               <a href="#faq" className="text-gray-600 hover:text-amber-500 transition-colors">
                 FAQ
               </a>
-              <Button variant="outline" className="ml-4">
-                Se connecter
-              </Button>
+
             </nav>
-            <Link href="/inscription">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/connexion" className="hidden md:block">
+                <Button variant="outline" className="ml-4">
+                  Se connecter
+                </Button>
+              </Link>
+              <Link href="/inscription">
+                <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -85,7 +91,7 @@ export default function LandingPage() {
                 Transformez la gestion de votre salon de coiffure
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Luxery vous offre une solution complète pour gérer vos réservations, votre boutique, votre file
+                Saloona vous offre une solution complète pour gérer vos réservations, votre boutique, votre file
                 d'attente et votre équipe. Augmentez votre chiffre d'affaires et fidélisez vos clients.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -110,8 +116,8 @@ export default function LandingPage() {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/placeholder.svg?height=600&width=800&text=Dashboard+Luxery"
-                  alt="Dashboard Luxery"
+                  src="/placeholder.svg?height=600&width=800&text=Dashboard+Saloona"
+                  alt="Dashboard Saloona"
                   width={800}
                   height={600}
                   className="rounded-2xl"
@@ -123,23 +129,6 @@ export default function LandingPage() {
                 <div className="text-sm text-gray-600">Augmentation des réservations</div>
               </div>
             </motion.div>
-          </div>
-        </div>
-
-        {/* Logos des clients */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 mt-20">
-          <p className="text-center text-gray-500 mb-8">Ils nous font confiance</p>
-          <div className="flex flex-wrap justify-center gap-8 opacity-70">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-12">
-                <Image
-                  src={`/placeholder.svg?height=48&width=120&text=Salon+${i}`}
-                  alt={`Salon ${i}`}
-                  width={120}
-                  height={48}
-                />
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -419,7 +408,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Ce que nos clients disent</h2>
-            <p className="text-xl text-gray-600">Découvrez comment Luxery a transformé l'activité de ces salons</p>
+            <p className="text-xl text-gray-600">Découvrez comment Saloona a transformé l'activité de ces salons</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -447,7 +436,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-gray-600 mb-4">
-                "Depuis que nous utilisons Luxery, notre nombre de réservations a augmenté de 40%. Les clients adorent
+                "Depuis que nous utilisons Saloona, notre nombre de réservations a augmenté de 40%. Les clients adorent
                 pouvoir réserver en ligne et recevoir des rappels automatiques."
               </p>
               <div className="flex text-amber-500">
@@ -727,7 +716,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Questions fréquentes</h2>
-            <p className="text-xl text-gray-600">Tout ce que vous devez savoir sur Luxery</p>
+            <p className="text-xl text-gray-600">Tout ce que vous devez savoir sur Saloona</p>
           </div>
 
           <div className="max-w-3xl mx-auto">
@@ -735,27 +724,27 @@ export default function LandingPage() {
               {
                 question: "Comment fonctionne l'essai gratuit ?",
                 answer:
-                  "Vous pouvez essayer Luxery gratuitement pendant 14 jours sans aucun engagement. Aucune carte de crédit n'est requise pour commencer. À la fin de la période d'essai, vous pouvez choisir le forfait qui vous convient.",
+                  "Vous pouvez essayer Saloona gratuitement pendant 14 jours sans aucun engagement. Aucune carte de crédit n'est requise pour commencer. À la fin de la période d'essai, vous pouvez choisir le forfait qui vous convient.",
               },
               {
                 question: "Est-ce que je peux annuler à tout moment ?",
                 answer:
-                  "Oui, vous pouvez annuler votre abonnement à tout moment. Nous ne vous facturerons pas pour le mois suivant. Vous conserverez l'accès à Luxery jusqu'à la fin de votre période de facturation en cours.",
+                  "Oui, vous pouvez annuler votre abonnement à tout moment. Nous ne vous facturerons pas pour le mois suivant. Vous conserverez l'accès à Saloona jusqu'à la fin de votre période de facturation en cours.",
               },
               {
-                question: "Comment Luxery peut-il m'aider à augmenter mes réservations ?",
+                question: "Comment Saloona peut-il m'aider à augmenter mes réservations ?",
                 answer:
-                  "Luxery vous permet d'offrir à vos clients la possibilité de réserver en ligne 24h/24, 7j/7. Les rappels automatiques réduisent les rendez-vous manqués, et notre système de file d'attente optimise votre planning pour maximiser le nombre de clients que vous pouvez servir.",
+                  "Saloona vous permet d'offrir à vos clients la possibilité de réserver en ligne 24h/24, 7j/7. Les rappels automatiques réduisent les rendez-vous manqués, et notre système de file d'attente optimise votre planning pour maximiser le nombre de clients que vous pouvez servir.",
               },
               {
-                question: "Puis-je intégrer Luxery à mon site web existant ?",
+                question: "Puis-je intégrer Saloona à mon site web existant ?",
                 answer:
-                  "Absolument ! Nous fournissons des widgets de réservation que vous pouvez facilement intégrer à votre site web existant. Vous pouvez également partager un lien direct vers votre page de réservation Luxery.",
+                  "Absolument ! Nous fournissons des widgets de réservation que vous pouvez facilement intégrer à votre site web existant. Vous pouvez également partager un lien direct vers votre page de réservation Saloona.",
               },
               {
                 question: "Comment fonctionne la boutique en ligne ?",
                 answer:
-                  "La boutique en ligne vous permet de créer un catalogue de produits, de gérer votre inventaire et de vendre directement à vos clients. Vous pouvez accepter les paiements en ligne et suivre vos commandes facilement depuis le tableau de bord Luxery.",
+                  "La boutique en ligne vous permet de créer un catalogue de produits, de gérer votre inventaire et de vendre directement à vos clients. Vous pouvez accepter les paiements en ligne et suivre vos commandes facilement depuis le tableau de bord Saloona.",
               },
             ].map((faq, index) => (
               <motion.div
@@ -794,7 +783,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-bold mb-6">Prêt à transformer votre salon de coiffure ?</h2>
             <p className="text-xl mb-8 text-white/90">
-              Rejoignez des milliers de salons qui utilisent Luxery pour développer leur activité et améliorer
+              Rejoignez des milliers de salons qui utilisent Saloona pour développer leur activité et améliorer
               l'expérience client.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -816,7 +805,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">Luxery</h3>
+              <h3 className="text-xl font-bold mb-4">Saloona</h3>
               <p className="text-gray-400 mb-4">La solution complète pour les salons de coiffure modernes.</p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-white">
@@ -931,7 +920,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Luxery. Tous droits réservés.</p>
+            <p>&copy; {new Date().getFullYear()} Saloona. Tous droits réservés.</p>
           </div>
         </div>
       </footer>

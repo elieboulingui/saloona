@@ -5,9 +5,9 @@ import { Inter } from "next/font/google"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Luxery - Solution complète pour salons de coiffure",
+  title: "SALOONA - La Solution Digitale complète pour salons de coiffure",
   description:
-    "Gérez vos réservations, votre boutique, votre file d'attente et votre équipe avec Luxery, la solution tout-en-un pour les salons de coiffure modernes.",
+    "Gérez vos réservations, votre boutique, votre file d'attente et votre équipe avec Saloona, la solution tout-en-un pour les salons de coiffure modernes.",
 }
 
 export default function LandingLayout({
