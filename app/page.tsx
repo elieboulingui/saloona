@@ -75,9 +75,9 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gray-50">
+    <div className="flex flex-col min-h-[100dvh] bg-gray-100">
       {/* Header */}
-      <header className="bg-amber-500 sticky top-0 z-10 shadow-md">
+      <header className="bg-amber-500 sticky top-0 z-10">
         <div className="py-2 px-4 container mx-auto max-w-6xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -118,7 +118,7 @@ export default function OrganizationsPage() {
       </header>
 
       {/* Department filters */}
-      <div className="bg-white py-2 border-b border-gray-200">
+      <div className="bg-white py-2 border-b border-gray-300">
         <div className="container mx-auto max-w-6xl overflow-x-auto">
           <div className="flex gap-4 pb-2">
             <div
