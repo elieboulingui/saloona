@@ -118,7 +118,7 @@ export default function OrganizationsPage() {
       </header>
 
       {/* Department filters */}
-      <div className="bg-white py-4 border-b border-gray-200 mb-4">
+      <div className="bg-white py-2 border-b border-gray-200">
         <div className="container mx-auto max-w-6xl overflow-x-auto">
           <div className="flex gap-4 pb-2">
             <div
@@ -187,7 +187,7 @@ export default function OrganizationsPage() {
                   className="cursor-pointer"
                   onClick={() => router.push(`/salon/${organization.id}`)}
                 >
-                  <Card className="overflow-hidden border-none bg-white py-0">
+                  <Card className="overflow-hidden border-1 shadow-none rounded-sm bg-white py-0">
                     <div className="relative h-40 w-full">
                       <Image
                         src={organization.imageCover || "/placeholder.svg"}
