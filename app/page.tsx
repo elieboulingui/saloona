@@ -4,13 +4,14 @@ import useSWR from "swr"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Search, MapPin, Scissors, User, LogIn } from "lucide-react"
+import { Search, MapPin, Scissors, User, LogIn, Grid } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatTime } from "@/lib/utils"
+import Link from "next/link"
 
 // Types
 export interface Organization {
@@ -100,21 +101,25 @@ export default function OrganizationsPage() {
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
-                <LogIn className="h-4 w-4 mr-2" />
-                Connexion
-              </Button>
-              <Button className="bg-white hidden md:block text-amber-500 hover:bg-white/90">
-                <User className="h-4 w-4 mr-2" />
-                Inscription
-              </Button>
+              <Link href={"/connexion"}>
+                <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Connexion
+                </Button>
+              </Link>
+              <Link href={"/landing"}>
+                <Button className="bg-white hidden md:flex text-amber-500 hover:bg-white/90">
+                  <Scissors className="h-4 w-4 mr-2" />
+                  Je suis un salon
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </header>
 
       {/* Department filters */}
-      <div className="bg-white py-4 border-b border-gray-200 mb-4 shadow-sm">
+      <div className="bg-white py-4 border-b border-gray-200 mb-4">
         <div className="container mx-auto max-w-6xl overflow-x-auto">
           <div className="flex gap-4 pb-2">
             <div
@@ -122,7 +127,7 @@ export default function OrganizationsPage() {
               onClick={() => setSelectedDepartment(null)}
             >
               <div className="bg-gray-100 p-2 rounded-full">
-                <Scissors className="h-5 w-5" />
+                <Grid className="h-5 w-5" />
               </div>
               <span className="text-xs font-medium">Tous</span>
             </div>
@@ -142,7 +147,7 @@ export default function OrganizationsPage() {
                     className="h-5 w-5"
                   />
                 </div>
-                <span className="text-xs font-medium">{dept.label}</span>
+                <span className="text-xs font-medium text-center">{dept.label}</span>
               </div>
             ))}
           </div>

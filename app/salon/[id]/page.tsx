@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Grid,
   Home,
   ListOrdered,
   MapPin,
@@ -233,18 +234,18 @@ export default function OrganizationDetailsPage() {
         </div>
       </div>
       {/* Boutons d'action */}
-      <div className="flex mb-6 container mx-auto max-w-6xl sticky top-0 z-[999] bg-white shadow-md">
+      <div className="flex mb-6 container mx-auto max-w-6xl sticky top-0 z-[999] bg-white">
         <Button
           className="flex-1 bg-amber-500 hover:bg-amber-600 text-black rounded-none border-none py-6"
           onClick={() => setShowCart(true)}
         >
-          <Calendar className="h-4 w-4 mr-2" />
-          Réserver
+          <Grid className="h-4 w-4 mr-2" />
+          Services
           {cart.length > 0 && <Badge className="ml-2 bg-white text-amber-500">{cart.length}</Badge>}
         </Button>
         <Button
           variant="outline"
-          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
+          className="flex-1 border-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
           onClick={() => router.push(`/salon/${id}/boutique`)}
         >
           <ShoppingBasket className="h-4 w-4 mr-2" />
@@ -252,7 +253,7 @@ export default function OrganizationDetailsPage() {
         </Button>
         <Button
           variant="outline"
-          className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
+          className="flex-1 border-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
           onClick={() => router.push(`/salon/${id}/queue`)}
         >
           <ListOrdered className="h-4 w-4 mr-2" />

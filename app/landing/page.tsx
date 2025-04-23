@@ -51,7 +51,13 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <span className="text-2xl font-bold text-amber-500">Saloona</span>
+              <Image
+                src="/logo-black.png"
+                alt="Saloona Logo"
+                width={140}
+                height={40}
+                className="h-10 w-auto"
+              />
             </div>
             <nav className="hidden md:flex space-x-8 items-center">
               <a href="#features" className="text-gray-600 hover:text-amber-500 transition-colors">
@@ -83,7 +89,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-amber-50 to-amber-100 py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-amber-50 to-amber-100 py-10 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div initial="hidden" animate="visible" variants={fadeIn} className="max-w-2xl">
@@ -91,7 +97,7 @@ export default function LandingPage() {
                 Transformez la gestion de votre salon de coiffure
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Saloona vous offre une solution complète pour gérer vos réservations, votre boutique, votre file
+                Nous vous offrons une solution complète pour gérer vos réservations, votre boutique, votre file
                 d'attente et votre équipe. Augmentez votre chiffre d'affaires et fidélisez vos clients.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -122,7 +128,7 @@ export default function LandingPage() {
                   height={600}
                   className="rounded-2xl"
                 />
-              
+
               </div>
               <div className="absolute bottom-20 -right-6 bg-white rounded-lg shadow-lg p-4 w-48">
                 <div className="text-amber-500 font-bold">+32%</div>
@@ -619,11 +625,11 @@ export default function LandingPage() {
                 </ul>
               </div>
               <div className="px-8 pb-8">
-              <Link href="/register">
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
+                <Link href="/register">
+                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
                 </Link>
               </div>
-              
+
             </motion.div>
 
             {/* Pro Plan */}
@@ -793,12 +799,12 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
-              <Button className="bg-white text-amber-600 hover:bg-gray-100 text-lg py-6 px-8">
-                Commencer l'essai gratuit
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+                <Button className="bg-white text-amber-600 hover:bg-gray-100 text-lg py-6 px-8">
+                  Commencer l'essai gratuit
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               </Link>
-             
+
             </div>
             <p className="mt-6 text-sm text-white/80">Aucune carte de crédit requise. Essai gratuit de 14 jours.</p>
           </div>
@@ -813,7 +819,7 @@ export default function LandingPage() {
               <h3 className="text-xl font-bold mb-4">Saloona</h3>
               <p className="text-gray-400 mb-4">La solution complète pour les salons de coiffure modernes.</p>
               <div className="flex space-x-4">
-              
+
                 <a href="#" className="text-gray-400 hover:text-white">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -825,7 +831,7 @@ export default function LandingPage() {
                     <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"></path>
                   </svg>
                 </a>
-               
+
               </div>
             </div>
             <div>
