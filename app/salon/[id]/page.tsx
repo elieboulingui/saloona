@@ -52,18 +52,18 @@ interface OrganizationDetails {
   address: string
   verificationStatus: string
   OrganizationAvailability:
-    | {
-        openingTime: number
-        closingTime: number
-        mondayOpen: boolean
-        thursdayOpen: boolean
-        wednesdayOpen: boolean
-        fridayOpen: boolean
-        sundayOpen: boolean
-        saturdayOpen: boolean
-        tuesdayOpen: boolean
-      }[]
-    | null
+  | {
+    openingTime: number
+    closingTime: number
+    mondayOpen: boolean
+    thursdayOpen: boolean
+    wednesdayOpen: boolean
+    fridayOpen: boolean
+    sundayOpen: boolean
+    saturdayOpen: boolean
+    tuesdayOpen: boolean
+  }[]
+  | null
 }
 
 interface Service {
@@ -236,7 +236,7 @@ export default function OrganizationDetailsPage() {
       {/* Boutons d'action */}
       <div className="flex mb-6 container mx-auto max-w-6xl sticky top-0 z-[999] bg-white">
         <Button
-          className="flex-1 bg-amber-500 hover:bg-amber-600 text-black rounded-none border-none py-6"
+          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-none border-none py-6"
           onClick={() => setShowCart(true)}
         >
           <Grid className="h-4 w-4 mr-2" />
@@ -265,28 +265,30 @@ export default function OrganizationDetailsPage() {
         <div className="lg:flex lg:gap-8">
           <div className="mb-6 bg-gray-50 lg:w-1/4 lg:sticky lg:top-24 lg:self-start">
             <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
-            <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3 rounded-lg">
-              {organization.departments.map((dept) => (
-                <motion.div
-                  key={dept.id}
-                  whileTap={{ scale: 0.95 }}
-                  className={cn(
-                    "flex flex-col lg:flex-row items-center lg:items-start gap-2 p-2 rounded-xl cursor-pointer w-auto",
-                    selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
-                  )}
-                  onClick={() => setSelectedDepartment(dept.id)}
-                >
-                  <Image
-                    src={`/${dept.icon}` || "/placeholder.svg"}
-                    alt={dept.label}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10"
-                  />
-                  <span className="text-sm font-medium text-center lg:text-left lg:my-auto">{dept.label}</span>
-                </motion.div>
-              ))}
-            </div>
+            {organization.departments.length > 1 && (
+              <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3 rounded-lg">
+                {organization.departments.map((dept) => (
+                  <motion.div
+                    key={dept.id}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "flex flex-col lg:flex-row items-center lg:items-start gap-2 p-2 rounded-xl cursor-pointer w-auto",
+                      selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
+                    )}
+                    onClick={() => setSelectedDepartment(dept.id)}
+                  >
+                    <Image
+                      src={`/${dept.icon}` || "/placeholder.svg"}
+                      alt={dept.label}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10"
+                    />
+                    <span className="text-sm font-medium text-center lg:text-left lg:my-auto">{dept.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Services - improve layout for desktop */}

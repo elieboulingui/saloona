@@ -103,7 +103,6 @@ export default function OrganizationsPage() {
             <div className="flex gap-3">
               <Link href={"/connexion"}>
                 <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
-                  <LogIn className="h-4 w-4 mr-2" />
                   Connexion
                 </Button>
               </Link>
@@ -188,7 +187,7 @@ export default function OrganizationsPage() {
                   className="cursor-pointer"
                   onClick={() => router.push(`/salon/${organization.id}`)}
                 >
-                  <Card className="overflow-hidden border-none shadow-none bg-white py-0">
+                  <Card className="overflow-hidden border-none bg-white py-0">
                     <div className="relative h-40 w-full">
                       <Image
                         src={organization.imageCover || "/placeholder.svg"}
