@@ -6,11 +6,6 @@ import { auth } from "@/auth"
 export async function GET(request: Request) {
   
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-    }
-
 
     // Récupérer tous les départements de l'organisation
     const departments = await prisma.department.findMany({
