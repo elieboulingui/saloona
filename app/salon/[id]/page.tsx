@@ -245,7 +245,7 @@ export default function OrganizationDetailsPage() {
         <Button
           variant="outline"
           className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
-          onClick={() => router.push("/salon/saji/boutique")}
+          onClick={() => router.push(`/salon/${id}/boutique`)}
         >
           <ShoppingBasket className="h-4 w-4 mr-2" />
           Boutique
@@ -253,7 +253,7 @@ export default function OrganizationDetailsPage() {
         <Button
           variant="outline"
           className="flex-1 border-gray-500 text-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
-          onClick={() => router.push("/salon/sadji/queue")}
+          onClick={() => router.push(`/salon/${id}/queue`)}
         >
           <ListOrdered className="h-4 w-4 mr-2" />
           Fil d'attente
