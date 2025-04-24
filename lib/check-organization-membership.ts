@@ -8,7 +8,7 @@ export async function checkOrganizationMembership(organizationId: string) {
     const session = await auth()
    
     if (!session || !session.user) {
-      redirect("/")
+      redirect("/connexion")
     }
 
     const userId = session.user.id

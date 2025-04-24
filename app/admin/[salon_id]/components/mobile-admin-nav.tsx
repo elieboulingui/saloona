@@ -20,6 +20,10 @@ export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
   if (pathname.includes(`/admin/${salon_id}/boutique`)) {
     return null
   }
+  // Ne pas afficher la navigation dans les pages de boutique
+  if (pathname.includes(`/admin/${salon_id}/calendar`)) {
+    return null
+  }
 
   // Définir les éléments de navigation en fonction du rôle
   const navItems = [
@@ -66,7 +70,7 @@ export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
   const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole || ""))
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-2 shadow-lg z-10">
+    <nav className="fixed bottom-0 left-0 container z-50 mx-auto max-w-6xl right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-2 shadow-lg">
       {filteredNavItems.map((item) => (
         <Link key={item.href} href={item.href} className="flex flex-col items-center p-2">
           <motion.div

@@ -1,40 +1,85 @@
-import { prisma } from "@/utils/prisma"
-import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { prisma } from "@/utils/prisma"
 
-export async function PATCH(request: Request,
-  { params }: { params: Promise<{ appointmentId: string }> }
-) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string; appointmentId: string }> }) {
   try {
-    const { appointmentId } = await params
-    const { status } = await request.json()
+    const { id: organizationId, appointmentId } = await params
+    const body = await request.json()
 
-    // Récupérer la session de l'utilisateur connecté
-    const session = await auth()
+    // Vérifier que le rendez-vous existe et appartient à l'organisation
+    const existingAppointment = await prisma.appointment.findFirst({
+      where: {
+        id: appointmentId,
+        organizationId,
+      },
+    })
 
-    if (!session) {
+    if (!existingAppointment) {
       return NextResponse.json(
-        { error: "Vous n'etes pas autorisé !" },
-        { status: 403 },
+        { error: "Rendez-vous non trouvé ou n'appartient pas à cette organisation" },
+        { status: 404 },
       )
-    }
-
-    // Préparer les données à mettre à jour
-    const updateData: any = { status }
-
-    // Si le statut est INCHAIR et que l'utilisateur est connecté, mettre à jour le barberId
-    if (status === "INCHAIR" && session?.user?.id) {
-      updateData.barberId = session.user.id
     }
 
     // Mettre à jour le rendez-vous
     const updatedAppointment = await prisma.appointment.update({
-      where: { id : appointmentId },
-      data: updateData,
+      where: {
+        id: appointmentId,
+      },
+      data: {
+        firstName: body.firstName || undefined,
+        phoneNumber: body.phoneNumber || undefined,
+        date: body.date ? new Date(body.date) : undefined,
+        hourAppointment: body.hourAppointment || undefined, // Ajout du champ hourAppointment
+        startDate: body.startDate ? new Date(body.startDate) : undefined,
+        endDate: body.endDate ? new Date(body.endDate) : undefined,
+        barberId: body.barberId !== undefined ? body.barberId : undefined,
+        status: body.status || undefined,
+        estimatedTime: body.estimatedTime || undefined,
+      },
+      include: {
+        services: {
+          include: {
+            service: true,
+          },
+        },
+      },
     })
 
-    revalidatePath("/tv")
+    // Si des services sont fournis, mettre à jour les services du rendez-vous
+    if (body.serviceIds && Array.isArray(body.serviceIds)) {
+      // Supprimer les services existants
+      await prisma.appointmentService.deleteMany({
+        where: {
+          appointmentId,
+        },
+      })
+
+      // Ajouter les nouveaux services
+      await prisma.appointmentService.createMany({
+        data: body.serviceIds.map((serviceId: string) => ({
+          appointmentId,
+          serviceId,
+        })),
+        skipDuplicates: true,
+      })
+
+      // Récupérer le rendez-vous mis à jour avec les nouveaux services
+      const appointmentWithServices = await prisma.appointment.findUnique({
+        where: {
+          id: appointmentId,
+        },
+        include: {
+          services: {
+            include: {
+              service: true,
+            },
+          },
+        },
+      })
+
+      return NextResponse.json(appointmentWithServices)
+    }
 
     return NextResponse.json(updatedAppointment)
   } catch (error) {
@@ -45,4 +90,3 @@ export async function PATCH(request: Request,
     )
   }
 }
-

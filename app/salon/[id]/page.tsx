@@ -177,15 +177,15 @@ export default function OrganizationDetailsPage() {
         {/* Header flottant */}
         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
           <Link href="/">
-            <motion.div whileTap={{ scale: 0.9 }} className="bg-black/30 p-3 rounded-full backdrop-blur-sm">
-              <Home className="h-5 w-5 text-white" />
+            <motion.div whileTap={{ scale: 0.9 }} className="bg-white p-3 rounded-full backdrop-blur-sm">
+              <Home className="h-5 w-5 text-black" />
             </motion.div>
           </Link>
 
           <div className="flex gap-2">
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className="bg-black/30 p-3 rounded-full backdrop-blur-sm"
+              className="bg-white p-3 rounded-full backdrop-blur-sm"
               onClick={() => {
                 if (navigator.share) {
                   navigator.share({
@@ -196,7 +196,7 @@ export default function OrganizationDetailsPage() {
                 }
               }}
             >
-              <Share2 className="h-5 w-5 text-white" />
+              <Share2 className="h-5 w-5 text-black" />
             </motion.button>
 
             <motion.button whileTap={{ scale: 0.9 }} className={cn("p-3 rounded-full backdrop-blur-sm bg-white")}>

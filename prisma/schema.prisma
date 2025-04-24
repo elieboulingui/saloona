@@ -177,12 +177,13 @@ model Appointment {
   firstName   String
   phoneNumber String
   date        DateTime
+  hourAppointment String // format is like this 10:00 , 11h30
 
   startDate   DateTime?
   endDate     DateTime?
 
   orderNumber   Int
-  estimatedTime String
+  estimatedTime Int
   status        AppointmentStatus @default(PENDING)
 
   createdAt DateTime @default(now())

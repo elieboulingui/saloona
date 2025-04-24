@@ -10,48 +10,44 @@ import { inngest } from "@/inngest/client"
 type SaveAppointmentResult = {
   success: boolean
   orderNumber: number
-  estimatedTime: string
+  hourAppointment: string // ✅ Nouveau
   appointmentId?: string
   createdAt?: Date
+  estimatedTime?: number // facultatif, utile pour le dashboard interne
   error?: string
 }
 
+
 export async function saveAppointment(
-  serviceIds: string[], // Accept multiple services
+  serviceIds: string[],
   selectedDate: Date,
-  organizationId: string, // Required!
+  organizationId: string,
   firstName: string = generateRandomCode(),
-  phoneNumber:string,
+  phoneNumber: string,
   status: AppointmentStatus = AppointmentStatus.PENDING,
   barberId?: string,
 ): Promise<SaveAppointmentResult> {
   try {
-
-    console.log(serviceIds)
-
     const normalizedDate = new Date(selectedDate)
     normalizedDate.setHours(12, 0, 0, 0)
 
     const now = new Date()
-
     const isToday =
       normalizedDate.getFullYear() === now.getFullYear() &&
       normalizedDate.getMonth() === now.getMonth() &&
       normalizedDate.getDate() === now.getDate()
 
     if (isToday && now.getHours() >= 17) {
-      console.log("hello")
       return {
         success: false,
         orderNumber: 0,
-        estimatedTime: "",
+        hourAppointment: "",
         error: "Les réservations pour aujourd'hui ne sont plus disponibles après 17h",
       }
     }
 
     const startOfDay = new Date(normalizedDate)
     startOfDay.setHours(0, 0, 0, 0)
-
     const endOfDay = new Date(normalizedDate)
     endOfDay.setHours(23, 59, 59, 999)
 
@@ -65,10 +61,18 @@ export async function saveAppointment(
 
     const newOrderNumber = lastAppointment ? lastAppointment.orderNumber + 1 : 1
 
-    const startHour = 9
-    let estimatedHour = startHour
-    let estimatedMinutes = 0
+    // 🧮 Récupérer les services et calculer la durée moyenne
+    const services = await prisma.service.findMany({
+      where: { id: { in: serviceIds } },
+      select: { durationMin: true, durationMax: true },
+    })
 
+    const totalDuration = services.reduce((acc, service) => {
+      const avg = Math.round((service.durationMin + service.durationMax) / 2)
+      return acc + avg
+    }, 0) // total en minutes
+
+    // ⏱️ Déduire l’heure de début
     const lastValidAppointment = await prisma.appointment.findFirst({
       where: {
         date: { gte: startOfDay, lte: endOfDay },
@@ -78,38 +82,38 @@ export async function saveAppointment(
         ],
       },
       orderBy: { orderNumber: "desc" },
-      select: { estimatedTime: true },
+      select: { hourAppointment: true, estimatedTime: true },
     })
 
+    let startHour = 9
+    let startMinute = 0
+
     if (lastValidAppointment) {
-      const [lastHour, lastMin] = lastValidAppointment.estimatedTime.split(":").map(Number)
-      estimatedHour = lastHour
-      estimatedMinutes = lastMin
-      if (estimatedMinutes >= 60) {
-        estimatedHour += Math.floor(estimatedMinutes / 60)
-        estimatedMinutes %= 60
-      }
+      const [lastHour, lastMin] = lastValidAppointment.hourAppointment.split(":").map(Number)
+      const lastDuration = lastValidAppointment.estimatedTime || 0
+      const totalMin = lastHour * 60 + lastMin + lastDuration
+      startHour = Math.floor(totalMin / 60)
+      startMinute = totalMin % 60
     }
 
-    const formattedHour = estimatedHour.toString().padStart(2, "0")
-    const formattedMinutes = estimatedMinutes.toString().padStart(2, "0")
-    const estimatedTime = `${formattedHour}:${formattedMinutes}`
+    const hourAppointment = `${startHour.toString().padStart(2, "0")}:${startMinute
+      .toString()
+      .padStart(2, "0")}`
 
-    // Création du rendez-vous principal
     const appointment = await prisma.appointment.create({
       data: {
         date: normalizedDate,
         firstName,
         phoneNumber,
         orderNumber: newOrderNumber,
-        estimatedTime,
+        estimatedTime: totalDuration,
+        hourAppointment,
         status,
         barberId,
         organizationId,
       },
     })
 
-    // Création des liaisons AppointmentService
     await prisma.appointmentService.createMany({
       data: serviceIds.map((sid) => ({
         appointmentId: appointment.id,
@@ -121,20 +125,22 @@ export async function saveAppointment(
     return {
       success: true,
       orderNumber: newOrderNumber,
-      estimatedTime,
+      hourAppointment,
       appointmentId: appointment.id,
       createdAt: appointment.createdAt,
+      estimatedTime: totalDuration, // pour affichage admin, optionnel
     }
   } catch (error) {
     console.error("Erreur lors de la sauvegarde du rendez-vous:", error)
     return {
       success: false,
       orderNumber: 0,
-      estimatedTime: "",
+      hourAppointment: "",
       error: "Une erreur est survenue lors de la sauvegarde du rendez-vous",
     }
   }
 }
+
 
 
 type DeleteAppointmentResult = {

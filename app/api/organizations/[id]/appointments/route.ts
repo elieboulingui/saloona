@@ -69,6 +69,7 @@ try {
       startDate: appointment.startDate,
       endDate: appointment.endDate,
       orderNumber: appointment.orderNumber,
+      hourAppointment: appointment.hourAppointment,
       estimatedTime: appointment.estimatedTime,
       status: appointment.status,
       createdAt: appointment.createdAt,
@@ -85,33 +86,21 @@ try {
   }
 }
 
-// POST /api/organizations/[id]/appointments
-export async function POST(request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-try {
-
-    const { id } = await params
-  
-    const session = await auth()
-
-    // Vérifier si l'utilisateur est connecté
-    if (!session?.user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-    }
-
-    // Vérifier si l'utilisateur est membre de l'organisation
-    const organizationId = id
-    const canAccess = await checkOrganizationMembership(session.user.id)
-
-    if (!canAccess) {
-      return NextResponse.json({ error: "Accès refusé" }, { status: 403 })
-    }
-
+// Mise à jour de la partie POST de la route
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const {id : organizationId} = await params
     const data = await request.json()
 
     // Validation des données
-    if (!data.firstName || !data.phoneNumber || !data.date || !data.serviceIds || data.serviceIds.length === 0) {
+    if (
+      !data.firstName ||
+      !data.phoneNumber ||
+      !data.date ||
+      !data.serviceIds ||
+      data.serviceIds.length === 0 ||
+      !data.hourAppointment
+    ) {
       return NextResponse.json({ error: "Données manquantes pour créer un rendez-vous" }, { status: 400 })
     }
 
@@ -132,19 +121,21 @@ try {
         firstName: data.firstName,
         phoneNumber: data.phoneNumber,
         date: new Date(data.date),
+        hourAppointment: data.hourAppointment, // Ajout du champ hourAppointment
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         endDate: data.endDate ? new Date(data.endDate) : undefined,
         orderNumber: appointmentsCount + 1,
-        estimatedTime: data.estimatedTime || "30min",
+        estimatedTime: data.estimatedTime || 30, // Valeur par défaut de 30 minutes
         status: data.status || "PENDING",
         organization: {
           connect: { id: organizationId },
         },
-        barber: data.barberId
-          ? {
-              connect: { id: data.barberId },
-            }
-          : undefined,
+        barber:
+          data.barberId && data.barberId !== "unassigned"
+            ? {
+                connect: { id: data.barberId },
+              }
+            : undefined,
       },
     })
 
