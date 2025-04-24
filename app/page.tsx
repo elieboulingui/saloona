@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatTime } from "@/lib/utils"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 // Types
 export interface Organization {
@@ -33,6 +34,8 @@ export interface Organization {
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function OrganizationsPage() {
+
+  const { data: session } = useSession()
 
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
@@ -99,8 +102,8 @@ export default function OrganizationsPage() {
                 />
               </div>
             </div>
-
-            <div className="flex gap-3">
+            {!session ? (
+              <div className="flex gap-3">
               <Link href={"/connexion"}>
                 <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
                   Connexion
@@ -113,6 +116,15 @@ export default function OrganizationsPage() {
                 </Button>
               </Link>
             </div>
+            ) : (
+              <Link href={"/admin"}>
+                <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30 border-white/30">
+                  Tableau de board
+                </Button>
+              </Link>
+              
+            )}
+
           </div>
         </div>
       </header>

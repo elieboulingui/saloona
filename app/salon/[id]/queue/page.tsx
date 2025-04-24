@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, Clock, CheckCircle, Users, RefreshCw, AlertCircle, User, Search } from "lucide-react"
+import { ArrowLeft, Clock, CheckCircle, Users, RefreshCw, AlertCircle, User, Search, Plus, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -76,6 +76,9 @@ export default function SalonQueuePage() {
     (client) => client.status === "PENDING" || client.status === "CONFIRMED",
   )
   const clientsCompleted = sortedAppointments.filter((client) => client.status === "COMPLETED")
+
+  // Vérifier s'il y a des clients actifs (en service ou en attente)
+  const hasActiveClients = clientsInService.length > 0 || clientsWaiting.length > 0
 
   // Formater l'heure de dernière mise à jour
   const formatLastUpdated = () => {
@@ -176,6 +179,11 @@ export default function SalonQueuePage() {
       return "Aucun service"
     }
     return appointment.services.map((service: any) => service.service.name).join(", ")
+  }
+
+  // Fonction pour naviguer vers la page de réservation
+  const goToBooking = () => {
+    router.push(`/salon/${id}/booking`)
   }
 
   return (
@@ -426,6 +434,28 @@ export default function SalonQueuePage() {
           </motion.div>
         )}
       </main>
+
+      {/* Bouton flottant pour faire une réservation quand il n'y a pas de clients actifs */}
+      {!isLoading && !error && !hasActiveClients && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 25 }}
+          className="fixed bottom-6 right-6"
+        >
+          <Button
+            onClick={goToBooking}
+            className="bg-amber-500 hover:bg-amber-600 rounded-full h-14 w-14 shadow-lg flex items-center justify-center"
+          >
+            <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.3 }}>
+              <Calendar className="h-6 w-6" />
+            </motion.div>
+          </Button>
+          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-gray-800 text-white text-xs px-2 py-1 rounded">
+            Faire une réservation
+          </span>
+        </motion.div>
+      )}
     </div>
   )
 }

@@ -434,6 +434,7 @@ export default function BookingPageClient({ id }: BookingContentProps) {
                   <Input
                     id="fullName"
                     placeholder="Entrez votre nom complet"
+                    autoFocus={true}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className={`bg-white ${!isNameValid && fullName ? "border-red-300" : ""}`}
@@ -504,6 +505,7 @@ export default function BookingPageClient({ id }: BookingContentProps) {
                     id="date"
                     type="date"
                     value={date}
+                    autoFocus={true}
                     onChange={(e) => setDate(e.target.value)}
                     min={format(new Date(), "yyyy-MM-dd")}
                     className="bg-white"
