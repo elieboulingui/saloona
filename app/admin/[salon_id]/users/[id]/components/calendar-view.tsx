@@ -12,6 +12,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2, Clock, ChevronRight, CalendarIcon, RefreshCcw } from "lucide-react"
 
+// Ajouter l'import pour AppointmentSheet
+import { AppointmentSheet } from "@/app/admin/[salon_id]/components/appointment-sheet"
+
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -24,6 +27,10 @@ export function CalendarView({ userId, salonId }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [searchTerm, setSearchTerm] = useState("")
   const [isCalendarView, setIsCalendarView] = useState(false)
+
+  // Dans la fonction CalendarView, ajouter ces états après les états existants
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
+  const [isAppointmentSheetOpen, setIsAppointmentSheetOpen] = useState(false)
 
   // Formater la date pour l'API
   const formatDateForApi = (date: Date | undefined) => {
@@ -133,6 +140,18 @@ export function CalendarView({ userId, salonId }: CalendarViewProps) {
     },
   }
 
+  // Ajouter cette fonction avant le return
+  const handleAppointmentClick = (appointment: any) => {
+    setSelectedAppointment(appointment)
+    setIsAppointmentSheetOpen(true)
+  }
+
+  const handleAppointmentUpdateSuccess = () => {
+    setIsAppointmentSheetOpen(false)
+    setSelectedAppointment(null)
+    mutate() // Rafraîchir les données
+  }
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
       {/* Date navigation */}
@@ -227,7 +246,10 @@ export function CalendarView({ userId, salonId }: CalendarViewProps) {
           <AnimatePresence>
             {filteredAppointments.map((appointment: any, index: number) => (
               <motion.div key={appointment.id} variants={itemVariants} layout whileHover={{ y: -2 }}>
-                <Card className={`overflow-hidden border ${getStatusColor(appointment.status)}`}>
+                <Card
+                  className={`overflow-hidden border py-0 ${getStatusColor(appointment.status)} cursor-pointer`}
+                  onClick={() => handleAppointmentClick(appointment)}
+                >
                   <div className="p-4">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
@@ -242,11 +264,22 @@ export function CalendarView({ userId, salonId }: CalendarViewProps) {
                           <div className="flex items-center">
                             <span className="font-bold text-sm">{appointment.firstName}</span>
                             <Badge variant="outline" className={`ml-2 text-xs ${getStatusColor(appointment.status)}`}>
-                              {appointment.estimatedTime}
+                              {appointment.hourAppointment}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">{appointment.service.name}</p>
-                          <p className="text-xs text-muted-foreground">{appointment.phoneNumber}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {appointment.services &&
+                              appointment.services.map((service: any) => (
+                                <Badge
+                                  key={service.serviceId}
+                                  variant="outline"
+                                  className="text-xs bg-amber-50 text-amber-700"
+                                >
+                                  {service.service.name}
+                                </Badge>
+                              ))}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{appointment.phoneNumber}</p>
                           <p className="text-xs font-medium text-muted-foreground">
                             {getStatusLabel(appointment.status)}
                           </p>
@@ -278,7 +311,16 @@ export function CalendarView({ userId, salonId }: CalendarViewProps) {
           )}
         </div>
       )}
+      {selectedAppointment && (
+        <AppointmentSheet
+          isOpen={isAppointmentSheetOpen}
+          onClose={() => setIsAppointmentSheetOpen(false)}
+          appointment={selectedAppointment}
+          mode="edit"
+          salonId={salonId}
+          onSuccess={handleAppointmentUpdateSuccess}
+        />
+      )}
     </motion.div>
   )
 }
-

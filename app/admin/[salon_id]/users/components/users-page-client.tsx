@@ -188,9 +188,9 @@ export default function UsersPageClient({ salonId }: UsersPageClientProps) {
                                 
                                 <Badge
                                   variant="outline"
-                                  className={`ml-2 text-xs ${getRoleColor(user.organizationRole)}`}
+                                  className={`ml-2 text-xs ${getRoleColor(user.role)}`}
                                 >
-                                  {getRoleLabel(user.organizationRole)}
+                                  {getRoleLabel(user.role)}
                                 </Badge>
                               </div>
                               <p className="text-xs text-muted-foreground">{user.email}</p>

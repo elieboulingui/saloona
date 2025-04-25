@@ -1,6 +1,37 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
 
+
+// Fonction pour récupérer un rendez-vous spécifique d'une organisation
+export async function GET(request: Request, { params }: { params: Promise<{ id: string; appointmentId: string }> }) {
+  try {
+    const { id: organizationId, appointmentId } = await params
+    
+    const appointment = await prisma.appointment.findUnique({
+      where: {
+        id: appointmentId,
+      },
+      include: {
+        services: {
+          include: {
+            service: true,
+          },
+        },
+      },
+    })
+
+    if (!appointment) {
+      return NextResponse.json({ error: "Rendez-vous non trouvé" }, { status: 404 })
+    }
+
+    return NextResponse.json(appointment)
+  } catch (error) {
+    console.error("Erreur lors de la récupération du rendez-vous:", error)
+    return NextResponse.json({ error: "Erreur lors de la récupération du rendez-vous" }, { status: 500 })
+  }
+}
+
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string; appointmentId: string }> }) {
   try {
     const { id: organizationId, appointmentId } = await params

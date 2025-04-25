@@ -2,7 +2,6 @@ import type React from "react"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { MobileAdminNav } from "./components/mobile-admin-nav"
-import { checkOrganizationMembership } from "@/lib/check-organization-membership"
 
 export default async function DashboardLayout({
   children,

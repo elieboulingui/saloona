@@ -20,7 +20,7 @@ try {
 
     // Vérifier si l'utilisateur est membre de l'organisation
     const organizationId = id
-    const canAccess = await checkOrganizationMembership(session.user.id)
+    const canAccess = await checkOrganizationMembership(organizationId)
 
     if (!canAccess) {
       return NextResponse.json({ error: "Accès refusé" }, { status: 403 })
