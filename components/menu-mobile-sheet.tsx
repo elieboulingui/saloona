@@ -1,7 +1,10 @@
-import { ArrowRight, ChevronRight, Link, MenuIcon } from "lucide-react";
+"use client";
+
+import { ArrowRight, ChevronRight, MenuIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet"
 import { useState } from "react";
+import Link from "next/link";
 
 const MenuMobile = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
