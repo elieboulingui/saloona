@@ -1,122 +1,125 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/utils/prisma"
-import { startOfDay, endOfDay, parseISO, subDays } from "date-fns"
+import { startOfDay, endOfDay, parseISO, subDays, format, differenceInMinutes } from "date-fns"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string , user_id : string}> }) {
   try {
-    const { id , user_id} = await params
+    const { id:organizationId , user_id : userId} = await params
     
     const { searchParams } = new URL(request.url)
     const startDateParam = searchParams.get("startDate")
     const endDateParam = searchParams.get("endDate")
 
-    // Vérifier si l'utilisateur existe
-    const user = await prisma.user.findUnique({
-      where: { id: user_id },
-    })
+  // Définir la plage de dates par défaut (30 derniers jours) si non spécifiée
+  const now = new Date()
+  const defaultStartDate = new Date(now)
+  defaultStartDate.setDate(defaultStartDate.getDate() - 30)
 
-    if (!user) {
-      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 })
-    }
+  const startDate = startDateParam ? startOfDay(parseISO(startDateParam)) : startOfDay(defaultStartDate)
+  const endDate = endDateParam ? endOfDay(parseISO(endDateParam)) : endOfDay(now)
 
-    // Définir la période par défaut (30 derniers jours) si non spécifiée
-    const endDate = endDateParam ? parseISO(endDateParam) : new Date()
-    const startDate = startDateParam ? parseISO(startDateParam) : subDays(endDate, 30)
-
-    // Récupérer tous les rendez-vous terminés pour l'utilisateur dans la période
-    const appointments = await prisma.appointment.findMany({
-      where: {
-        barberId: user_id,
-        status: "COMPLETED",
+  // 1. Récupérer tous les services du coiffeur dans la plage de dates
+  const appointmentServices = await prisma.appointmentService.findMany({
+    where: {
+      barberId: userId,
+      appointment: {
+        organizationId,
         date: {
-          gte: startOfDay(startDate),
-          lte: endOfDay(endDate),
+          gte: startDate,
+          lte: endDate,
         },
       },
-      include: {
-        services: {
-          // Include the AppointmentService model
-          include: {
-            service: true, // Include the Service details
-          },
-        },
-      },
-    })
+      // S'assurer que le service a été commencé et terminé
+      startDate: { not: null },
+      endDate: { not: null },
+    },
+    include: {
+      service: true,
+      appointment: true,
+    },
+    orderBy: {
+      startDate: "asc",
+    },
+  })
 
-    // Calculer les statistiques par service
-    const serviceStats: Record<
-      string,
-      {
-        count: number
-        totalDuration: number
-        avgDuration: number
-        serviceName: string
-        serviceId: string
-      }
-    > = {}
+  // 2. Calculer les statistiques globales
+  const totalAppointments = new Set(appointmentServices.map((as) => as.appointmentId)).size
 
-    appointments.forEach((appointment) => {
-      appointment.services.forEach((appointmentService) => {
-        // Iterate through AppointmentServices
-        const serviceId = appointmentService.serviceId // Access serviceId from AppointmentService
+  // Calculer la durée totale et moyenne des services
+  let totalDuration = 0
+  appointmentServices.forEach((as) => {
+    if (as.startDate && as.endDate) {
+      const duration = differenceInMinutes(new Date(as.endDate), new Date(as.startDate))
+      totalDuration += duration
+    }
+  })
 
-        if (!serviceStats[serviceId]) {
-          serviceStats[serviceId] = {
-            count: 0,
-            totalDuration: 0,
-            avgDuration: 0,
-            serviceName: appointmentService.service.name, // Access service name from AppointmentService
-            serviceId: serviceId,
-          }
+  const avgDuration = totalAppointments > 0 ? totalDuration / totalAppointments : 0
+
+  // 3. Calculer les statistiques par service
+  const serviceStats: Record<
+    string,
+    {
+      serviceId: string
+      serviceName: string
+      count: number
+      totalDuration: number
+      avgDuration: number
+    }
+  > = {}
+
+  appointmentServices.forEach((as) => {
+    if (as.startDate && as.endDate && as.service) {
+      const duration = differenceInMinutes(new Date(as.endDate), new Date(as.startDate))
+
+      if (!serviceStats[as.serviceId]) {
+        serviceStats[as.serviceId] = {
+          serviceId: as.serviceId,
+          serviceName: as.service.name,
+          count: 0,
+          totalDuration: 0,
+          avgDuration: 0,
         }
+      }
 
-        // Calculer la durée moyenne entre min et max du service
-        const avgServiceDuration = (appointmentService.service.durationMin + appointmentService.service.durationMax) / 2 // Access duration from AppointmentService
+      serviceStats[as.serviceId].count += 1
+      serviceStats[as.serviceId].totalDuration += duration
+    }
+  })
 
-        serviceStats[serviceId].count += 1
-        serviceStats[serviceId].totalDuration += avgServiceDuration
-      })
-    })
+  // Calculer la durée moyenne pour chaque service
+  Object.values(serviceStats).forEach((stat) => {
+    stat.avgDuration = stat.count > 0 ? stat.totalDuration / stat.count : 0
+  })
 
-    // Calculer la durée moyenne pour chaque service
-    Object.keys(serviceStats).forEach((serviceId) => {
-      serviceStats[serviceId].avgDuration = serviceStats[serviceId].totalDuration / serviceStats[serviceId].count
-    })
+  // 4. Calculer les statistiques par jour
+  const dailyStats: Record<string, { date: string; count: number }> = {}
 
-    // Convertir en tableau pour faciliter l'utilisation côté client
-    const serviceStatsArray = Object.values(serviceStats)
+  appointmentServices.forEach((as) => {
+    if (as.startDate) {
+      const dateKey = format(new Date(as.startDate), "yyyy-MM-dd")
 
-    // Calculer les statistiques globales
-    const totalAppointments = appointments.length
-    const totalDuration = serviceStatsArray.reduce((sum, stat) => sum + stat.totalDuration, 0)
-    const avgDuration = totalAppointments > 0 ? totalDuration / totalAppointments : 0
-
-    // Calculer les statistiques par jour
-    const dailyStats: Record<string, { date: string; count: number }> = {}
-
-    appointments.forEach((appointment) => {
-      const dateStr = appointment.date.toISOString().split("T")[0]
-
-      if (!dailyStats[dateStr]) {
-        dailyStats[dateStr] = {
-          date: dateStr,
+      if (!dailyStats[dateKey]) {
+        dailyStats[dateKey] = {
+          date: dateKey,
           count: 0,
         }
       }
 
-      dailyStats[dateStr].count += 1
-    })
+      dailyStats[dateKey].count += 1
+    }
+  })
 
-    // Convertir en tableau pour faciliter l'utilisation côté client
-    const dailyStatsArray = Object.values(dailyStats).sort((a, b) => a.date.localeCompare(b.date))
+  // 5. Préparer la réponse
+  const response = {
+    totalAppointments,
+    totalDuration,
+    avgDuration,
+    serviceStats: Object.values(serviceStats).sort((a, b) => b.count - a.count),
+    dailyStats: Object.values(dailyStats).sort((a, b) => a.date.localeCompare(b.date)),
+  }
 
-    return NextResponse.json({
-      totalAppointments,
-      totalDuration,
-      avgDuration,
-      serviceStats: serviceStatsArray,
-      dailyStats: dailyStatsArray,
-    })
+  return NextResponse.json(response)
     
   } catch (error) {
     console.error("Erreur lors de la récupération des statistiques de l'utilisateur:", error)

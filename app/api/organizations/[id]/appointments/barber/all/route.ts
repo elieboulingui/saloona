@@ -4,6 +4,7 @@ import { format } from "date-fns"
 
 export async function GET(request: Request) {
   try {
+    
     const { searchParams } = new URL(request.url)
     const barberIdParam = searchParams.get("barberId")
 
