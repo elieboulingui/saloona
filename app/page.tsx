@@ -132,7 +132,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-[100dvh] relative">
       {/* Header */}
-      <header className="bg-white z-40 sticky top-0  py-4 px-4 md:px-4 lg:px-0 container mx-auto max-w-6xl flex items-center justify-between">
+      <header className="bg-white z-40 sticky top-0  py-4 px-4 md:px-4 lg:px-4 container mx-auto max-w-6xl flex items-center justify-between rounded-b-md">
         <div className="flex items-center gap-3">
           <Image src="/logo-black.png" alt="Saloona Logo" width={120} height={50} className="h-10 w-auto" />
         </div>
@@ -154,7 +154,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="sticky top-16 z-40 bg-white shadow-md px-4 md:px-8 py-2"
+            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 py-2 rounded-b-md"
           >
             <div className="flex overflow-x-auto space-x-3 scroll-bar-none">
               {departments?.map((dept) => (
