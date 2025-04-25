@@ -49,32 +49,32 @@ export const services = [
 export const departments = [
   {
     id: "a1b2c3d4",
-    icon: "scissors",
+    icon: "coiffure.png",
     label: "Coiffure"
   },
   {
     id: "e5f6g7h8",
-    icon: "nail-polish",
-    label: "Manucure & Pédicure"
+    icon: "pedicure.png",
+    label: "Onglerie"
   },
   {
     id: "i9j0k1l2",
-    icon: "spa",
+    icon: "visage.png",
     label: "Soins du visage"
   },
   {
     id: "m3n4o5p6",
-    icon: "massage",
+    icon: "massage.png",
     label: "Massothérapie"
   },
   {
     id: "q7r8s9t0",
-    icon: "makeup",
+    icon: "mackup.svg",
     label: "Maquillage"
   },
   {
     id: "u1v2w3x4",
-    icon: "wax",
+    icon: "epilation.png",
     label: "Épilation"
   }
 ]

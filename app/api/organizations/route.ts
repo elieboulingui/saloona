@@ -12,7 +12,8 @@ export async function GET(req: Request) {
           select: {
             department: {
               select: {
-                label: true, // Only get the department name
+                label: true,
+                id: true,
               },
             },
           },

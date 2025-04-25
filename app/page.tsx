@@ -5,40 +5,44 @@ import useSWR from "swr"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Search, MenuIcon, X, ChevronRight, ArrowRight } from "lucide-react"
+import { Search } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useRecentlyViewedStore } from "@/store/recently-viewed-store"
 import type { Organization } from "@/types/organization"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import CardOrganization from "@/components/card-organization"
+import MenuMobile from "@/components/menu-mobile-sheet"
+import { departments } from "@/data"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function HomePage() {
+
   const router = useRouter()
-  const [searchTerm, setSearchTerm] = useState("")
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null)
+
   const [isFilterSticky, setIsFilterSticky] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const recommendationsRef = useRef<HTMLDivElement>(null)
+
+  const [showStickyFilter, setShowStickyFilter] = useState(false)
+  const recommendationsRef = useRef<HTMLDivElement | null>(null)
+
   const filterRef = useRef<HTMLDivElement>(null)
 
   const { data: organizations, error, isLoading } = useSWR<Organization[]>("/api/organizations", fetcher)
-  const { data: departments } = useSWR<{ id: string; label: string; icon: string }[]>("/api/departments", fetcher)
   const recentlyViewed = useRecentlyViewedStore((state) => state.items)
 
   const filteredOrganizations = organizations?.filter((organization) => {
-    // Filtre par terme de recherche
-    const matchesSearch = organization.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+    console.log("Filtered organizations:", selectedDepartment)
 
     // Filtre par département sélectionné
     const matchesDepartment = selectedDepartment
       ? organization.departments.some((dept) => dept.id === selectedDepartment)
       : true
 
-    return matchesSearch && matchesDepartment
+    return matchesDepartment
+
   })
 
   // Gérer le scroll pour rendre le filtre sticky
@@ -100,10 +104,35 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Affiche la barre quand la section est partiellement visible
+        setShowStickyFilter(entry.isIntersecting)
+      },
+      {
+        root: null,
+        threshold: 0.1,
+      }
+    )
+
+    if (recommendationsRef.current) {
+      observer.observe(recommendationsRef.current)
+    }
+
+    return () => {
+      if (recommendationsRef.current) {
+        observer.unobserve(recommendationsRef.current)
+      }
+    }
+  }, [])
+
+
   return (
-    <div className="flex flex-col min-h-[100dvh]">
+    <div className="flex flex-col min-h-[100dvh] relative">
       {/* Header */}
-      <header className="bg-white py-4 px-4 md:px-0 container mx-auto max-w-6xl flex items-center justify-between">
+      <header className="bg-white z-40 sticky top-0  py-4 px-4 md:px-4 lg:px-0 container mx-auto max-w-6xl flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Image src="/logo-black.png" alt="Saloona Logo" width={120} height={50} className="h-10 w-auto" />
         </div>
@@ -114,64 +143,46 @@ export default function HomePage() {
           <Button className="hidden md:flex hover:cursor-pointer bg-amber-500 hover:bg-amber-600  rounded-full py-4 px-6">
             Je suis un professionnel
           </Button>
-
-          {/* Menu mobile */}
-          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden border-1 rounded-full p-4 bg-amber-500">
-                <MenuIcon className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="p-0">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Pour les clients</h2>
-                  <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <Button variant="link" className="w-full justify-between text-purple-600">
-                    Connectez-vous ou inscrivez-vous
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-
-                  <Button variant="link" className="w-full justify-between">
-                    Téléchargez l'app
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-
-                  <Button variant="link" className="w-full justify-between">
-                    Aide et assistance
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-
-                  <Button variant="link" className="w-full justify-between">
-                    <div className="flex items-center">
-                      <span className="mr-2">🇫🇷</span> français
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="mt-8">
-                  <Button variant="outline" className="w-full justify-between">
-                    Pour les professionnels
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <MenuMobile />
         </div>
       </header>
+
+      <AnimatePresence>
+        {showStickyFilter && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="sticky top-16 z-40 bg-white shadow-md px-4 md:px-8 py-2"
+          >
+            <div className="flex overflow-x-auto space-x-3 scrollbar-hide">
+              {departments?.map((dept) => (
+                <button
+                  key={dept.id}
+                  onClick={() => {
+                    setSelectedDepartment(dept.id)
+                    scrollToRecommendations()
+                  }}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 border text-sm font-medium transition ${selectedDepartment === dept.id
+                      ? 'bg-amber-500 text-white border-amber-500'
+                      : 'bg-white text-gray-700 border-gray-300'
+                    }`}
+                >
+                  {dept.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-amber-100 to-red-100 py-12 md:py-20 px-4 md:px-8">
         <div className="container mx-auto max-w-6xl">
           <h1 className="text-3xl md:text-6xl font-bold mb-8 md:mb-12 max-w-4xl">
-            Réservez des prestations de beauté et de bien-être près de chez vous
+            Réservez des prestations de beauté et de bien-être en quelques clics
           </h1>
 
           {/* Grille de départements au lieu de la barre de recherche */}
