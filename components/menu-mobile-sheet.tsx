@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, MenuIcon } from "lucide-react";
+import { ArrowRight, ChevronRight, Link, MenuIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet"
 import { useState } from "react";
@@ -19,29 +19,28 @@ const MenuMobile = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <Button variant="link" className="w-full justify-between text-purple-600">
-                            Connectez-vous ou inscrivez-vous
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
+                        <Link href="/connexion" className="w-full">
+                            <Button variant="link" className="w-full justify-between text-purple-600">
+                                Connectez-vous ou inscrivez-vous
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <Link href="/aide-et-assistance" className="w-full">
+                            <Button variant="link" className="w-full justify-between">
+                                Aide et assistance
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </Link>
 
-                        <Button variant="link" className="w-full justify-between">
-                            Aide et assistance
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-
-                        <Button variant="link" className="w-full justify-between">
-                            <div className="flex items-center">
-                                <span className="mr-2">🇫🇷</span> français
-                            </div>
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
                     </div>
 
                     <div className="mt-8">
+                        <Link href="/business" className="w-full">
                         <Button variant="outline" className="w-full justify-between">
                             Pour les professionnels
                             <ArrowRight className="h-4 w-4" />
                         </Button>
+                        </Link>
                     </div>
                 </div>
             </SheetContent>
