@@ -107,7 +107,7 @@ export function UserDetailsPageClient({ userId, salonId }: UserDetailsPageClient
     return (
       <div className="flex flex-col min-h-[100dvh]">
         <header className="bg-amber-500 p-4 flex items-center shadow-md">
-          <Link href="/admin/users">
+          <Link href={`/admin/${salonId}/users`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full mr-3">
               <ArrowLeft className="h-5 w-5 text-white" />
             </motion.div>

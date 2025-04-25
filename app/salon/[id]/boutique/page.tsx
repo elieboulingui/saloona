@@ -105,7 +105,7 @@ export default function BoutiquePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gray-50">
+    <div className="flex flex-col container max-w-6xl mx-auto min-h-[100dvh] bg-gray-50">
       {/* Header */}
       <header className="bg-white p-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export default function BoutiquePage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <AnimatePresence>
               {filteredProducts.map((product) => (
                 <motion.div
