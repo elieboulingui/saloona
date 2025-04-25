@@ -156,7 +156,7 @@ export default function HomePage() {
             transition={{ duration: 0.3 }}
             className="sticky top-16 z-40 bg-white shadow-md px-4 md:px-8 py-2"
           >
-            <div className="flex overflow-x-auto space-x-3 scrollbar-hide">
+            <div className="flex overflow-x-auto space-x-3 scroll-bar-none">
               {departments?.map((dept) => (
                 <button
                   key={dept.id}

@@ -207,8 +207,9 @@ export default function OrganizationDetailsPage() {
 
         {/* Informations en bas de l'image */}
         <div className="absolute bottom-4 left-4 right-4 text-white lg:left-8 lg:right-8 lg:bottom-8">
-          <h1 className="text-2xl lg:text-4xl font-bold mb-1">{organization.name}</h1>
-          <div className="flex items-center text-sm lg:text-base mb-2">
+          <h1 className="text-2xl lg:text-4xl font-bold mb-1"></h1>
+          <h1 className="text-2xl font-bold">{organization.name}</h1>
+          <div className="flex items-center text-sm lg:text-base font-medium mb-2">
             <MapPin className="h-4 w-4 mr-1 lg:h-5 lg:w-5" />
             <span>{organization.address}</span>
           </div>
@@ -266,13 +267,13 @@ export default function OrganizationDetailsPage() {
           <div className="mb-6 bg-gray-50 lg:w-1/4 lg:sticky lg:top-24 lg:self-start">
             <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
             {organization.departments.length > 1 && (
-              <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 overflow-x-auto scrollbar-hiden bg-purple-50 p-3 rounded-lg">
+              <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide bg-purple-50 p-3 rounded-lg">
                 {organization.departments.map((dept) => (
                   <motion.div
                     key={dept.id}
                     whileTap={{ scale: 0.95 }}
                     className={cn(
-                      "flex flex-col lg:flex-row items-center lg:items-start gap-2 p-2 rounded-xl cursor-pointer w-auto",
+                      "flex flex-row min-w-[7rem] justify-center lg:flex-row items-center lg:items-start gap-2 p-2 rounded-full cursor-pointer shrink-0", // shrink-0 empêche la réduction
                       selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
                     )}
                     onClick={() => setSelectedDepartment(dept.id)}
@@ -280,15 +281,16 @@ export default function OrganizationDetailsPage() {
                     <Image
                       src={`/${dept.icon}` || "/placeholder.svg"}
                       alt={dept.label}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6 object-contain"
                     />
                     <span className="text-sm font-medium text-center lg:text-left lg:my-auto">{dept.label}</span>
                   </motion.div>
                 ))}
               </div>
             )}
+
           </div>
 
           {/* Services - improve layout for desktop */}
