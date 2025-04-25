@@ -14,6 +14,7 @@ import type { Organization } from "@/types/organization"
 import CardOrganization from "@/components/card-organization"
 import MenuMobile from "@/components/menu-mobile-sheet"
 import { departments } from "@/data"
+import Link from "next/link"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -137,12 +138,16 @@ export default function HomePage() {
           <Image src="/logo-black.png" alt="Saloona Logo" width={120} height={50} className="h-10 w-auto" />
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="hidden hover:cursor-pointer md:flex rounded-full py-4 px-6">
-            Se connecter
-          </Button>
-          <Button className="hidden md:flex hover:cursor-pointer bg-amber-500 hover:bg-amber-600  rounded-full py-4 px-6">
-            Je suis un professionnel
-          </Button>
+          <Link href={"/connexion"}>
+            <Button variant="outline" className="hidden hover:cursor-pointer md:flex rounded-full py-4 px-6">
+              Se connecter
+            </Button>
+          </Link>
+          <Link href="/business">
+            <Button className="hidden md:flex hover:cursor-pointer bg-amber-500 hover:bg-amber-600  rounded-full py-4 px-6">
+              Je suis un professionnel
+            </Button>
+          </Link>
           <MenuMobile />
         </div>
       </header>
@@ -165,8 +170,8 @@ export default function HomePage() {
                     scrollToRecommendations()
                   }}
                   className={`whitespace-nowrap rounded-full px-4 py-2 border text-sm font-medium transition ${selectedDepartment === dept.id
-                      ? 'bg-amber-500 text-white border-amber-500'
-                      : 'bg-white text-gray-700 border-gray-300'
+                    ? 'bg-amber-500 text-white border-amber-500'
+                    : 'bg-white text-gray-700 border-gray-300'
                     }`}
                 >
                   {dept.label}

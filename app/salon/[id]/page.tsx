@@ -267,7 +267,7 @@ export default function OrganizationDetailsPage() {
           <div className="mb-6 bg-gray-50 lg:w-1/4 lg:sticky lg:top-24 lg:self-start">
             <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
             {organization.departments.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide bg-purple-50 p-3 rounded-lg">
+              <div className="flex lg:flex-col gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide bg-purple-50 p-3 rounded-lg">
                 {organization.departments.map((dept) => (
                   <motion.div
                     key={dept.id}
