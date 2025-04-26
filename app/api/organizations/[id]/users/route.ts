@@ -23,6 +23,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             image: true,
             phone: true,
             speciality: true,
+            services : true
           },
         },
       },
@@ -37,6 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       phone: userOrg.user.phone,
       speciality: userOrg.user.speciality,
       role: userOrg.role,
+      services: userOrg.user.services,
     }))
 
     return NextResponse.json(formattedUsers)

@@ -56,7 +56,6 @@ interface PropertyName {
 export async function CreateInvoice(data: InvoiceData) {
   try {
 
-
     const { payer_msisdn, amount, short_description, payer_email, description, external_reference, expiry_period } =
       data
 

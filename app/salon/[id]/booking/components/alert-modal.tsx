@@ -66,4 +66,3 @@ export function AlertModal({ isOpen, onClose, onConfirm, title, description }: A
     </AnimatePresence>
   )
 }
-

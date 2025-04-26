@@ -7,30 +7,47 @@ import { AppointmentStatus } from "@prisma/client"
 import { z } from "zod"
 import { inngest } from "@/inngest/client"
 
-type SaveAppointmentResult = {
+// Types pour les résultats des opérations
+export type SaveAppointmentResult = {
   success: boolean
-  orderNumber: number
-  hourAppointment: string // ✅ Nouveau
+  orderNumber?: number
+  hourAppointment?: string
   appointmentId?: string
   createdAt?: Date
-  estimatedTime?: number // facultatif, utile pour le dashboard interne
+  estimatedTime?: number
   error?: string
 }
 
-
+/**
+ * Crée un nouveau rendez-vous
+ * @param serviceIds IDs des services sélectionnés
+ * @param selectedDate Date sélectionnée
+ * @param organizationId ID de l'organisation (salon)
+ * @param firstName Nom du client
+ * @param phoneNumber Numéro de téléphone du client
+ * @param status Statut du rendez-vous
+ * @param barberId ID du coiffeur sélectionné (peut être null pour "non assigné")
+ * @param hourAppointment Heure du rendez-vous sélectionnée par le client
+ * @param estimatedTime Temps estimé pour les services en minutes
+ * @returns Résultat de l'opération
+ */
 export async function saveAppointment(
   serviceIds: string[],
   selectedDate: Date,
   organizationId: string,
-  firstName: string = generateRandomCode(),
+  firstName: string,
   phoneNumber: string,
   status: AppointmentStatus = AppointmentStatus.PENDING,
-  barberId?: string,
+  barberId: string | null = null,
+  hourAppointment: string,
+  estimatedTime?: number,
 ): Promise<SaveAppointmentResult> {
   try {
+    // Normaliser la date (sans l'heure)
     const normalizedDate = new Date(selectedDate)
     normalizedDate.setHours(12, 0, 0, 0)
 
+    // Vérifier si la réservation est pour aujourd'hui et après 17h
     const now = new Date()
     const isToday =
       normalizedDate.getFullYear() === now.getFullYear() &&
@@ -40,17 +57,17 @@ export async function saveAppointment(
     if (isToday && now.getHours() >= 17) {
       return {
         success: false,
-        orderNumber: 0,
-        hourAppointment: "",
         error: "Les réservations pour aujourd'hui ne sont plus disponibles après 17h",
       }
     }
 
+    // Définir le début et la fin de la journée pour les requêtes
     const startOfDay = new Date(normalizedDate)
     startOfDay.setHours(0, 0, 0, 0)
     const endOfDay = new Date(normalizedDate)
     endOfDay.setHours(23, 59, 59, 999)
 
+    // Trouver le dernier numéro de commande pour générer le suivant
     const lastAppointment = await prisma.appointment.findFirst({
       where: {
         date: { gte: startOfDay, lte: endOfDay },
@@ -61,59 +78,39 @@ export async function saveAppointment(
 
     const newOrderNumber = lastAppointment ? lastAppointment.orderNumber + 1 : 1
 
-    // 🧮 Récupérer les services et calculer la durée moyenne
-    const services = await prisma.service.findMany({
-      where: { id: { in: serviceIds } },
-      select: { durationMin: true, durationMax: true },
-    })
+    // Si estimatedTime n'est pas fourni, calculer à partir des services
+    let finalEstimatedTime = estimatedTime
 
-    const totalDuration = services.reduce((acc, service) => {
-      const avg = Math.round((service.durationMin + service.durationMax) / 2)
-      return acc + avg
-    }, 0) // total en minutes
+    if (finalEstimatedTime === undefined) {
+      // Récupérer les services et calculer la durée totale estimée
+      const services = await prisma.service.findMany({
+        where: { id: { in: serviceIds } },
+        select: { durationMin: true, durationMax: true },
+      })
 
-    // ⏱️ Déduire l’heure de début
-    const lastValidAppointment = await prisma.appointment.findFirst({
-      where: {
-        date: { gte: startOfDay, lte: endOfDay },
-        OR: [
-          { status: { not: AppointmentStatus.PENDING } },
-          { createdAt: { gte: new Date(now.getTime() - 5 * 60000) } },
-        ],
-      },
-      orderBy: { orderNumber: "desc" },
-      select: { hourAppointment: true, estimatedTime: true },
-    })
-
-    let startHour = 9
-    let startMinute = 0
-
-    if (lastValidAppointment) {
-      const [lastHour, lastMin] = lastValidAppointment.hourAppointment.split(":").map(Number)
-      const lastDuration = lastValidAppointment.estimatedTime || 0
-      const totalMin = lastHour * 60 + lastMin + lastDuration
-      startHour = Math.floor(totalMin / 60)
-      startMinute = totalMin % 60
+      // Calculer la durée totale (moyenne des durées min et max)
+      finalEstimatedTime = services.reduce((acc, service) => {
+        const avg = Math.round((service.durationMin + service.durationMax) / 2)
+        return acc + avg
+      }, 0) // total en minutes
     }
 
-    const hourAppointment = `${startHour.toString().padStart(2, "0")}:${startMinute
-      .toString()
-      .padStart(2, "0")}`
-
+    // Créer le rendez-vous
     const appointment = await prisma.appointment.create({
       data: {
         date: normalizedDate,
         firstName,
         phoneNumber,
         orderNumber: newOrderNumber,
-        estimatedTime: totalDuration,
-        hourAppointment,
+        estimatedTime: finalEstimatedTime, // Convertir en string pour correspondre au modèle
+        hourAppointment: hourAppointment,
         status,
-        barberId,
+        barberId: barberId === "unassigned" ? null : barberId, // Gérer le cas "non assigné"
         organizationId,
       },
     })
 
+    // Créer les relations avec les services
     await prisma.appointmentService.createMany({
       data: serviceIds.map((sid) => ({
         appointmentId: appointment.id,
@@ -122,33 +119,48 @@ export async function saveAppointment(
       skipDuplicates: true,
     })
 
+    // Envoyer une notification via Inngest si disponible
+    if (typeof inngest !== "undefined" && inngest.send) {
+      await inngest.send({
+        name: "appointment/created",
+        data: {
+          appointmentId: appointment.id,
+          organizationId,
+          firstName,
+          phoneNumber,
+          orderNumber: newOrderNumber,
+          hourAppointment,
+          estimatedTime: finalEstimatedTime,
+        },
+      })
+    }
+
+    // Revalider le chemin pour mettre à jour l'UI
+    revalidatePath(`/salon/${organizationId}/booking`)
+
     return {
       success: true,
       orderNumber: newOrderNumber,
-      hourAppointment,
+      hourAppointment: hourAppointment,
       appointmentId: appointment.id,
       createdAt: appointment.createdAt,
-      estimatedTime: totalDuration, // pour affichage admin, optionnel
+      estimatedTime: finalEstimatedTime,
     }
   } catch (error) {
     console.error("Erreur lors de la sauvegarde du rendez-vous:", error)
     return {
       success: false,
-      orderNumber: 0,
-      hourAppointment: "",
       error: "Une erreur est survenue lors de la sauvegarde du rendez-vous",
     }
   }
 }
 
-
-
-type DeleteAppointmentResult = {
-  success: boolean
-  error?: string
-}
-
-export async function deleteAppointment(appointmentId: string): Promise<DeleteAppointmentResult> {
+/**
+ * Supprime un rendez-vous
+ * @param appointmentId ID du rendez-vous à supprimer
+ * @returns Résultat de l'opération
+ */
+export async function deleteAppointment(appointmentId: string): Promise<{ success: boolean; error?: string }> {
   try {
     // Vérifier si l'ID du rendez-vous est fourni
     if (!appointmentId) {
@@ -158,7 +170,14 @@ export async function deleteAppointment(appointmentId: string): Promise<DeleteAp
       }
     }
 
-    // Supprimer le rendez-vous de la base de données
+    // Supprimer d'abord les relations avec les services
+    await prisma.appointmentService.deleteMany({
+      where: {
+        appointmentId,
+      },
+    })
+
+    // Puis supprimer le rendez-vous
     await prisma.appointment.delete({
       where: {
         id: appointmentId,
@@ -177,12 +196,20 @@ export async function deleteAppointment(appointmentId: string): Promise<DeleteAp
   }
 }
 
+/**
+ * Met à jour un rendez-vous
+ * @param appointmentId ID du rendez-vous à mettre à jour
+ * @param firstName Nouveau nom du client
+ * @param phoneNumber Nouveau numéro de téléphone
+ * @param status Nouveau statut
+ * @returns Résultat de l'opération
+ */
 export async function updateAppointment(
   appointmentId: string,
   firstName: string,
   phoneNumber: string,
   status: AppointmentStatus,
-) {
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Vérifier si l'ID du rendez-vous est fourni
     if (!appointmentId) {
@@ -192,15 +219,15 @@ export async function updateAppointment(
       }
     }
 
-    // Supprimer le rendez-vous de la base de données
+    // Mettre à jour le rendez-vous
     await prisma.appointment.update({
       where: {
         id: appointmentId,
       },
       data: {
-        firstName: firstName,
-        phoneNumber: phoneNumber,
-        status: status,
+        firstName,
+        phoneNumber,
+        status,
       },
     })
 
@@ -208,10 +235,10 @@ export async function updateAppointment(
       success: true,
     }
   } catch (error) {
-    console.error("Erreur lors de la suppression du rendez-vous:", error)
+    console.error("Erreur lors de la mise à jour du rendez-vous:", error)
     return {
       success: false,
-      error: "Une erreur est survenue lors de la suppression du rendez-vous",
+      error: "Une erreur est survenue lors de la mise à jour du rendez-vous",
     }
   }
 }
@@ -235,23 +262,7 @@ const createTransactionSchema = z.object({
   organizationId: z.string().min(1, "L'ID de l'organisation est requis"),
 })
 
-// Schéma de validation pour la mise à jour d'une transaction
-const updateTransactionSchema = z.object({
-  id: z.string().min(1, "L'ID de la transaction est requis"),
-  amount: z.number().positive("Le montant doit être positif").optional(),
-  reference: z.string().min(1, "La référence est requise").optional(),
-  shortDescription: z.string().min(1, "La description courte est requise").optional(),
-  payerMsisdn: z.string().min(1, "Le numéro de téléphone est requis").optional(),
-  payerEmail: z.string().email("L'email doit être valide").optional(),
-  type: z.enum(["APPOINTMENT", "ORDER", "WITHDRAWAL"]).optional(),
-  appointmentId: z.string().optional(),
-  orderId: z.string().optional(),
-  bill_id: z.string().optional(),
-  server_transaction_id: z.string().optional(),
-  status: z.string().optional(),
-})
-
-// Type pour les résultats des opérations
+// Type pour les résultats des opérations de transaction
 type TransactionResult = {
   success: boolean
   data?: any
@@ -260,6 +271,8 @@ type TransactionResult = {
 
 /**
  * Crée une nouvelle transaction
+ * @param data Données de la transaction
+ * @returns Résultat de l'opération
  */
 export async function createTransaction(data: z.infer<typeof createTransactionSchema>): Promise<TransactionResult> {
   try {
@@ -281,7 +294,7 @@ export async function createTransaction(data: z.infer<typeof createTransactionSc
     // Créer la transaction
     const transaction = await prisma.transaction.create({
       data: {
-        amount: 1000,
+        amount: validatedData.amount,
         reference: validatedData.reference,
         shortDescription: validatedData.shortDescription,
         payerMsisdn: validatedData.payerMsisdn,
@@ -295,8 +308,6 @@ export async function createTransaction(data: z.infer<typeof createTransactionSc
         organizationId: validatedData.organizationId,
       },
     })
-
-    // Revalider les chemins potentiellement affectés
 
     return {
       success: true,
@@ -320,16 +331,27 @@ export async function createTransaction(data: z.infer<typeof createTransactionSc
 }
 
 /**
- * Met à jour une transaction existante
+ * Met à jour le statut d'une transaction et du rendez-vous associé
+ * @param transactionId ID de la transaction
+ * @param status Nouveau statut
+ * @param appointmentId ID du rendez-vous associé
+ * @param clientName Nom du client
+ * @param phoneNumber Numéro de téléphone du client
+ * @param appointmentStatus Nouveau statut du rendez-vous
+ * @returns Résultat de l'opération
  */
-export async function updateTransaction(data: z.infer<typeof updateTransactionSchema>): Promise<TransactionResult> {
+export async function updateTransactionStatus(
+  transactionId: string,
+  status: string,
+  appointmentId: string,
+  clientName: string,
+  phoneNumber: string,
+  appointmentStatus: AppointmentStatus,
+): Promise<TransactionResult> {
   try {
-    // Valider les données
-    const validatedData = updateTransactionSchema.parse(data)
-
     // Vérifier si la transaction existe
     const existingTransaction = await prisma.transaction.findUnique({
-      where: { id: validatedData.id },
+      where: { id: transactionId },
     })
 
     if (!existingTransaction) {
@@ -339,129 +361,6 @@ export async function updateTransaction(data: z.infer<typeof updateTransactionSc
       }
     }
 
-    // Mettre à jour la transaction
-    const transaction = await prisma.transaction.update({
-      where: { id: validatedData.id },
-      data: {
-        amount: 1000,
-        reference: validatedData.reference,
-        shortDescription: validatedData.shortDescription,
-        payerMsisdn: validatedData.payerMsisdn,
-        payerEmail: validatedData.payerEmail,
-        type: validatedData.type,
-        appointmentId: validatedData.appointmentId,
-        orderId: validatedData.orderId,
-        bill_id: validatedData.bill_id,
-        server_transaction_id: validatedData.server_transaction_id,
-        status: validatedData.status,
-      },
-    })
-
-    // Revalider les chemins potentiellement affectés
-    if (existingTransaction.appointmentId) {
-      revalidatePath(`/services/[id]/boooking`)
-    }
-    if (existingTransaction.orderId) {
-      revalidatePath(`/boutique`)
-    }
-
-    return {
-      success: true,
-      data: transaction,
-    }
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de la transaction:", error)
-
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: error.errors.map((e) => `${e.path}: ${e.message}`).join(", "),
-      }
-    }
-
-    return {
-      success: false,
-      error: "Une erreur est survenue lors de la mise à jour de la transaction",
-    }
-  }
-}
-
-/**
- * Récupère une transaction par son ID
- */
-export async function getTransactionById(id: string): Promise<TransactionResult> {
-  try {
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
-    })
-
-    if (!transaction) {
-      return {
-        success: false,
-        error: "Transaction non trouvée",
-      }
-    }
-
-    return {
-      success: true,
-      data: transaction,
-    }
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la transaction:", error)
-    return {
-      success: false,
-      error: "Une erreur est survenue lors de la récupération de la transaction",
-    }
-  }
-}
-
-/**
- * Récupère une transaction par sa référence
- */
-export async function getTransactionByReference(reference: string): Promise<TransactionResult> {
-  try {
-
-    const transaction = await prisma.transaction.findUnique({
-      where: { reference },
-    })
-
-    if (!transaction) {
-      return {
-        success: false,
-        error: "Transaction non trouvée",
-      }
-    }
-
-    return {
-      success: true,
-      data: transaction,
-    }
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la transaction:", error)
-    return {
-      success: false,
-      error: "Une erreur est survenue lors de la récupération de la transaction",
-    }
-  }
-}
-
-// Modifier la fonction updateTransactionStatus pour appeler la fonction Inngest
-export async function updateTransactionStatus(
-  id: string,
-  status: string,
-  appointmentId: string,
-  clientName: string,
-  phoneNumber: string,
-  appointmentStatus: AppointmentStatus,
-): Promise<TransactionResult> {
-  try {
-    console.log(id)
-
-    // Vérifier si la transaction existe
-    const existingTransaction = await prisma.transaction.findUnique({
-      where: { id },
-    })
-
     // Vérifier si l'ID du rendez-vous est fourni
     if (!appointmentId) {
       return {
@@ -470,7 +369,7 @@ export async function updateTransactionStatus(
       }
     }
 
-    // Mettre à jour le rendez-vous dans la base de données
+    // Mettre à jour le rendez-vous
     const appointment = await prisma.appointment.update({
       where: {
         id: appointmentId,
@@ -481,41 +380,36 @@ export async function updateTransactionStatus(
         status: appointmentStatus,
       },
       include: {
-        services: true, // Inclure les informations du service
+        services: true, // Inclure les informations des services
       },
     })
 
-    if (!existingTransaction) {
-      console.log("Transaction non trouvée")
-      return {
-        success: false,
-        error: "Transaction non trouvée",
-      }
-    }
-
-    // Mettre à jour le statut de la transaction
+    // Mettre à jour la transaction
     const transaction = await prisma.transaction.update({
-      where: { id },
-      data: { status: status },
+      where: { id: transactionId },
+      data: { status },
     })
 
-    // Envoyer une notification via Inngest
-    await inngest.send({
-      name: "transaction/status.updated",
-      data: {
-        transactionId: id,
-        status: status,
-        appointmentId: appointmentId,
-        clientName: clientName,
-        phoneNumber: phoneNumber,
-        appointmentStatus: appointmentStatus,
-        serviceName: appointment.services[0]?.id || "Service",
-      },
-    })
+    // Envoyer une notification via Inngest si disponible
+    if (typeof inngest !== "undefined" && inngest.send) {
+      await inngest.send({
+        name: "transaction/status.updated",
+        data: {
+          transactionId,
+          status,
+          appointmentId,
+          clientName,
+          phoneNumber,
+          appointmentStatus,
+          serviceName: appointment.services[0]?.serviceId || "Service",
+        },
+      })
+    }
 
     // Revalider les chemins potentiellement affectés
     if (existingTransaction.appointmentId) {
       revalidatePath(`/tv`)
+      revalidatePath(`/salon/${existingTransaction.organizationId}/booking`)
     }
 
     return {
