@@ -10,16 +10,18 @@ import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useRecentlyViewedStore } from "@/store/recently-viewed-store"
-import type { Organization } from "@/types/organization"
+import type { OrganizationDetails } from "@/types/organization"
 import CardOrganization from "@/components/card-organization"
 import MenuMobile from "@/components/menu-mobile-sheet"
 import { departments } from "@/data"
 import Link from "next/link"
+import { BlogSection } from "@/components/blog-section"
+import { ProCtaSection } from "@/components/pro-cta-section"
+import { Footer } from "@/components/footer"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function HomePage() {
-
   const router = useRouter()
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null)
 
@@ -30,18 +32,16 @@ export default function HomePage() {
 
   const filterRef = useRef<HTMLDivElement>(null)
 
-  const { data: organizations, error, isLoading } = useSWR<Organization[]>("/api/organizations", fetcher)
+  const { data: organizations, error, isLoading } = useSWR<OrganizationDetails[]>("/api/organizations", fetcher)
   const recentlyViewed = useRecentlyViewedStore((state) => state.items)
 
   const filteredOrganizations = organizations?.filter((organization) => {
-
     // Filtre par département sélectionné
     const matchesDepartment = selectedDepartment
       ? organization.departments.some((dept) => dept.id === selectedDepartment)
       : true
 
     return matchesDepartment
-
   })
 
   // Gérer le scroll pour rendre le filtre sticky
@@ -58,7 +58,8 @@ export default function HomePage() {
   }, [])
 
   // Fonction pour naviguer vers un salon et l'ajouter aux récemment consultés
-  const handleOrganizationClick = (organization: Organization) => {
+  const handleOrganizationClick = (organization: OrganizationDetails) => {
+    useRecentlyViewedStore.getState().addItem(organization)
     router.push(`/salon/${organization.id}`)
   }
 
@@ -102,7 +103,6 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -112,7 +112,7 @@ export default function HomePage() {
       {
         root: null,
         threshold: 0.1,
-      }
+      },
     )
 
     if (recommendationsRef.current) {
@@ -125,7 +125,6 @@ export default function HomePage() {
       }
     }
   }, [])
-
 
   return (
     <div className="flex flex-col min-h-[100dvh] relative">
@@ -156,7 +155,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 pt-2 pb-5 rounded-b-md"
+            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 py-2 rounded-b-md"
           >
             <div className="flex overflow-x-auto space-x-3 scroll-bar-none">
               {departments?.map((dept) => (
@@ -166,10 +165,11 @@ export default function HomePage() {
                     setSelectedDepartment(dept.id)
                     scrollToRecommendations()
                   }}
-                  className={`whitespace-nowrap rounded-full px-4 py-2 border text-sm font-medium transition ${selectedDepartment === dept.id
-                    ? 'bg-amber-500 text-white border-amber-500'
-                    : 'bg-white text-gray-700 border-gray-300'
-                    }`}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 border text-sm font-medium transition ${
+                    selectedDepartment === dept.id
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "bg-white text-gray-700 border-gray-300"
+                  }`}
                 >
                   {dept.label}
                 </button>
@@ -178,7 +178,6 @@ export default function HomePage() {
           </motion.div>
         )}
       </AnimatePresence>
-
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-amber-100 to-red-100 py-12 md:py-20 px-4 md:px-8">
@@ -295,6 +294,15 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Blog & Astuces Section */}
+      <BlogSection />
+
+      {/* Professional CTA Section */}
+      <ProCtaSection />
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

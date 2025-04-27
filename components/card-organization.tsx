@@ -4,15 +4,15 @@ import { Card } from "./ui/card"
 import { Badge } from "./ui/badge"
 import { MapPin } from "lucide-react"
 import Image from "next/image"
-import type { Organization } from "@/types/organization"
+import type { OrganizationDetails } from "@/types/organization"
 
 interface OrganizationProps {
-  organization: Organization
+  organization: OrganizationDetails
   onClick?: () => void
 }
 
 const CardOrganization = ({ organization, onClick }: OrganizationProps) => {
-  
+
   return (
     <div className="w-full" onClick={onClick}>
       <Card key={organization.id} className="overflow-hidden gap-0 border-none shadow-sm cursor-pointer py-0">

@@ -265,10 +265,10 @@ export default function BoutiquePage() {
                         </div>
                       ) : (
                         <Button
-                          className="w-full bg-amber-500 hover:bg-amber-600 mt-auto"
+                          className="w-full bg-amber-500 text-sm lg:text-lg rounded-full hover:bg-amber-600 mt-auto"
                           onClick={() => handleAddToCart(product)}
                         >
-                          <ShoppingBag className="h-4 w-4 mr-2" />
+                          <ShoppingBag className="h-4 w-4" />
                           Ajouter
                         </Button>
                       )}
