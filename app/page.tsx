@@ -35,8 +35,6 @@ export default function HomePage() {
 
   const filteredOrganizations = organizations?.filter((organization) => {
 
-    console.log("Filtered organizations:", selectedDepartment)
-
     // Filtre par département sélectionné
     const matchesDepartment = selectedDepartment
       ? organization.departments.some((dept) => dept.id === selectedDepartment)
@@ -61,7 +59,6 @@ export default function HomePage() {
 
   // Fonction pour naviguer vers un salon et l'ajouter aux récemment consultés
   const handleOrganizationClick = (organization: Organization) => {
-    useRecentlyViewedStore.getState().addItem(organization)
     router.push(`/salon/${organization.id}`)
   }
 
@@ -159,7 +156,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 py-2 rounded-b-md"
+            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 pt-2 pb-5 rounded-b-md"
           >
             <div className="flex overflow-x-auto space-x-3 scroll-bar-none">
               {departments?.map((dept) => (

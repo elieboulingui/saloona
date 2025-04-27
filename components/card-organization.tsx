@@ -12,6 +12,7 @@ interface OrganizationProps {
 }
 
 const CardOrganization = ({ organization, onClick }: OrganizationProps) => {
+  
   return (
     <div className="w-full" onClick={onClick}>
       <Card key={organization.id} className="overflow-hidden gap-0 border-none shadow-sm cursor-pointer py-0">

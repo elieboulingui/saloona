@@ -1,34 +1,20 @@
 "use client"
-
-import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import Image from "next/image"
 import { useParams, useRouter } from "next/navigation"
 import useSWR from "swr"
-import {
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Grid,
-  Home,
-  ListOrdered,
-  MapPin,
-  Minus,
-  Phone,
-  Plus,
-  Share2,
-  ShoppingBag,
-  ShoppingBasket,
-  Trash2,
-} from "lucide-react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn, formatTime } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useRef } from "react"
+
+// Icons
+import { ChevronLeft, Clock, Heart, MapPin, Share2, ShoppingCart } from "lucide-react"
+
+// Components
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { cn, formatTime } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-service-store"
+// Remplacer la fonction useIsMobile par useMobile pour correspondre à l'import
+import { useIsMobile } from "@/hooks/use-mobile"
+import Link from "next/link"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -52,18 +38,18 @@ interface OrganizationDetails {
   address: string
   verificationStatus: string
   OrganizationAvailability:
-  | {
-    openingTime: number
-    closingTime: number
-    mondayOpen: boolean
-    thursdayOpen: boolean
-    wednesdayOpen: boolean
-    fridayOpen: boolean
-    sundayOpen: boolean
-    saturdayOpen: boolean
-    tuesdayOpen: boolean
-  }[]
-  | null
+    | {
+        openingTime: number
+        closingTime: number
+        mondayOpen: boolean
+        thursdayOpen: boolean
+        wednesdayOpen: boolean
+        fridayOpen: boolean
+        sundayOpen: boolean
+        saturdayOpen: boolean
+        tuesdayOpen: boolean
+      }[]
+    | null
 }
 
 interface Service {
@@ -86,22 +72,111 @@ interface CartItem {
 
 export default function OrganizationDetailsPage() {
   const { id } = useParams()
-  const { items: cart, addItem, removeItem, total, totalDuration, clearCart } = useCartStore()
+  const router = useRouter()
+  const { items: cart, addItem, removeItem, total, clearCart } = useCartStore()
+  const isMobile = useIsMobile()
+
+  const [activeSection, setActiveSection] = useState("prestations")
+  const [activeServiceCategory, setActiveServiceCategory] = useState("all")
+  const [isNavSticky, setIsNavSticky] = useState(false)
+  const navRef = useRef<HTMLDivElement>(null)
+  const prestationsRef = useRef<HTMLDivElement>(null)
+  const equipeRef = useRef<HTMLDivElement>(null)
+  const aproposRef = useRef<HTMLDivElement>(null)
+  const avisRef = useRef<HTMLDivElement>(null)
+  const photosRef = useRef<HTMLDivElement>(null)
 
   const { data: organization, error, isLoading } = useSWR<OrganizationDetails>(`/api/organizations/${id}`, fetcher)
 
-  const router = useRouter()
-  const [expandedService, setExpandedService] = useState<string | null>(null)
-
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null)
+  const [expandedService, setExpandedService] = useState<string | null>(null)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const [showCart, setShowCart] = useState(false)
+  // Handle scroll for active section detection
+  useEffect(() => {
+    let ticking = false
+    let lastKnownScrollPosition = 0
 
-  // Gérer l'expansion des services
+    const handleScroll = () => {
+      lastKnownScrollPosition = window.scrollY
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Ajouter un offset pour la navigation fixe en mobile
+          const offset = isMobile ? 150 : 100
+          const scrollPosition = lastKnownScrollPosition + offset
+
+          // Définir les sections et leurs positions
+          const sections = [
+            { id: "prestations", ref: prestationsRef },
+            { id: "equipe", ref: equipeRef },
+            { id: "apropos", ref: aproposRef },
+            { id: "avis", ref: avisRef },
+            { id: "photos", ref: photosRef },
+          ]
+
+          // Trouver la section active
+          let newActiveSection = activeSection
+
+          // Parcourir les sections de bas en haut pour trouver la première visible
+          for (let i = sections.length - 1; i >= 0; i--) {
+            const section = sections[i]
+            if (section.ref.current && scrollPosition >= section.ref.current.offsetTop) {
+              newActiveSection = section.id
+              break
+            }
+          }
+
+          // Mettre à jour seulement si la section a changé
+          if (newActiveSection !== activeSection) {
+            setActiveSection(newActiveSection)
+          }
+
+          ticking = false
+        })
+
+        ticking = true
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [activeSection, isMobile])
+
+  // Scroll to section when clicking on navigation
+  const scrollToSection = (sectionId: string) => {
+    // Mettre à jour l'état immédiatement pour éviter le clignotement
+    setActiveSection(sectionId)
+
+    const sectionRefs = {
+      prestations: prestationsRef,
+      equipe: equipeRef,
+      apropos: aproposRef,
+      avis: avisRef,
+      photos: photosRef,
+    }
+
+    const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs]
+
+    if (sectionRef.current) {
+      // Calculer l'offset en fonction de la hauteur de la navigation fixe
+      const yOffset = isMobile ? -150 : -70
+      const y = sectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset
+
+      // Utiliser scrollTo avec behavior smooth pour une animation fluide
+      window.scrollTo({
+        top: y,
+        behavior: "smooth",
+      })
+    }
+  }
+
+  // Toggle service expansion
   const toggleServiceExpansion = (serviceId: string) => {
     setExpandedService(expandedService === serviceId ? null : serviceId)
   }
 
+  // Add service to cart
   const addToCart = (service: Service) => {
     addItem({
       serviceId: service.id,
@@ -111,366 +186,684 @@ export default function OrganizationDetailsPage() {
     })
   }
 
+  // Remove service from cart
   const removeFromCart = (serviceId: string) => {
     removeItem(serviceId)
   }
 
-  // Vérifier si un service est dans le panier
+  // Check if service is in cart
   const isInCart = (serviceId: string) => {
     return cart.some((item) => item.serviceId === serviceId)
   }
 
-  const calculateTotal = () => total()
-  const calculateTotalDuration = () => totalDuration()
-
-  // Formater la durée en heures et minutes
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-
-    if (hours > 0) {
-      return `${hours}h${mins > 0 ? ` ${mins}min` : ""}`
-    }
-    return `${mins}min`
-  }
-
-  // Procéder à la réservation
+  // Proceed to booking
   const proceedToBooking = () => {
     router.push(`/salon/${id}/booking`)
   }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <Skeleton className="h-60 w-full mb-4" />
-        <Skeleton className="h-8 w-1/2 mb-2" />
-        <Skeleton className="h-6 w-1/4 mb-2" />
-        <Skeleton className="h-6 w-1/3 mb-2" />
+      <div className="container mx-auto p-4 space-y-4">
+        <Skeleton className="h-60 w-full rounded-lg" />
+        <Skeleton className="h-8 w-1/2" />
+        <Skeleton className="h-6 w-1/4" />
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-40 w-full rounded-lg" />
+        </div>
       </div>
     )
   }
 
   if (error) {
-    return <div className="text-red-500">Failed to load organization</div>
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <div className="bg-red-50 p-6 rounded-lg">
+          <h2 className="text-red-600 text-xl font-semibold">Erreur de chargement</h2>
+          <p className="text-red-500 mt-2">Impossible de charger les informations du salon.</p>
+          <Button variant="outline" className="mt-4" onClick={() => router.push("/")}>
+            Retour à l'accueil
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   if (!organization) {
-    return <div>Organization not found</div>
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <div className="bg-amber-50 p-6 rounded-lg">
+          <h2 className="text-amber-600 text-xl font-semibold">Salon introuvable</h2>
+          <p className="text-amber-500 mt-2">Ce salon n'existe pas ou a été supprimé.</p>
+          <Button variant="outline" className="mt-4" onClick={() => router.push("/")}>
+            Retour à l'accueil
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const filteredServices = selectedDepartment
     ? organization.services.filter((service) => service.departmentId === selectedDepartment)
     : organization.services
 
+  // Mock data for team members (to be replaced with real data)
+  const teamMembers = [
+    { id: "1", name: "Evard", role: "Coiffeur", image: "/placeholder.svg?height=100&width=100" },
+    { id: "2", name: "Adèle", role: "Coiffeuse", image: "/placeholder.svg?height=100&width=100" },
+    { id: "3", name: "Hugo", role: "Barbier", image: "/placeholder.svg?height=100&width=100" },
+    { id: "4", name: "Coach Sportif", role: "Fitness", image: "/placeholder.svg?height=100&width=100" },
+  ]
+
+  // Mock data for reviews (to be replaced with real data)
+  const reviews = [
+    { id: "1", author: "Cédric F.", rating: 5, comment: "Très bon service, je recommande !", date: "2 mars 2023" },
+    {
+      id: "2",
+      author: "Arnaud W.",
+      rating: 5,
+      comment: "Très professionnel, installations claires et sympathique unique.",
+      date: "15 avril 2023",
+    },
+    {
+      id: "3",
+      author: "Aline K.",
+      rating: 4,
+      comment: "Accueil très chaleureux, service impeccable.",
+      date: "8 mai 2023",
+    },
+    { id: "4", author: "Hélène A.", rating: 5, comment: "Je recommande vivement !", date: "20 juin 2023" },
+  ]
+
   return (
-    <div className="flex relative flex-col min-h-[100dvh] bg-gray-50">
-      {/* Image de couverture avec header flottant */}
-      <div className="relative h-64 md:h-80 lg:h-96 container mx-auto max-w-6xl mt-0">
-        <Image
-          src={`${organization.imageCover}`}
-          alt={organization.name}
-          fill
-          className="object-cover rounded-none"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-        {/* Header flottant */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start">
-          <Link href="/">
-            <motion.div whileTap={{ scale: 0.9 }} className="bg-white p-3 rounded-full backdrop-blur-sm">
-              <Home className="h-5 w-5 text-black" />
-            </motion.div>
-          </Link>
-
-          <div className="flex gap-2">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              className="bg-white p-3 rounded-full backdrop-blur-sm"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: organization.name,
-                    text: `Découvrez ${organization.name} - ${organization.description?.substring(0, 50)}...`,
-                    url: window.location.href,
-                  })
-                }
-              }}
-            >
-              <Share2 className="h-5 w-5 text-black" />
-            </motion.button>
-
-            <motion.button whileTap={{ scale: 0.9 }} className={cn("p-3 rounded-full backdrop-blur-sm bg-white")}>
-              <Phone className="h-5 w-5 text-black" />
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Informations en bas de l'image */}
-        <div className="absolute bottom-4 left-4 right-4 text-white lg:left-8 lg:right-8 lg:bottom-8">
-          <h1 className="text-2xl lg:text-4xl font-bold mb-1"></h1>
-          <h1 className="text-2xl font-bold">{organization.name}</h1>
-          <div className="flex items-center text-sm lg:text-base font-medium mb-2">
-            <MapPin className="h-4 w-4 mr-1 lg:h-5 lg:w-5" />
-            <span>{organization.address}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {organization.verificationStatus === "verified" ? (
-              <Badge className="bg-green-500">Vérifié</Badge>
-            ) : (
-              <Badge className="bg-red-500">Non vérifié</Badge>
-            )}
-
-            <div className="flex items-center text-sm lg:text-base">
-              {organization.OrganizationAvailability && (
-                <>
-                  <Clock className="h-4 w-4 mr-1 lg:h-5 lg:w-5" />
-                  <span>
-                    {formatTime(organization.OrganizationAvailability[0].openingTime)}-{" "}
-                    {formatTime(organization.OrganizationAvailability[0].closingTime)}
-                  </span>
-                </>
-              )}
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Mobile Header */}
+      {isMobile && (
+        <>
+          {/* Breadcrumb navigation */}
+          <div className="bg-white border-b border-gray-100 py-2 px-4">
+            <div className="flex items-center text-sm">
+              <Link href="/" className="text-gray-500">
+                Accueil
+              </Link>
+             
+              <span className="mx-1 text-gray-500">•</span>
+              <span className="font-medium">{organization.name}</span>
             </div>
           </div>
-        </div>
-      </div>
-      {/* Boutons d'action */}
-      <div className="flex mb-6 container mx-auto max-w-6xl sticky top-0 z-[999] bg-white">
-        <Button
-          className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-none border-none py-6"
-          onClick={() => setShowCart(true)}
-        >
-          <Grid className="h-4 w-4 mr-2" />
-          Services
-          {cart.length > 0 && <Badge className="ml-2 bg-white text-amber-500">{cart.length}</Badge>}
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
-          onClick={() => router.push(`/salon/${id}/boutique`)}
-        >
-          <ShoppingBasket className="h-4 w-4 mr-2" />
-          Boutique
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-gray-500 hover:bg-gray-50 rounded-none border-none py-6"
-          onClick={() => router.push(`/salon/${id}/queue`)}
-        >
-          <ListOrdered className="h-4 w-4 mr-2" />
-          Fil d'attente
-        </Button>
-      </div>
-      <main className="flex-1 px-4 py-4 container mx-auto max-w-6xl">
-        {/* Départements */}
-        <div className="lg:flex lg:gap-8">
-          <div className="mb-6 bg-gray-50 lg:w-1/4 lg:sticky lg:top-24 lg:self-start">
-            <h2 className="text-lg font-bold mb-3">Que souhaitez vous faire ?</h2>
-            {organization.departments.length > 1 && (
-              <div className="flex lg:flex-col gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide bg-purple-50 p-3 rounded-lg">
-                {organization.departments.map((dept) => (
-                  <motion.div
-                    key={dept.id}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "flex flex-row min-w-[7rem] justify-center lg:flex-row items-center lg:items-start gap-2 p-2 rounded-full cursor-pointer shrink-0", // shrink-0 empêche la réduction
-                      selectedDepartment === dept.id ? "bg-[#fe9a00] shadow-sm" : "bg-white/60",
-                    )}
-                    onClick={() => setSelectedDepartment(dept.id)}
-                  >
-                    <Image
-                      src={`/${dept.icon}` || "/placeholder.svg"}
-                      alt={dept.label}
-                      width={24}
-                      height={24}
-                      className="h-6 w-6 object-contain"
-                    />
-                    <span className="text-sm font-medium text-center lg:text-left lg:my-auto">{dept.label}</span>
-                  </motion.div>
-                ))}
+        </>
+      )}
+
+      {/* Main content */}
+      <main className={cn("flex-1", isMobile ? "pt-0 pb-24" : "pt-0")}>
+        {/* Hero image for mobile */}
+        {isMobile && (
+          <div className="relative h-[300px] w-full">
+            <Image
+              src={organization.imageCover || "/placeholder.svg?height=400&width=600"}
+              alt={organization.name}
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute top-4 left-4 right-4 flex justify-between">
+              <button
+                onClick={() => router.push("/")}
+                className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <div className="flex gap-2">
+                <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
+                  <Share2 className="h-5 w-5" />
+                </button>
+                <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
+                  <Heart className="h-5 w-5" />
+                </button>
               </div>
-            )}
-
+            </div>
+            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">1/6</div>
           </div>
+        )}
 
-          {/* Services - improve layout for desktop */}
-          <div className="mb-6 lg:w-3/4">
-            <div className="mt-4 space-y-3">
-              <AnimatePresence>
-                {filteredServices.map((service) => (
-                  <motion.div
-                    key={service.id}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+        <div className="container mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="lg:flex lg:gap-8">
+            {/* Main content area */}
+            <div className="lg:w-3/4 relative">
+              {/* Organization name and info for desktop */}
+              {!isMobile && (
+                <div className="mt-8 mb-6">
+                  <h1 className="text-4xl font-bold">{organization.name}</h1>
+                  <div className="flex items-center gap-2 mt-2 text-sm">
+                    <div className="flex items-center">
+                      <span>{organization.address}</span>
+                      <a href="#" className="text-blue-600 ml-1">
+                        Afficher l'itinéraire
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Image gallery for desktop */}
+              {!isMobile && (
+                <div className="mb-12">
+                  <div className="grid grid-cols-12 gap-2 h-[400px]">
+                    <div className="col-span-8 relative rounded-lg overflow-hidden">
+                      <Image
+                        src={organization.imageCover || "/placeholder.svg?height=400&width=600"}
+                        alt={organization.name}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    </div>
+                    <div className="col-span-4 grid grid-rows-2 gap-2">
+                      <div className="relative rounded-lg overflow-hidden">
+                        <Image
+                          src="/placeholder.svg?height=200&width=200"
+                          alt="Salon interior"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="relative rounded-lg overflow-hidden">
+                        <Image
+                          src="/placeholder.svg?height=200&width=200"
+                          alt="Salon interior"
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-end justify-end p-3">
+                          <button className="bg-white text-black text-sm font-medium py-2 px-3 rounded-lg">
+                            Afficher toutes les images
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Organization info for mobile */}
+              {isMobile && (
+                <div className="py-6">
+                  <h1 className="text-3xl font-bold">{organization.name}</h1>
+                  <div className="flex items-center mt-2">
+                    <span className="text-2xl font-bold mr-2">4.8</span>
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg
+                          key={i}
+                          className="w-5 h-5 text-black fill-current"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-indigo-500 ml-2">(18)</span>
+                  </div>
+                  <div className="mt-2 text-gray-600">Avenue Jean Paul II, Libreville</div>
+                  <div className="mt-1 text-amber-600 font-medium">Fermé</div>
+                </div>
+              )}
+
+              {/* Navigation for sections */}
+              <div
+                ref={navRef}
+                className={cn(
+                  "bg-white border-b border-gray-200 transition-all duration-300",
+                  isMobile ? "sticky top-0 left-0 right-0 z-40 pr-4" : "mb-4",
+                )}
+              >
+                <div className="flex overflow-x-auto scrollbar-hide relative">
+                  <button
+                    onClick={() => scrollToSection("prestations")}
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap font-medium text-base relative transition-colors duration-300",
+                      activeSection === "prestations" ? "text-black" : "text-gray-500",
+                    )}
                   >
-                    <Card
+                    Prestations
+                    {activeSection === "prestations" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black transition-all duration-300" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("equipe")}
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap font-medium text-base relative transition-colors duration-300",
+                      activeSection === "equipe" ? "text-black" : "text-gray-500",
+                    )}
+                  >
+                    Équipe
+                    {activeSection === "equipe" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black transition-all duration-300" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("apropos")}
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap font-medium text-base relative transition-colors duration-300",
+                      activeSection === "apropos" ? "text-black" : "text-gray-500",
+                    )}
+                  >
+                    À propos
+                    {activeSection === "apropos" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black transition-all duration-300" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("avis")}
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap font-medium text-base relative transition-colors duration-300",
+                      activeSection === "avis" ? "text-black" : "text-gray-500",
+                    )}
+                  >
+                    Avis
+                    {activeSection === "avis" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black transition-all duration-300" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => scrollToSection("photos")}
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap font-medium text-base relative transition-colors duration-300",
+                      activeSection === "photos" ? "text-black" : "text-gray-500",
+                    )}
+                  >
+                    Photos
+                    {activeSection === "photos" && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black transition-all duration-300" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Prestations section */}
+              <div ref={prestationsRef} id="prestations" className={cn("mb-12", isMobile && "pt-8")}>
+                <h2 className="text-3xl font-bold mb-6">Prestations</h2>
+
+                {/* Service category tabs */}
+                <div className="overflow-x-auto whitespace-nowrap mb-4 scrollbar-hide">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
                       className={cn(
-                        "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md",
-                        expandedService === service.id ? "border-amber-300" : "",
-                        isInCart(service.id) ? "border-green-300 bg-green-50" : "",
+                        "rounded-full text-sm font-medium py-2 px-4 border-gray-300",
+                        activeServiceCategory === "all" && "bg-black text-white hover:bg-black border-black",
                       )}
-                      onClick={() => toggleServiceExpansion(service.id)}
+                      onClick={() => {
+                        setActiveServiceCategory("all")
+                        setSelectedDepartment(null)
+                      }}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center">
-                              <h3 className="font-bold">{service.name}</h3>
-                              {isInCart(service.id) && <Badge className="ml-2 bg-green-500">Sélectionné</Badge>}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-500 mt-1">
-                              <Clock className="h-3 w-3 mr-1" />
-                              <span>{service.durationMin} min</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-amber-600">{service.price.toLocaleString()} FCFA</div>
-                            {expandedService === service.id ? (
-                              <ChevronUp className="h-5 w-5 text-gray-400 mt-1" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400 mt-1" />
-                            )}
+                      À la une
+                    </Button>
+
+                    {organization.departments.map((dept) => (
+                      <Button
+                        key={dept.id}
+                        variant="outline"
+                        className={cn(
+                          "rounded-full text-sm font-medium py-2 px-4 border-gray-300",
+                          selectedDepartment === dept.id && "bg-black text-white hover:bg-black border-black",
+                        )}
+                        onClick={() => {
+                          setActiveServiceCategory(dept.id)
+                          setSelectedDepartment(dept.id)
+                        }}
+                      >
+                        {dept.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Services list */}
+                <div className="space-y-0">
+                  {filteredServices.map((service) => (
+                    <div key={service.id} className="border-t border-gray-100 py-6 first:border-t-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-base">{service.name}</h3>
+                          <div className="text-sm text-gray-500 mt-1">{service.durationMin} min</div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            à partir de {Number.parseInt(service.price).toLocaleString()} FCFA
                           </div>
                         </div>
+                        <Button
+                          variant="outline"
+                          className="rounded-full border-gray-300 px-5"
+                          onClick={() => {
+                            if (isInCart(service.id)) {
+                              removeFromCart(service.id)
+                            } else {
+                              addToCart(service)
+                            }
+                          }}
+                        >
+                          {isInCart(service.id) ? "Sélectionné" : "Réserver"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
 
-                        <AnimatePresence>
-                          {expandedService === service.id && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="mt-3 pt-3 border-t border-gray-100"
-                            >
-                              <p className="text-gray-600 text-sm mb-3">{service.description}</p>
-                              {isInCart(service.id) ? (
-                                <Button
-                                  variant="outline"
-                                  className="w-full border-red-500 text-red-500 hover:bg-red-50"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    removeFromCart(service.id)
-                                  }}
-                                >
-                                  <Minus className="mr-2 h-4 w-4" />
-                                  Retirer du panier
-                                </Button>
-                              ) : (
-                                <Button
-                                  className="w-full bg-amber-500 hover:bg-amber-600"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    addToCart(service)
-                                  }}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Ajouter au panier
-                                </Button>
+                  <div className="pt-4 flex justify-between items-center">
+                    <span className="text-gray-500">88 prestations disponibles</span>
+                    <Button variant="outline" className="rounded-full border-gray-300 px-5">
+                      Tout voir
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Team section */}
+              <div ref={equipeRef} id="equipe" className="mb-12">
+                <h2 className="text-3xl font-bold mb-8">Équipe</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+                  {teamMembers.map((member) => (
+                    <div key={member.id} className="text-center">
+                      <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden mb-3 bg-gray-100">
+                        <Image
+                          src={member.image || "/placeholder.svg"}
+                          alt={member.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <h3 className="font-medium">{member.name}</h3>
+                      <p className="text-sm text-gray-500">{member.role}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* About section */}
+              <div ref={aproposRef} id="apropos" className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">À propos</h2>
+
+                {organization.description && (
+                  <div className="mb-8">
+                    <p className="text-gray-600">{organization.description}</p>
+                  </div>
+                )}
+
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="font-medium mb-3 flex items-center">
+                      <MapPin className="h-5 w-5 mr-2 text-gray-500" />
+                      Adresse
+                    </h3>
+                    <p className="text-gray-600 mb-2">{organization.address}</p>
+                    <div className="h-60 bg-gray-200 rounded-lg">
+                      {/* Map placeholder - to be replaced with actual map */}
+                      <div className="h-full w-full flex items-center justify-center text-gray-400">Carte</div>
+                    </div>
+                  </div>
+
+                  {organization.OrganizationAvailability && (
+                    <div>
+                      <h3 className="font-medium mb-3 flex items-center">
+                        <Clock className="h-5 w-5 mr-2 text-gray-500" />
+                        Horaires d'ouverture
+                      </h3>
+                      <div className="grid grid-cols-2 gap-y-2 text-sm">
+                        <div className="flex justify-between pr-4">
+                          <span>Lundi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].mondayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Mardi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].tuesdayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Mercredi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].wednesdayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Jeudi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].thursdayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Vendredi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].fridayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Samedi</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].saturdayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between pr-4">
+                          <span>Dimanche</span>
+                          <span>
+                            {organization.OrganizationAvailability[0].sundayOpen
+                              ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
+                                  organization.OrganizationAvailability[0].closingTime,
+                                )}`
+                              : "Fermé"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reviews section */}
+              <div ref={avisRef} id="avis" className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Avis</h2>
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center mr-4">
+                    <span className="text-3xl font-bold mr-2">4.8</span>
+                    <div className="flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg
+                          key={i}
+                          className="w-5 h-5 text-black fill-current"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                  <span className="text-gray-500">(128 avis)</span>
+                </div>
+
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-gray-100 pb-6 last:border-b-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-medium">{review.author}</h3>
+                          <p className="text-xs text-gray-500">{review.date}</p>
+                        </div>
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <svg
+                              key={i}
+                              className={cn(
+                                "w-4 h-4",
+                                i < review.rating ? "text-black fill-current" : "text-gray-300 fill-current",
                               )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">{review.comment}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <Button variant="outline" className="rounded-full border-gray-300 px-5 mt-6">
+                  Voir tous les avis
+                </Button>
+              </div>
+
+              {/* Photos section */}
+              <div ref={photosRef} id="photos" className="mb-12">
+                <h2 className="text-3xl font-bold mb-6">Photos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div key={i} className="aspect-square relative rounded-lg overflow-hidden">
+                      <Image
+                        src={i === 0 ? organization.imageCover || "/placeholder.svg" : "/placeholder.svg"}
+                        alt={`Photo ${i + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {/* Sidebar for desktop */}
+            {!isMobile && (
+              <div className="lg:w-1/4 hidden lg:block">
+                <div className="sticky top-6 border border-gray-200 rounded-lg shadow-sm">
+                  <div className="p-6">
+                    {cart.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-center">
+                        <ShoppingCart className="h-12 w-12 text-gray-300 mb-3" />
+                        <p className="text-gray-500 font-medium">Aucun service sélectionné</p>
+                        <p className="text-gray-400 text-sm mt-1">Sélectionnez des services pour réserver</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-3 max-h-60 overflow-auto">
+                          {cart.map((item) => (
+                            <div key={item.serviceId} className="flex justify-between items-center">
+                              <div>
+                                <p className="font-medium">{item.serviceName}</p>
+                                <p className="text-sm text-gray-500">{item.duration} min</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium">{item.price.toLocaleString()} FCFA</p>
+                                <button className="text-red-500 text-sm" onClick={() => removeFromCart(item.serviceId)}>
+                                  Retirer
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between font-semibold">
+                          <span>Total</span>
+                          <span>{total().toLocaleString()} FCFA</span>
+                        </div>
+
+                        <Button
+                          className="w-full mt-4 bg-amber-500 hover:bg-amber-600 text-white"
+                          onClick={proceedToBooking}
+                        >
+                          Continuer la réservation
+                        </Button>
+                      </>
+                    )}
+
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="flex items-center">
+                        <Clock className="h-5 w-5 mr-2 text-gray-500" />
+                        <div>
+                          <span className="font-medium flex items-center">
+                            Fermé
+                            <svg
+                              className="w-4 h-4 ml-1"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M6 9L12 15L18 9"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-start">
+                        <MapPin className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Avenue Jean Paul II, Libreville, Estuaire</p>
+                          <a href="#" className="text-blue-600 text-sm">
+                            Afficher l'itinéraire
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
 
-      {/* Modal du panier */}
-      <AnimatePresence>
-        {showCart && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-end lg:items-center justify-center p-4"
-            onClick={() => setShowCart(false)}
+      {/* Fixed booking button for mobile */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-50">
+          <Button
+            className={cn(
+              "w-full text-white rounded-lg py-6 text-base font-medium relative",
+              cart.length > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-300 cursor-not-allowed",
+            )}
+            onClick={proceedToBooking}
+            disabled={cart.length === 0}
           >
-            <motion.div
-              initial={{ y: "100%", scale: 0.95 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: "100%", scale: 0.95 }}
-              transition={{ type: "spring", damping: 25 }}
-              className="bg-white rounded-t-xl lg:rounded-xl w-full max-w-md p-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4 lg:hidden" />
-
-              <h2 className="text-xl font-bold mb-4">Votre sélection</h2>
-
-              {cart.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">Votre panier est vide</p>
-                  <Button variant="outline" className="mx-auto" onClick={() => setShowCart(false)}>
-                    Parcourir les services
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-3 mb-4 max-h-60 overflow-auto">
-                    {cart.map((item) => (
-                      <div key={item.serviceId} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <h3 className="font-medium">{item.serviceName}</h3>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span>{item.duration} min</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-amber-600">{item.price.toLocaleString()} FCFA</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => removeFromCart(item.serviceId)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t pt-4 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total:</span>
-                      <span className="font-bold text-amber-600">{calculateTotal().toLocaleString()} FCFA</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Durée totale:</span>
-                      <span className="font-medium">{formatDuration(calculateTotalDuration())}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <Button variant="outline" className="flex-1" onClick={() => setShowCart(false)}>
-                      Continuer
-                    </Button>
-                    <Button className="flex-1 bg-amber-500 hover:bg-amber-600" onClick={proceedToBooking}>
-                      Réserver
-                    </Button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Bouton de réservation flottant */}
-      {cart.length > 0 && !showCart && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg">
-          <Button className="w-full bg-amber-500 hover:bg-amber-600 rounded-full" onClick={() => setShowCart(true)}>
-            <ShoppingBag className="h-4 w-4 mr-2" />
-            {cart.length} service{cart.length > 1 ? "s" : ""} • {calculateTotal().toLocaleString()} FCFA
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+            Réserver
           </Button>
         </div>
       )}
