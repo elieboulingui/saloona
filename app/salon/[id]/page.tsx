@@ -6,7 +6,7 @@ import useSWR from "swr"
 import { useState, useEffect, useRef } from "react"
 
 // Icons
-import { ChevronLeft, Clock, Heart, MapPin, Share2, ShoppingCart } from "lucide-react"
+import { ChevronLeft, Clock, Heart, MapPin, Phone, Share2, ShoppingCart } from "lucide-react"
 
 // Components
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,7 @@ interface OrganizationDetails {
   logo: string | null
   imageCover: string | null
   description: string | null
+  phone : string | null
   departments: { label: string; id: string; icon: string }[]
   services: {
     name: string
@@ -38,18 +39,18 @@ interface OrganizationDetails {
   address: string
   verificationStatus: string
   OrganizationAvailability:
-    | {
-        openingTime: number
-        closingTime: number
-        mondayOpen: boolean
-        thursdayOpen: boolean
-        wednesdayOpen: boolean
-        fridayOpen: boolean
-        sundayOpen: boolean
-        saturdayOpen: boolean
-        tuesdayOpen: boolean
-      }[]
-    | null
+  | {
+    openingTime: number
+    closingTime: number
+    mondayOpen: boolean
+    thursdayOpen: boolean
+    wednesdayOpen: boolean
+    fridayOpen: boolean
+    sundayOpen: boolean
+    saturdayOpen: boolean
+    tuesdayOpen: boolean
+  }[]
+  | null
 }
 
 interface Service {
@@ -278,24 +279,12 @@ export default function OrganizationDetailsPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Mobile Header */}
-      {isMobile && (
-        <>
-          {/* Breadcrumb navigation */}
-          <div className="bg-white border-b border-gray-100 py-2 px-4">
-            <div className="flex items-center text-sm">
-              <Link href="/" className="text-gray-500">
-                Accueil
-              </Link>
-             
-              <span className="mx-1 text-gray-500">•</span>
-              <span className="font-medium">{organization.name}</span>
-            </div>
-          </div>
-        </>
-      )}
+
+
 
       {/* Main content */}
       <main className={cn("flex-1", isMobile ? "pt-0 pb-24" : "pt-0")}>
+
         {/* Hero image for mobile */}
         {isMobile && (
           <div className="relative h-[300px] w-full">
@@ -317,9 +306,9 @@ export default function OrganizationDetailsPage() {
                 <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
                   <Share2 className="h-5 w-5" />
                 </button>
-                <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
-                  <Heart className="h-5 w-5" />
-                </button>
+                <a href={`tel:${organization.phone}`} className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md">
+                  <Phone className="h-5 w-5" />
+                </a>
               </div>
             </div>
             <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">1/6</div>
@@ -330,9 +319,28 @@ export default function OrganizationDetailsPage() {
           <div className="lg:flex lg:gap-8">
             {/* Main content area */}
             <div className="lg:w-3/4 relative">
+              <div className="flex">
+                {/* Breadcrumb navigation */}
+                <div className="bg-white w-full border-b flex justify-between border-gray-100 py-2">
+                  <div className="flex items-center text-sm">
+                    <Link href="/" className="text-gray-500">
+                      Accueil
+                    </Link>
+                    <span className="mx-1 text-gray-500">•</span>
+                    <span className="font-medium">{organization.name}</span>
+                  </div>
+                  <div>
+                    <span className="mx-1 text-gray-500">•</span>
+                    <Link href={`/salon/${id}/boutique`} className="text-sm font-medium">
+                      Notre boutique
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
               {/* Organization name and info for desktop */}
               {!isMobile && (
-                <div className="mt-8 mb-6">
+                <div className="mt-3 mb-6">
                   <h1 className="text-4xl font-bold">{organization.name}</h1>
                   <div className="flex items-center gap-2 mt-2 text-sm">
                     <div className="flex items-center">
@@ -388,7 +396,7 @@ export default function OrganizationDetailsPage() {
               {/* Organization info for mobile */}
               {isMobile && (
                 <div className="py-6">
-                  <h1 className="text-3xl font-bold">{organization.name}</h1>                 
+                  <h1 className="text-3xl font-bold">{organization.name}</h1>
                   <div className="mt-2 text-gray-600">Avenue Jean Paul II, Libreville</div>
                   <div className="mt-1 text-amber-600 font-medium">Fermé</div>
                 </div>
@@ -535,12 +543,6 @@ export default function OrganizationDetailsPage() {
                     </div>
                   ))}
 
-                  <div className="pt-4 flex justify-between items-center">
-                    <span className="text-gray-500">88 prestations disponibles</span>
-                    <Button variant="outline" className="rounded-full border-gray-300 px-5">
-                      Tout voir
-                    </Button>
-                  </div>
                 </div>
               </div>
 
@@ -600,8 +602,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].mondayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -610,8 +612,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].tuesdayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -620,8 +622,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].wednesdayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -630,8 +632,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].thursdayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -640,8 +642,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].fridayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -650,8 +652,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].saturdayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>
@@ -660,8 +662,8 @@ export default function OrganizationDetailsPage() {
                           <span>
                             {organization.OrganizationAvailability[0].sundayOpen
                               ? `${formatTime(organization.OrganizationAvailability[0].openingTime)} - ${formatTime(
-                                  organization.OrganizationAvailability[0].closingTime,
-                                )}`
+                                organization.OrganizationAvailability[0].closingTime,
+                              )}`
                               : "Fermé"}
                           </span>
                         </div>

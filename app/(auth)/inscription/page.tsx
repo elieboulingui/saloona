@@ -19,13 +19,6 @@ import { Textarea } from "@/components/ui/textarea"
 import HeaderAuth from "../components/header-auth"
 import { departments } from "@/data"
 
-// Type pour Department
-type Department = {
-  id: string
-  label: string
-  icon: string | null
-}
-
 
 // Schéma de validation pour l'étape 1 - Informations du salon
 const salonInfoSchema = z.object({

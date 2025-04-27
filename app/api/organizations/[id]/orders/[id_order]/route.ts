@@ -40,7 +40,6 @@ export async function PATCH(request: Request,
 
     const { id } = await params
 
-
     const { status } = await request.json()
 
     const order = await prisma.order.update({
