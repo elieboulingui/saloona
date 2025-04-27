@@ -388,23 +388,7 @@ export default function OrganizationDetailsPage() {
               {/* Organization info for mobile */}
               {isMobile && (
                 <div className="py-6">
-                  <h1 className="text-3xl font-bold">{organization.name}</h1>
-                  <div className="flex items-center mt-2">
-                    <span className="text-2xl font-bold mr-2">4.8</span>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <svg
-                          key={i}
-                          className="w-5 h-5 text-black fill-current"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-indigo-500 ml-2">(18)</span>
-                  </div>
+                  <h1 className="text-3xl font-bold">{organization.name}</h1>                 
                   <div className="mt-2 text-gray-600">Avenue Jean Paul II, Libreville</div>
                   <div className="mt-1 text-amber-600 font-medium">Fermé</div>
                 </div>
