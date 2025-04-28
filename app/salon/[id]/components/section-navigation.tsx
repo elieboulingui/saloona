@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface SectionNavigationProps {
@@ -17,41 +17,30 @@ interface SectionNavigationProps {
 }
 
 export function SectionNavigation({ activeSection, onSectionChange, isMobile, sections }: SectionNavigationProps) {
+  const navRef = useRef<HTMLDivElement>(null)
+  const [isSticky, setIsSticky] = useState(false)
+
   // Handle scroll for active section detection
   useEffect(() => {
     const handleScroll = () => {
-      // Ajouter un offset pour la navigation fixe
-      const offset = isMobile ? 150 : 100
-      const scrollPosition = window.scrollY + offset
-
-      // Trouver la section active
-      let newActiveSection = activeSection
-
-      // Parcourir les sections de bas en haut pour trouver la première visible
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i]
-        if (section.ref.current && scrollPosition >= section.ref.current.offsetTop) {
-          newActiveSection = section.id
-          break
-        }
-      }
-
-      // Mettre à jour seulement si la section a changé
-      if (newActiveSection !== activeSection) {
-        onSectionChange(newActiveSection)
+      if (navRef.current) {
+        const navPosition = navRef.current.getBoundingClientRect().top
+        setIsSticky(navPosition <= 0)
       }
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [activeSection, isMobile, onSectionChange, sections])
+  }, [])
 
   return (
     <div
       className={cn(
         "bg-white border-b border-gray-200 transition-all duration-300 sticky z-40",
         isMobile ? "top-0 left-0 right-0 pr-4" : "top-0 mb-4",
+        isSticky ? "fixed top-0 left-0 right-0" : "",
       )}
+      ref={navRef}
     >
       <div className="flex overflow-x-auto scrollbar-hide relative">
         {sections.map((section) => (

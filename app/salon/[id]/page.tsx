@@ -35,10 +35,10 @@ export default function OrganizationDetailsPage() {
 
   const [activeSection, setActiveSection] = useState("prestations")
   const [activeServiceCategory, setActiveServiceCategory] = useState("all")
-  const prestationsRef = useRef<HTMLDivElement>(null!) // Non-null assertion
-  const equipeRef = useRef<HTMLDivElement>(null!)
-  const aproposRef = useRef<HTMLDivElement>(null!)
-  const photosRef = useRef<HTMLDivElement>(null!)
+  const prestationsRef = useRef<HTMLDivElement>(null)
+  const equipeRef = useRef<HTMLDivElement>(null)
+  const aproposRef = useRef<HTMLDivElement>(null)
+  const photosRef = useRef<HTMLDivElement>(null)
 
   const { data: organization, error, isLoading } = useSWR<OrganizationDetails>(`/api/organizations/${id}`, fetcher)
 
@@ -46,48 +46,11 @@ export default function OrganizationDetailsPage() {
 
   // Définir les sections pour la navigation
   const sections = [
-    { id: "prestations", label: "Prestations", ref: prestationsRef },
-    { id: "apropos", label: "À propos", ref: aproposRef },
-    { id: "photos", label: "Photos", ref: photosRef },
-    { id: "equipe", label: "Équipe", ref: equipeRef },
+    { id: "prestations", label: "Prestations", ref: prestationsRef as React.RefObject<HTMLDivElement> },
+    { id: "equipe", label: "Équipe", ref: equipeRef as React.RefObject<HTMLDivElement> },
+    { id: "apropos", label: "À propos", ref: aproposRef as React.RefObject<HTMLDivElement> },
+    { id: "photos", label: "Photos", ref: photosRef as React.RefObject<HTMLDivElement> },
   ]
-
-  // Effet pour détecter la section visible lors du défilement
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!prestationsRef.current || !equipeRef.current || !aproposRef.current || !photosRef.current) return
-
-      const sectionRefs = {
-        prestations: prestationsRef.current,
-        equipe: equipeRef.current,
-        apropos: aproposRef.current,
-        photos: photosRef.current,
-      }
-
-      const offset = isMobile ? 200 : 100
-      const scrollPosition = window.scrollY + offset
-
-      // Trouver la section actuellement visible
-      let currentSection = "prestations"
-
-      if (scrollPosition >= sectionRefs.photos.offsetTop) {
-        currentSection = "photos"
-      } else if (scrollPosition >= sectionRefs.apropos.offsetTop) {
-        currentSection = "apropos"
-      } else if (scrollPosition >= sectionRefs.equipe.offsetTop) {
-        currentSection = "equipe"
-      } else if (scrollPosition >= sectionRefs.prestations.offsetTop) {
-        currentSection = "prestations"
-      }
-
-      if (currentSection !== activeSection) {
-        setActiveSection(currentSection)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [activeSection, isMobile])
 
   // Scroll to section when clicking on navigation
   const scrollToSection = (sectionId: string) => {
@@ -115,6 +78,45 @@ export default function OrganizationDetailsPage() {
       })
     }
   }
+
+  // Effet pour détecter la section visible lors du défilement
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!prestationsRef.current || !equipeRef.current || !aproposRef.current || !photosRef.current) return
+
+      const sectionRefs = {
+        prestations: prestationsRef.current,
+        equipe: equipeRef.current,
+        apropos: aproposRef.current,
+        photos: photosRef.current,
+      }
+
+      const offset = isMobile ? 200 : 100
+      const scrollPosition = window.scrollY + offset
+
+      // Trouver la section actuellement visible
+      let currentSection = "prestations"
+
+      // Vérifier de bas en haut pour trouver la première section visible
+      if (scrollPosition >= sectionRefs.photos.offsetTop) {
+        currentSection = "photos"
+      } else if (scrollPosition >= sectionRefs.apropos.offsetTop) {
+        currentSection = "apropos"
+      } else if (scrollPosition >= sectionRefs.equipe.offsetTop) {
+        currentSection = "equipe"
+      } else if (scrollPosition >= sectionRefs.prestations.offsetTop) {
+        currentSection = "prestations"
+      }
+
+      if (currentSection !== activeSection) {
+        // Mettre à jour l'onglet actif sans déclencher de défilement automatique
+        setActiveSection(currentSection)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [activeSection, isMobile])
 
   // Add service to cart
   const addToCart = (service: Service) => {
@@ -372,6 +374,11 @@ export default function OrganizationDetailsPage() {
                 </div>
               </div>
 
+              {/* Team section - Remplacé par notre nouveau composant */}
+              <div ref={equipeRef} id="equipe">
+                <TeamSection organizationId={id as string} />
+              </div>
+
               {/* About section */}
               <div ref={aproposRef} id="apropos" className="mb-12">
                 <h2 className="text-3xl font-bold mb-6">À propos</h2>
@@ -386,11 +393,6 @@ export default function OrganizationDetailsPage() {
               <div ref={photosRef} id="photos" className="mb-12">
                 <h2 className="text-3xl font-bold mb-6">Photos</h2>
                 <PhotosGrid coverImage={organization.imageCover} />
-              </div>
-
-                            {/* Team section - Remplacé par notre nouveau composant */}
-                            <div ref={equipeRef} id="equipe">
-                <TeamSection organizationId={id as string} />
               </div>
             </div>
 
