@@ -30,7 +30,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export default function OrganizationDetailsPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { items: cart, addItem, removeItem, total, clearCart } = useCartStore()
+  const { items: cart, addItem, removeItem, total } = useCartStore()
   const isMobile = useIsMobile()
 
   const [activeSection, setActiveSection] = useState("prestations")
@@ -81,7 +81,9 @@ export default function OrganizationDetailsPage() {
 
   // Effet pour détecter la section visible lors du défilement
   useEffect(() => {
+
     const handleScroll = () => {
+
       if (!prestationsRef.current || !equipeRef.current || !aproposRef.current || !photosRef.current) return
 
       const sectionRefs = {

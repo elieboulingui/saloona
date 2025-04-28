@@ -22,7 +22,6 @@ interface BarberDashboardProps {
 }
 
 export default function BarberDashboard({ salonId }: BarberDashboardProps) {
-
   const { data: session } = useSession()
   const userId = session?.user?.id
   const [activeTab, setActiveTab] = useState("appointments")
@@ -133,7 +132,6 @@ export default function BarberDashboard({ salonId }: BarberDashboardProps) {
           <Link href={`/admin/${salonId}/users/${userId}`}>
             <motion.button whileTap={{ scale: 0.9 }} className="bg-white/20 p-2 rounded-full text-white">
               <User className="h-5 w-5" />
-              
             </motion.button>
           </Link>
           <Link href={`/admin/${salonId}/waiting`}>
@@ -141,7 +139,7 @@ export default function BarberDashboard({ salonId }: BarberDashboardProps) {
               <ListOrdered className="h-5 w-5" />
             </motion.button>
           </Link>
-          <UserSheet salonId={salonId}/>
+          <UserSheet salonId={salonId} />
         </div>
       </header>
 
@@ -224,7 +222,11 @@ export default function BarberDashboard({ salonId }: BarberDashboardProps) {
                                   {getStatusLabel(appointment.status)}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-muted-foreground">{appointment.service.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {Array.isArray(appointment.services)
+                                  ? appointment.services.map((service) => service.name).join(", ")
+                                  : appointment.service?.name || "Service non spécifié"}
+                              </p>
                               <p className="text-xs text-muted-foreground">{appointment.phoneNumber}</p>
                               <div className="flex items-center mt-1">
                                 <Clock className="h-3 w-3 text-muted-foreground mr-1" />
