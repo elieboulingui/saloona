@@ -75,6 +75,9 @@ export default function LandingPage() {
               <a href="#faq" className="text-gray-600 hover:text-amber-500 transition-colors">
                 FAQ
               </a>
+              <Link href="/a-propos-de-nous" className="text-gray-600 hover:text-amber-500 transition-colors">
+                Qui sommes nous ?
+              </Link>
 
             </nav>
             <div className="flex items-center gap-3">
