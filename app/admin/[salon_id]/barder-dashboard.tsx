@@ -224,7 +224,7 @@ export default function BarberDashboard({ salonId }: BarberDashboardProps) {
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 {Array.isArray(appointment.services)
-                                  ? appointment.services.map((service) => service.name).join(", ")
+                                  ? appointment.services.map((service: { name: any }) => service.name).join(", ")
                                   : appointment.service?.name || "Service non spécifié"}
                               </p>
                               <p className="text-xs text-muted-foreground">{appointment.phoneNumber}</p>
