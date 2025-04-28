@@ -2,7 +2,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { useParams, useRouter } from "next/navigation"
 import useSWR from "swr"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 
 // Icons
 import { ChevronLeft, Phone, Share2 } from "lucide-react"
@@ -13,10 +13,9 @@ import { cn } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-service-store"
 import { useIsMobile } from "@/hooks/use-mobile"
 import Link from "next/link"
-import type { OrganizationDetails, Service, TeamMember } from "@/types/organization"
+import type { OrganizationDetails, Service } from "@/types/organization"
 
 // Custom components
-import { TeamCard } from "./components/team-card"
 import { ServiceCard } from "./components/service-card"
 import { SectionNavigation } from "./components/section-navigation"
 import { CartSidebar } from "./components/cart-sidebar"
@@ -24,6 +23,7 @@ import { MobileCart } from "./components/mobile-cart"
 import { PhotoGallery } from "./components/photo-gallery"
 import { OrganizationInfo } from "./components/organization-info"
 import { PhotosGrid } from "./components/photos-grid"
+import { TeamSection } from "./components/team-section"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -36,9 +36,9 @@ export default function OrganizationDetailsPage() {
   const [activeSection, setActiveSection] = useState("prestations")
   const [activeServiceCategory, setActiveServiceCategory] = useState("all")
   const prestationsRef = useRef<HTMLDivElement>(null!) // Non-null assertion
-  const equipeRef = useRef<HTMLDivElement>(null!) // Non-null assertion
-  const aproposRef = useRef<HTMLDivElement>(null!) // Non-null assertion
-  const photosRef = useRef<HTMLDivElement>(null!) // Non-null assertion
+  const equipeRef = useRef<HTMLDivElement>(null!)
+  const aproposRef = useRef<HTMLDivElement>(null!)
+  const photosRef = useRef<HTMLDivElement>(null!)
 
   const { data: organization, error, isLoading } = useSWR<OrganizationDetails>(`/api/organizations/${id}`, fetcher)
 
@@ -47,10 +47,47 @@ export default function OrganizationDetailsPage() {
   // Définir les sections pour la navigation
   const sections = [
     { id: "prestations", label: "Prestations", ref: prestationsRef },
-    { id: "equipe", label: "Équipe", ref: equipeRef },
     { id: "apropos", label: "À propos", ref: aproposRef },
     { id: "photos", label: "Photos", ref: photosRef },
+    { id: "equipe", label: "Équipe", ref: equipeRef },
   ]
+
+  // Effet pour détecter la section visible lors du défilement
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!prestationsRef.current || !equipeRef.current || !aproposRef.current || !photosRef.current) return
+
+      const sectionRefs = {
+        prestations: prestationsRef.current,
+        equipe: equipeRef.current,
+        apropos: aproposRef.current,
+        photos: photosRef.current,
+      }
+
+      const offset = isMobile ? 200 : 100
+      const scrollPosition = window.scrollY + offset
+
+      // Trouver la section actuellement visible
+      let currentSection = "prestations"
+
+      if (scrollPosition >= sectionRefs.photos.offsetTop) {
+        currentSection = "photos"
+      } else if (scrollPosition >= sectionRefs.apropos.offsetTop) {
+        currentSection = "apropos"
+      } else if (scrollPosition >= sectionRefs.equipe.offsetTop) {
+        currentSection = "equipe"
+      } else if (scrollPosition >= sectionRefs.prestations.offsetTop) {
+        currentSection = "prestations"
+      }
+
+      if (currentSection !== activeSection) {
+        setActiveSection(currentSection)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [activeSection, isMobile])
 
   // Scroll to section when clicking on navigation
   const scrollToSection = (sectionId: string) => {
@@ -159,13 +196,35 @@ export default function OrganizationDetailsPage() {
     ? organization.services.filter((service) => service.departmentId === selectedDepartment)
     : organization.services
 
-  // Mock data for team members (to be replaced with real data)
-  const teamMembers: TeamMember[] = [
-    { id: "1", name: "Evard", role: "Coiffeur", image: "/placeholder.svg?height=100&width=100" },
-    { id: "2", name: "Adèle", role: "Coiffeuse", image: "/placeholder.svg?height=100&width=100" },
-    { id: "3", name: "Hugo", role: "Barbier", image: "/placeholder.svg?height=100&width=100" },
-    { id: "4", name: "Coach Sportif", role: "Fitness", image: "/placeholder.svg?height=100&width=100" },
-  ]
+  // Déterminer si le salon est actuellement ouvert
+  const isOpen = () => {
+    if (!organization.OrganizationAvailability || organization.OrganizationAvailability.length === 0) {
+      return false
+    }
+
+    const availability = organization.OrganizationAvailability[0]
+    const now = new Date()
+    const day = now.getDay() // 0 = dimanche, 1 = lundi, etc.
+    const currentTime = now.getHours() * 60 + now.getMinutes() // Temps actuel en minutes
+
+    // Vérifier si le salon est ouvert aujourd'hui
+    const dayMapping: Record<number, keyof typeof availability> = {
+      0: "sundayOpen",
+      1: "mondayOpen",
+      2: "tuesdayOpen",
+      3: "wednesdayOpen",
+      4: "thursdayOpen",
+      5: "fridayOpen",
+      6: "saturdayOpen",
+    }
+
+    const isOpenToday = availability[dayMapping[day]]
+
+    if (!isOpenToday) return false
+
+    // Vérifier si l'heure actuelle est dans les heures d'ouverture
+    return currentTime >= availability.openingTime && currentTime <= availability.closingTime
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -243,7 +302,9 @@ export default function OrganizationDetailsPage() {
                 <div className="py-6">
                   <h1 className="text-3xl font-bold">{organization.name}</h1>
                   <div className="mt-2 text-gray-600">{organization.address}</div>
-                  <div className="mt-1 text-amber-600 font-medium">Fermé</div>
+                  <div className={`mt-1 font-medium ${isOpen() ? "text-green-600" : "text-amber-600"}`}>
+                    {isOpen() ? "Ouvert" : "Fermé"}
+                  </div>
                 </div>
               )}
 
@@ -311,22 +372,6 @@ export default function OrganizationDetailsPage() {
                 </div>
               </div>
 
-              {/* Team section */}
-              <div ref={equipeRef} id="equipe" className="mb-12">
-                <h2 className="text-3xl font-bold mb-8">Équipe</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {teamMembers.map((member) => (
-                    <TeamCard
-                      key={member.id}
-                      id={member.id}
-                      name={member.name}
-                      role={member.role}
-                      image={member.image}
-                    />
-                  ))}
-                </div>
-              </div>
-
               {/* About section */}
               <div ref={aproposRef} id="apropos" className="mb-12">
                 <h2 className="text-3xl font-bold mb-6">À propos</h2>
@@ -341,6 +386,11 @@ export default function OrganizationDetailsPage() {
               <div ref={photosRef} id="photos" className="mb-12">
                 <h2 className="text-3xl font-bold mb-6">Photos</h2>
                 <PhotosGrid coverImage={organization.imageCover} />
+              </div>
+
+                            {/* Team section - Remplacé par notre nouveau composant */}
+                            <div ref={equipeRef} id="equipe">
+                <TeamSection organizationId={id as string} />
               </div>
             </div>
 

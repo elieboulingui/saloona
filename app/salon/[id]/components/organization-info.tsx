@@ -20,6 +20,9 @@ interface OrganizationInfoProps {
 }
 
 export function OrganizationInfo({ description, address, availability }: OrganizationInfoProps) {
+  // Vérifier si les données de disponibilité existent
+  const hasAvailability = availability && availability.length > 0
+
   return (
     <div className="space-y-8">
       {description && (
@@ -40,7 +43,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
         </div>
       </div>
 
-      {availability && (
+      {hasAvailability && (
         <div>
           <h3 className="font-medium mb-3 flex items-center">
             <Clock className="h-5 w-5 mr-2 text-gray-500" />
@@ -49,7 +52,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
           <div className="grid grid-cols-2 gap-y-2 text-sm">
             <div className="flex justify-between pr-4">
               <span>Lundi</span>
-              <span>
+              <span className={!availability[0].mondayOpen ? "text-red-500" : ""}>
                 {availability[0].mondayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -57,7 +60,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Mardi</span>
-              <span>
+              <span className={!availability[0].tuesdayOpen ? "text-red-500" : ""}>
                 {availability[0].tuesdayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -65,7 +68,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Mercredi</span>
-              <span>
+              <span className={!availability[0].wednesdayOpen ? "text-red-500" : ""}>
                 {availability[0].wednesdayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -73,7 +76,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Jeudi</span>
-              <span>
+              <span className={!availability[0].thursdayOpen ? "text-red-500" : ""}>
                 {availability[0].thursdayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -81,7 +84,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Vendredi</span>
-              <span>
+              <span className={!availability[0].fridayOpen ? "text-red-500" : ""}>
                 {availability[0].fridayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -89,7 +92,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Samedi</span>
-              <span>
+              <span className={!availability[0].saturdayOpen ? "text-red-500" : ""}>
                 {availability[0].saturdayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}
@@ -97,7 +100,7 @@ export function OrganizationInfo({ description, address, availability }: Organiz
             </div>
             <div className="flex justify-between pr-4">
               <span>Dimanche</span>
-              <span>
+              <span className={!availability[0].sundayOpen ? "text-red-500" : ""}>
                 {availability[0].sundayOpen
                   ? `${formatTime(availability[0].openingTime)} - ${formatTime(availability[0].closingTime)}`
                   : "Fermé"}

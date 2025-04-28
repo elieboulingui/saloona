@@ -4,8 +4,8 @@ import { CheckCircle, ArrowLeft, XCircle, Clock } from 'lucide-react'
 import { prisma } from "@/utils/prisma"
 import { ReceiptDownloadButton } from "./receipt-download-button"
 
-export default async function BookingPage({ params }: { params: Promise<{ id_transaction: string }> }) {
-  const { id_transaction } = await params
+export default async function BookingPage({ params }: { params: Promise<{ id_transaction: string, id : string }> }) {
+  const { id_transaction , id :salonId} = await params
 
   // Récupérer la transaction et le rendez-vous associé
   const transaction = await prisma.transaction.findUnique({
@@ -91,17 +91,19 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
       {/* Header */}
-      <header className="bg-white p-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="mr-4">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className="text-xl font-bold">Confirmation</h1>
+      <header className="bg-white p-4 shadow-sm">
+        <div className="flex justify-between items-center container mx-auto max-w-6xl">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="mr-4">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-xl font-bold">Confirmation</h1>
+          </div>
+          <div>{statusIcons}</div>
         </div>
-        <div>{statusIcons}</div>
       </header>
 
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-4 container mx-auto max-w-3xl">
         {/* Reçu de paiement */}
         <Card className="overflow-hidden border-none shadow-md mb-4 py-0">
           <div className="bg-amber-500 text-white p-4">
@@ -180,6 +182,7 @@ export default async function BookingPage({ params }: { params: Promise<{ id_tra
         <ReceiptDownloadButton 
           transaction={transaction} 
           appointment={appointment} 
+          salonId={salonId}
           services={appointment.services.map(as => as.service)} 
         />
       </main>

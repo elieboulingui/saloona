@@ -10,9 +10,10 @@ interface ReceiptDownloadButtonProps {
   transaction: any
   appointment: any
   services: any[] // Changer pour accepter un tableau de services
+  salonId: string
 }
 
-export function ReceiptDownloadButton({ transaction, appointment, services }: ReceiptDownloadButtonProps) {
+export function ReceiptDownloadButton({ transaction, appointment, services, salonId }: ReceiptDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
 
   const handleDownload = async () => {
@@ -28,13 +29,13 @@ export function ReceiptDownloadButton({ transaction, appointment, services }: Re
       // Ajouter le logo et l'en-tête
       doc.setFontSize(22)
       doc.setTextColor(245, 158, 11) // Couleur ambre
-      doc.text("DREAD IN GABON", 105, 20, { align: "center" })
+      doc.text("Saloona", 105, 20, { align: "center" })
 
       doc.setFontSize(12)
       doc.setTextColor(0, 0, 0)
-      doc.text("Salon de Coiffure Spécialisé", 105, 28, { align: "center" })
-      doc.text("Kinguele Descente Eglise Universelle, Libreville", 105, 34, { align: "center" })
-      doc.text("Tel: +241 66 07 90 95", 105, 40, { align: "center" })
+      doc.text("Application de reservation en ligne", 105, 28, { align: "center" })
+      doc.text("Libreville, Centre ville", 105, 34, { align: "center" })
+      doc.text("Tel: +241 77 80 88 64", 105, 40, { align: "center" })
 
       // Ligne de séparation
       doc.setDrawColor(245, 158, 11)
@@ -151,11 +152,10 @@ export function ReceiptDownloadButton({ transaction, appointment, services }: Re
       doc.text(formattedDate, 70, y)
 
       // Générer le QR code avec l'URL de confirmation
-      const baseUrl = "https://sadji.vercel.app"
+      const baseUrl = "https://saloona.online"
 
-      // Modifier l'URL pour utiliser le premier service s'il existe
-      const serviceId = services && services.length > 0 ? services[0].id : "service";
-      const confirmationUrl = `${baseUrl}/services/${serviceId}/booking/confirmation/${transaction.id}`
+
+      const confirmationUrl = `${baseUrl}/salon/${salonId}/booking/confirmation/${transaction.id}`
 
       const qrCodeDataUrl = await QRCode.toDataURL(confirmationUrl, {
         width: 150,

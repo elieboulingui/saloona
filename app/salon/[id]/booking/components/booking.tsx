@@ -183,7 +183,7 @@ export default function BookingPageClient({ id }: BookingContentProps) {
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">
       <BookingHeader step={step} countdown={countdown} appointmentId={appointmentId} onBack={handleBack} salonId={id} />
 
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-4 container mx-auto max-w-2xl">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <ServicesStep

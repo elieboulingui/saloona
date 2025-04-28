@@ -14,6 +14,7 @@ interface MobileCartProps {
 }
 
 export function MobileCart({ cart, removeFromCart, proceedToBooking }: MobileCartProps) {
+
   const [showCart, setShowCart] = useState(false)
 
   return (
@@ -86,26 +87,27 @@ export function MobileCart({ cart, removeFromCart, proceedToBooking }: MobileCar
               )}
             </motion.div>
           </motion.div>
-        ) : null}
+        ) : (
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-50">
+            <Button
+              className={cn(
+                "w-full text-white rounded-lg py-6 text-base font-medium relative",
+                cart.length > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-300 cursor-not-allowed",
+              )}
+              onClick={() => setShowCart(true)}
+              disabled={cart.length === 0}
+            >
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+              Voir le panier ({cart.reduce((acc, item) => acc + item.price, 0).toLocaleString()} FCFA)
+            </Button>
+          </div>
+        )}
       </AnimatePresence>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 shadow-lg z-50">
-        <Button
-          className={cn(
-            "w-full text-white rounded-lg py-6 text-base font-medium relative",
-            cart.length > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-300 cursor-not-allowed",
-          )}
-          onClick={() => setShowCart(true)}
-          disabled={cart.length === 0}
-        >
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
-              {cart.length}
-            </span>
-          )}
-          Voir le panier ({cart.reduce((acc, item) => acc + item.price, 0).toLocaleString()} FCFA)
-        </Button>
-      </div>
     </>
   )
 }
