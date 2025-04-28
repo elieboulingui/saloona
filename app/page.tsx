@@ -155,7 +155,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl shadow-md px-4 md:px-4 lg:px-4 py-2 rounded-b-md"
+            className="sticky top-16 z-40 bg-white container mx-auto max-w-6xl px-4 md:px-4 lg:px-4 py-2 rounded-b-md"
           >
             <div className="flex overflow-x-auto space-x-3 scroll-bar-none">
               {departments?.map((dept) => (

@@ -1,10 +1,10 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { Organization } from "@/types/organization"
+import type { OrganizationDetails } from "@/types/organization"
 
 interface RecentlyViewedState {
-  items: Organization[]
-  addItem: (item: Organization) => void
+  items: OrganizationDetails[]
+  addItem: (item: OrganizationDetails) => void
   clearItems: () => void
 }
 

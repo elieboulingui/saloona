@@ -50,6 +50,7 @@ export default function LandingPage() {
       <header className="border-b bg-white sticky top-0 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
+            <Link href={"/"}>
             <div className="flex items-center">
               <Image
                 src="/logo-black.png"
@@ -59,6 +60,8 @@ export default function LandingPage() {
                 className="h-10 w-auto"
               />
             </div>
+            </Link>
+
             <nav className="hidden md:flex space-x-8 items-center">
               <a href="#features" className="text-gray-600 hover:text-amber-500 transition-colors">
                 Fonctionnalités
@@ -76,12 +79,12 @@ export default function LandingPage() {
             </nav>
             <div className="flex items-center gap-3">
               <Link href="/connexion" className="hidden md:block">
-                <Button variant="outline" className="ml-4">
+                <Button variant="outline" className="ml-4 rounded-full">
                   Se connecter
                 </Button>
               </Link>
               <Link href="/inscription">
-                <Button className="bg-amber-500 hover:bg-amber-600 text-white">Essayer gratuitement</Button>
+                <Button className="bg-amber-500 hover:bg-amber-600 text-white rounded-full">Essayer gratuitement</Button>
               </Link>
             </div>
           </div>
@@ -101,11 +104,11 @@ export default function LandingPage() {
                 d'attente et votre équipe. Augmentez votre chiffre d'affaires et fidélisez vos clients.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button className="bg-amber-500 hover:bg-amber-600 text-white text-lg py-6 px-8">
+                <Button className="bg-amber-500 hover:bg-amber-600 text-white text-lg py-6 px-8 rounded-full">
                   Commencer maintenant
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button variant="outline" className="text-lg py-6 px-8">
+                <Button variant="outline" className="text-lg py-6 px-8 rounded-full">
                   Demander une démo
                 </Button>
               </div>
@@ -626,7 +629,7 @@ export default function LandingPage() {
               </div>
               <div className="px-8 pb-8">
                 <Link href="/register">
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
+                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Commencer l'essai gratuit</Button>
                 </Link>
               </div>
 
@@ -672,7 +675,7 @@ export default function LandingPage() {
               </div>
               <div className="px-8 pb-8">
                 <Link href="/register">
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Commencer l'essai gratuit</Button>
+                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Commencer l'essai gratuit</Button>
                 </Link>
               </div>
             </motion.div>
@@ -715,7 +718,7 @@ export default function LandingPage() {
                 </ul>
               </div>
               <div className="px-8 pb-8">
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">Contacter les ventes</Button>
+                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Contacter les ventes</Button>
               </div>
             </motion.div>
           </div>
