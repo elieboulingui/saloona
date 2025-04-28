@@ -19,28 +19,74 @@ interface SectionNavigationProps {
 export function SectionNavigation({ activeSection, onSectionChange, isMobile, sections }: SectionNavigationProps) {
   const navRef = useRef<HTMLDivElement>(null)
   const [isSticky, setIsSticky] = useState(false)
+  const [navWidth, setNavWidth] = useState<number | null>(null)
+  const [navTop, setNavTop] = useState<number | null>(null)
 
-  // Handle scroll for active section detection
+  // Initialiser la position et la largeur de la navigation
+  useEffect(() => {
+    if (navRef.current) {
+      // Stocker la position initiale du nav
+      const rect = navRef.current.getBoundingClientRect()
+      setNavTop(rect.top + window.scrollY)
+      setNavWidth(rect.width)
+    }
+  }, [])
+
+  // Gérer le scroll pour la détection de la position sticky
   useEffect(() => {
     const handleScroll = () => {
-      if (navRef.current) {
-        const navPosition = navRef.current.getBoundingClientRect().top
-        setIsSticky(navPosition <= 0)
+      if (navRef.current && navTop !== null) {
+        // La navigation devient sticky uniquement lorsque le scroll dépasse sa position initiale
+        const shouldBeSticky = window.scrollY > navTop
+        setIsSticky(shouldBeSticky)
+
+        // Mettre à jour la largeur si nécessaire
+        if (shouldBeSticky && navRef.current) {
+          const parentWidth = navRef.current.parentElement?.clientWidth || navRef.current.clientWidth
+          setNavWidth(parentWidth)
+        }
       }
     }
 
     window.addEventListener("scroll", handleScroll)
+
+    // Appeler handleScroll immédiatement pour initialiser l'état
+    handleScroll()
+
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  }, [navTop])
+
+  // Gérer le redimensionnement de la fenêtre
+  useEffect(() => {
+    const handleResize = () => {
+      if (navRef.current) {
+        if (!isSticky) {
+          // Si non sticky, mettre à jour la largeur et la position
+          const rect = navRef.current.getBoundingClientRect()
+          setNavWidth(rect.width)
+          setNavTop(rect.top + window.scrollY)
+        } else {
+          // Si sticky, mettre à jour uniquement la largeur
+          const parentWidth = navRef.current.parentElement?.clientWidth || navRef.current.clientWidth
+          setNavWidth(parentWidth)
+        }
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [isSticky])
 
   return (
     <div
-      className={cn(
-        "bg-white border-b border-gray-200 transition-all duration-300 sticky z-40",
-        isMobile ? "top-0 left-0 right-0 pr-4" : "top-0 mb-4",
-        isSticky ? "fixed top-0 left-0 right-0" : "",
-      )}
       ref={navRef}
+      className={cn("bg-white border-b border-gray-200 transition-all duration-300 z-40", isSticky ? "fixed" : "")}
+      style={{
+        top: isSticky ? 0 : "auto",
+        width: isSticky ? (navWidth ? `${isMobile ? "100%" : navWidth}px` : "100%") : "100%",
+        left: isSticky ? (isMobile ? 0 : "auto") : "auto",
+        right: isSticky ? (isMobile ? 0 : "auto") : "auto",
+      }}
     >
       <div className="flex overflow-x-auto scrollbar-hide relative">
         {sections.map((section) => (

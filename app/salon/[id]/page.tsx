@@ -30,7 +30,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export default function OrganizationDetailsPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { items: cart, addItem, removeItem, total } = useCartStore()
+  const { items: cart, addItem, removeItem, total, clearCart } = useCartStore()
   const isMobile = useIsMobile()
 
   const [activeSection, setActiveSection] = useState("prestations")
@@ -39,6 +39,7 @@ export default function OrganizationDetailsPage() {
   const equipeRef = useRef<HTMLDivElement>(null)
   const aproposRef = useRef<HTMLDivElement>(null)
   const photosRef = useRef<HTMLDivElement>(null)
+  const navContainerRef = useRef<HTMLDivElement>(null)
 
   const { data: organization, error, isLoading } = useSWR<OrganizationDetails>(`/api/organizations/${id}`, fetcher)
 
@@ -52,38 +53,9 @@ export default function OrganizationDetailsPage() {
     { id: "photos", label: "Photos", ref: photosRef as React.RefObject<HTMLDivElement> },
   ]
 
-  // Scroll to section when clicking on navigation
-  const scrollToSection = (sectionId: string) => {
-    // Mettre à jour l'état immédiatement pour éviter le clignotement
-    setActiveSection(sectionId)
-
-    const sectionRefs = {
-      prestations: prestationsRef,
-      equipe: equipeRef,
-      apropos: aproposRef,
-      photos: photosRef,
-    }
-
-    const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs]
-
-    if (sectionRef.current) {
-      // Calculer l'offset en fonction de la hauteur de la navigation fixe
-      const yOffset = isMobile ? -150 : -70
-      const y = sectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset
-
-      // Utiliser scrollTo avec behavior smooth pour une animation fluide
-      window.scrollTo({
-        top: y,
-        behavior: "smooth",
-      })
-    }
-  }
-
   // Effet pour détecter la section visible lors du défilement
   useEffect(() => {
-
     const handleScroll = () => {
-
       if (!prestationsRef.current || !equipeRef.current || !aproposRef.current || !photosRef.current) return
 
       const sectionRefs = {
@@ -119,6 +91,33 @@ export default function OrganizationDetailsPage() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [activeSection, isMobile])
+
+  // Scroll to section when clicking on navigation
+  const scrollToSection = (sectionId: string) => {
+    // Mettre à jour l'état immédiatement pour éviter le clignotement
+    setActiveSection(sectionId)
+
+    const sectionRefs = {
+      prestations: prestationsRef,
+      equipe: equipeRef,
+      apropos: aproposRef,
+      photos: photosRef,
+    }
+
+    const sectionRef = sectionRefs[sectionId as keyof typeof sectionRefs]
+
+    if (sectionRef.current) {
+      // Calculer l'offset en fonction de la hauteur de la navigation fixe
+      const yOffset = isMobile ? -150 : -70
+      const y = sectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset
+
+      // Utiliser scrollTo avec behavior smooth pour une animation fluide
+      window.scrollTo({
+        top: y,
+        behavior: "smooth",
+      })
+    }
+  }
 
   // Add service to cart
   const addToCart = (service: Service) => {
@@ -312,16 +311,19 @@ export default function OrganizationDetailsPage() {
                 </div>
               )}
 
-              {/* Navigation for sections */}
-              <SectionNavigation
-                activeSection={activeSection}
-                onSectionChange={scrollToSection}
-                isMobile={isMobile}
-                sections={sections}
-              />
+              {/* Conteneur pour la navigation avec une référence */}
+              <div ref={navContainerRef} className="w-full bg-white">
+                <SectionNavigation
+                  activeSection={activeSection}
+                  onSectionChange={scrollToSection}
+                  isMobile={isMobile}
+                  sections={sections}
+                />
+              </div>
 
               {/* Prestations section */}
-              <div ref={prestationsRef} id="prestations" className={cn("mb-12", isMobile && "pt-8")}>
+              <div ref={prestationsRef} id="prestations" className={cn("mb-12 pt-8", isMobile && "pt-8")}>
+
                 <h2 className="text-3xl font-bold mb-6">Prestations</h2>
 
                 {/* Service category tabs */}

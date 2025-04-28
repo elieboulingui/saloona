@@ -72,6 +72,7 @@ export default function RootLayout({
           {children}
         </SessionProvider>
         <Toaster />
+        
 
         {/* Script pour enregistrer le service worker des notifications */}
         <Script id="register-service-worker" strategy="afterInteractive">
