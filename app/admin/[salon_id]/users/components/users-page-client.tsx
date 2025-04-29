@@ -18,7 +18,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 interface UsersPageClientProps {
   salonId: string
-}
+} 
 
 export default function UsersPageClient({ salonId }: UsersPageClientProps) {
 

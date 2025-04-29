@@ -55,7 +55,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
 
     const session = await auth()
@@ -63,7 +63,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const organizationId = params.id
+    const {id: organizationId} = await params
     const body = await request.json()
     const { name, email, phone, role, password, speciality, image, organizationRole } = body
 
