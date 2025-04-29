@@ -18,6 +18,7 @@ import Link from "next/link"
 import { BlogSection } from "@/components/blog-section"
 import { ProCtaSection } from "@/components/pro-cta-section"
 import { Footer } from "@/components/footer"
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -300,6 +301,9 @@ export default function HomePage() {
 
       {/* Professional CTA Section */}
       <ProCtaSection />
+      
+       {/* Prompt d'installation PWA */}
+       <PWAInstallPrompt />
 
       {/* Footer */}
       <Footer />
