@@ -556,178 +556,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-amber-50">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Des tarifs adaptés à tous les salons</h2>
-            <p className="text-xl text-gray-600">Choisissez le forfait qui correspond le mieux à vos besoins</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Starter Plan */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100"
-            >
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Starter</h3>
-                <div className="flex items-baseline mb-6">
-                  <span className="text-3xl font-bold text-gray-900">12.000 Fcfa</span>
-                  <span className="text-gray-500 ml-1">/mois</span>
-                </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Système de réservation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Gestion de file d'attente</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Notifications de base</span>
-                  </li>
-                  <li className="flex items-start text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="mr-2 shrink-0 mt-0.5"
-                    >
-                      <path d="M18 6 6 18"></path>
-                      <path d="m6 6 12 12"></path>
-                    </svg>
-                    <span>Boutique en ligne</span>
-                  </li>
-                  <li className="flex items-start text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="mr-2 shrink-0 mt-0.5"
-                    >
-                      <path d="M18 6 6 18"></path>
-                      <path d="m6 6 12 12"></path>
-                    </svg>
-                    <span>Gestion avancée du staff</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="px-8 pb-8">
-                <Link href="/register">
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Commencer l'essai gratuit</Button>
-                </Link>
-              </div>
-
-            </motion.div>
-
-            {/* Pro Plan */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-xl overflow-hidden shadow-xl border-2 border-amber-500 relative -mt-4 md:-mt-8"
-            >
-              <div className="bg-amber-500 text-white text-center py-2 font-medium">Recommandé</div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Pro</h3>
-                <div className="flex items-baseline mb-6">
-                  <span className="text-3xl font-bold text-gray-900">50.0000 Fcfa</span>
-                  <span className="text-gray-500 ml-1">/mois</span>
-                </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Tout ce qui est inclus dans Starter</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Boutique en ligne</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Gestion avancée du staff</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Campagnes marketing</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Rapports analytiques</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="px-8 pb-8">
-                <Link href="/register">
-                  <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Commencer l'essai gratuit</Button>
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Enterprise Plan */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-xl overflow-hidden shadow-lg border border-gray-100"
-            >
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Enterprise</h3>
-                <div className="flex items-baseline mb-6">
-                  <span className="text-3xl font-bold text-gray-900">120.000 FCFA</span>
-                  <span className="text-gray-500 ml-1">/mois</span>
-                </div>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Tout ce qui est inclus dans Pro</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Support prioritaire</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">API personnalisée</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Intégrations avancées</span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2 shrink-0 mt-0.5" />
-                    <span className="text-gray-600">Formation dédiée</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="px-8 pb-8">
-                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-full">Contacter les ventes</Button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section id="faq" className="py-20 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -739,14 +567,14 @@ export default function LandingPage() {
           <div className="max-w-3xl mx-auto">
             {[
               {
-                question: "Comment fonctionne l'essai gratuit ?",
+                question: "Combien coute le logiciel?",
                 answer:
-                  "Vous pouvez essayer Saloona gratuitement pendant 14 jours sans aucun engagement. Aucune carte de crédit n'est requise pour commencer. À la fin de la période d'essai, vous pouvez choisir le forfait qui vous convient.",
+                  "L'application est totalement gratuite. Nous prenons une commission de 10% sur chaque réservation et l'achat de produit effectuée via notre plateforme. Il n'y a pas de frais cachés. Ces frais sont supportes par le client pass par le salon.",
               },
               {
-                question: "Est-ce que je peux annuler à tout moment ?",
+                question: "Est-ce que je peux supprimer mon compte à tout moment ?",
                 answer:
-                  "Oui, vous pouvez annuler votre abonnement à tout moment. Nous ne vous facturerons pas pour le mois suivant. Vous conserverez l'accès à Saloona jusqu'à la fin de votre période de facturation en cours.",
+                  "Oui, vous pouvez supprimer votre compte à tout moment. Nous ne vous demandons pas de vous engager sur une période minimale. Vous pouvez également suspendre votre compte si vous le souhaitez.",
               },
               {
                 question: "Comment Saloona peut-il m'aider à augmenter mes réservations ?",

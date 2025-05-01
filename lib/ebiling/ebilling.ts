@@ -72,7 +72,6 @@ export async function CreateInvoice(data: InvoiceData) {
     return response.data
 
   } catch (error) {
-    console.log("errreeeeeeuuu")
     console.log(error)
   }
 }
