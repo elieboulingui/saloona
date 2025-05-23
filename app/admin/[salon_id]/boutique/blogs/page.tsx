@@ -1,5 +1,19 @@
-import BlogPageClient from "./components/BlogPageClient";
+'use client'
+import { useEffect, useState } from "react";
+import BlogPageClient from './components/BlogPageClient';
+const Page = () => {
+  const [salonId, setSalonId] = useState<string | null>(null);
 
-export default function Page({ params }: { params: { salon_id: string } }) {
-  return <BlogPageClient salonId={params.salon_id} />;
-}
+  useEffect(() => {
+    const match = window.location.href.match(/\/admin\/([^/]+)\/services\/departments/);
+    if (match) {
+      setSalonId(match[1]);
+    }
+  }, []);
+
+  if (!salonId) return <div>Chargement...</div>;
+
+  return <BlogPageClient salonId={salonId} />;
+};
+
+export default Page;
