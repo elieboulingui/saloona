@@ -1,7 +1,6 @@
 "use server"
-
+import { OrderStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
-import type { OrderStatus } from "@prisma/client"
 import { prisma } from "@/utils/prisma"
 
 // Récupérer toutes les commandes
@@ -35,13 +34,13 @@ export async function getOrders() {
 }
 
 // Mettre à jour le statut d'une commande
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     try {
-
         if (!orderId || !status) {
             return {
                 success: false,
-                error: "Impossible de mettre a jour la commande : Veuillez saisir tous les champs",
+                error: "Impossible de mettre à jour la commande : Veuillez saisir tous les champs",
             }
         }
 
