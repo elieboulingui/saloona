@@ -19,7 +19,7 @@ export function CreateOrganizationButton() {
       whileTap={{ scale: 0.9 }}
     >
       <Button
-        onClick={() => router.push("/register")}
+        onClick={() => router.push("/admin/create_organisation")}
         size="lg"
         className="rounded-full h-14 w-14 bg-amber-500 hover:bg-amber-600 shadow-lg"
       >
