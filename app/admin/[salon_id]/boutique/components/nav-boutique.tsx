@@ -84,6 +84,17 @@ const NavBoutique = ({salonId}:NavBoutiqueProps) => {
           Catégories
         </Link>
         <Link
+          href={`/admin/${salonId}/boutique/blogs`}
+          className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
+            isCategoriesActive
+              ? "border-amber-500 text-amber-600"
+              : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
+          }`}
+        >
+          <Tag className="h-4 w-4 mr-2" />
+          blogs
+        </Link>
+        <Link
           href={`/admin/${salonId}/boutique/orders`}
           className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
             isOrdersActive
