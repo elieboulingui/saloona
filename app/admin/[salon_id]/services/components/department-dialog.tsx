@@ -1,15 +1,13 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
+    DialogFooter
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2 } from "lucide-react"
@@ -39,62 +37,54 @@ export function DepartmentDialog({
     salonId,
     existingDepartments,
 }: DepartmentDialogProps) {
-
     const [loading, setLoading] = useState(false)
-    const [formData, setFormData] = useState({
-        name: "",
-        description: "",
-        image: "",
-    })
-    const [selectedDepartments, setSelectedDepartments] = useState<string[]>([])
+    const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]) // now stores labels
+    const [error, setError] = useState<string | null>(null)
 
-
-    // Handle department selection
-    const toggleDepartment = (departmentId: string) => {
-        setSelectedDepartments((prev) => {
-            if (prev.includes(departmentId)) {
-                return prev.filter((id) => id !== departmentId)
-            } else {
-                return [...prev, departmentId]
-            }
-        })
+    const toggleDepartment = (departmentLabel: string) => {
+        setSelectedDepartments((prev) =>
+            prev.includes(departmentLabel)
+                ? prev.filter((label) => label !== departmentLabel)
+                : [...prev, departmentLabel]
+        )
     }
-
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        console.log("Départements envoyés (labels):", selectedDepartments)
 
         try {
             setLoading(true)
-
-            const response = await fetch(`/api/organizations/${salonId}/departments`, {
+            const response = await fetch(`/api/organizations/departements?id=${salonId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ departmentIds: selectedDepartments }),
+                body: JSON.stringify({ departmentLabels: selectedDepartments }),
             })
 
             if (!response.ok) {
-                throw new Error("Erreur lors de l'ajout des départements")
+                const errorData = await response.json()
+                throw new Error(errorData.error || "Un problème est survenu lors de l'ajout des départements")
             }
 
             const newDepartments = await response.json()
+            console.log("Nouveaux départements:", newDepartments)
 
             setSelectedDepartments([])
             onClose()
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erreur:", error)
+            setError(error.message)
         } finally {
             setLoading(false)
         }
     }
 
-
     useEffect(() => {
         if (existingDepartments && existingDepartments.length > 0) {
-            const existingIds = existingDepartments.map(dep => dep.id) // ici on prend l'ID du département source
-            setSelectedDepartments(existingIds)
+            const existingLabels = existingDepartments.map(dep => dep.name) // assuming `name` is same as `label`
+            setSelectedDepartments(existingLabels)
         }
     }, [existingDepartments])
 
@@ -106,6 +96,7 @@ export function DepartmentDialog({
                     <DialogDescription>Ajouter un nouveau département pour organiser vos services</DialogDescription>
                 </DialogHeader>
 
+                {error && <div className="text-red-600">{error}</div>}
 
                 <div className="space-y-2">
                     {departments.length > 0 ? (
@@ -115,21 +106,21 @@ export function DepartmentDialog({
                                     key={department.id}
                                     className={cn(
                                         "flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                                        selectedDepartments.includes(department.id)
+                                        selectedDepartments.includes(department.label)
                                             ? "border-amber-500 bg-amber-50"
-                                            : "border-gray-200 hover:border-amber-200",
+                                            : "border-gray-200 hover:border-amber-200"
                                     )}
-                                    onClick={() => toggleDepartment(department.id)}
+                                    onClick={() => toggleDepartment(department.label)}
                                 >
                                     <div
                                         className={cn(
                                             "w-5 h-5 rounded-full mr-2 flex items-center justify-center border-2 transition-all",
-                                            selectedDepartments.includes(department.id)
+                                            selectedDepartments.includes(department.label)
                                                 ? "border-amber-500 bg-amber-500"
-                                                : "border-gray-300",
+                                                : "border-gray-300"
                                         )}
                                     >
-                                        {selectedDepartments.includes(department.id) && (
+                                        {selectedDepartments.includes(department.label) && (
                                             <Check className="h-3 w-3 text-white" />
                                         )}
                                     </div>
@@ -143,6 +134,7 @@ export function DepartmentDialog({
                         </p>
                     )}
                 </div>
+
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
                         Annuler
