@@ -25,7 +25,7 @@ const salonInfoSchema = z.object({
   salonName: z.string().min(3, "Le nom du salon doit contenir au moins 3 caractères"),
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
   description: z.string().optional(),
-  departmentIds: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
+  departmentLabels: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
 })
 
 // Schéma de validation pour l'étape 2 - Informations du propriétaire
@@ -76,7 +76,7 @@ export default function RegisterPage() {
       salonName: formData.salonName || "",
       address: formData.address || "",
       description: formData.description || "",
-      departmentIds: formData.departmentIds || [],
+      departmentLabels: formData.departmentLabels || [],
     },
   })
 
@@ -109,22 +109,14 @@ export default function RegisterPage() {
 
   // Update form value when selectedDepartments changes
   useEffect(() => {
-    setValueStep1("departmentIds", selectedDepartments)
+    setValueStep1("departmentLabels", selectedDepartments)
     if (selectedDepartments.length > 0) {
-      triggerStep1("departmentIds")
+      triggerStep1("departmentLabels")
     }
   }, [selectedDepartments, setValueStep1, triggerStep1])
 
   // Handle department selection
-  const toggleDepartment = (departmentId: string) => {
-    setSelectedDepartments((prev) => {
-      if (prev.includes(departmentId)) {
-        return prev.filter((id) => id !== departmentId)
-      } else {
-        return [...prev, departmentId]
-      }
-    })
-  }
+ 
 
   // Gestion de l'étape 1 - Informations du salon
   const onSubmitStep1 = (data: z.infer<typeof salonInfoSchema>) => {
@@ -144,11 +136,17 @@ export default function RegisterPage() {
       setIsSubmitting(true)
 
       // Combiner les données des trois étapes
-      const completeData = {
-        ...formData,
-        ...data,
-        departmentIds: selectedDepartments,
-      }
+      const departmentLabels = selectedDepartments
+      .map((id) => departments.find((d) => d.id === id)?.label)
+      .filter((label): label is string => !!label) // filtrer les labels non définis
+    
+    const completeData = {
+      ...formData,
+      ...data,
+      departments: departmentLabels, // on remplace par "departments" ou un autre nom si tu préfères
+    }
+    
+
 
       // Appel API pour l'enregistrement
       const response = await fetch("/api/register", {
@@ -174,13 +172,21 @@ export default function RegisterPage() {
       setIsSubmitting(false)
     }
   }
-
+  const toggleDepartment = (label: string) => {
+    setSelectedDepartments((prev) =>
+      prev.includes(label)
+        ? prev.filter((l) => l !== label)
+        : [...prev, label]
+    )
+  }
+  
   // Animation variants
   const variants = {
     hidden: { opacity: 0, x: 100 },
     visible: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -100 },
   }
+
 
   // Affichage du message de succès
   if (registrationSuccess) {
@@ -303,21 +309,21 @@ export default function RegisterPage() {
                                 key={department.id}
                                 className={cn(
                                   "flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                                  selectedDepartments.includes(department.id)
+                                  selectedDepartments.includes(department.label)
                                     ? "border-amber-500 bg-amber-50"
                                     : "border-gray-200 hover:border-amber-200",
                                 )}
-                                onClick={() => toggleDepartment(department.id)}
+                                onClick={() => toggleDepartment(department.label)}
                               >
                                 <div
                                   className={cn(
                                     "w-5 h-5 rounded-full mr-2 flex items-center justify-center border-2 transition-all",
-                                    selectedDepartments.includes(department.id)
+                                    selectedDepartments.includes(department.label)
                                       ? "border-amber-500 bg-amber-500"
                                       : "border-gray-300",
                                   )}
                                 >
-                                  {selectedDepartments.includes(department.id) && (
+                                  {selectedDepartments.includes(department.label) && (
                                     <Check className="h-3 w-3 text-white" />
                                   )}
                                 </div>
@@ -330,8 +336,8 @@ export default function RegisterPage() {
                             Aucun département disponible. Veuillez contacter l'administrateur.
                           </p>
                         )}
-                        {errorsStep1.departmentIds && (
-                          <p className="text-sm text-red-500 mt-2">{errorsStep1.departmentIds.message}</p>
+                        {errorsStep1.departmentLabels && (
+                          <p className="text-sm text-red-500 mt-2">{errorsStep1.departmentLabels.message}</p>
                         )}
                       </div>
                     </div>

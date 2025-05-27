@@ -34,7 +34,10 @@ CREATE TABLE "Organization" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "logo" TEXT,
-    "address" TEXT,
+    "address" TEXT NOT NULL,
+    "description" TEXT,
+    "imageCover" TEXT,
+    "phone" TEXT,
     "verificationStatus" TEXT NOT NULL DEFAULT 'pending',
     "ownerId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,10 +47,35 @@ CREATE TABLE "Organization" (
 );
 
 -- CreateTable
+CREATE TABLE "OrganizationAvailability" (
+    "id" TEXT NOT NULL,
+    "mondayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "tuesdayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "wednesdayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "thursdayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "fridayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "saturdayOpen" BOOLEAN NOT NULL DEFAULT true,
+    "sundayOpen" BOOLEAN NOT NULL DEFAULT false,
+    "openingTime" INTEGER NOT NULL DEFAULT 540,
+    "closingTime" INTEGER NOT NULL DEFAULT 1080,
+    "lunchBreakStart" INTEGER,
+    "lunchBreakEnd" INTEGER,
+    "appointmentInterval" INTEGER NOT NULL DEFAULT 15,
+    "preparationTime" INTEGER NOT NULL DEFAULT 0,
+    "cleanupTime" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "organizationId" TEXT NOT NULL,
+
+    CONSTRAINT "OrganizationAvailability_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "UserOrganization" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "organizationId" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'ADMIN',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -55,15 +83,38 @@ CREATE TABLE "UserOrganization" (
 );
 
 -- CreateTable
+CREATE TABLE "OrganizationDepartment" (
+    "id" TEXT NOT NULL,
+    "organisationId" TEXT NOT NULL,
+    "departmentId" TEXT NOT NULL,
+
+    CONSTRAINT "OrganizationDepartment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Department" (
     "id" TEXT NOT NULL,
-    "icon" TEXT,
     "label" TEXT NOT NULL,
+    "icon" TEXT NOT NULL,
+
+    CONSTRAINT "Department_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Blog" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "excerpt" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "readingTime" TEXT NOT NULL,
+    "image" TEXT NOT NULL,
+    "categoryId" TEXT NOT NULL,
     "organizationId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Department_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Blog_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -86,19 +137,35 @@ CREATE TABLE "Appointment" (
     "id" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "phoneNumber" TEXT NOT NULL,
-    "serviceId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
+    "hourAppointment" TEXT NOT NULL,
     "startDate" TIMESTAMP(3),
     "endDate" TIMESTAMP(3),
-    "barberId" TEXT,
+    "note" TEXT,
     "orderNumber" INTEGER NOT NULL,
-    "estimatedTime" TEXT NOT NULL,
+    "estimatedTime" INTEGER NOT NULL,
     "status" "AppointmentStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "organizationId" TEXT NOT NULL,
+    "barberId" TEXT,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AppointmentService" (
+    "id" TEXT NOT NULL,
+    "appointmentId" TEXT NOT NULL,
+    "serviceId" TEXT NOT NULL,
+    "startDate" TIMESTAMP(3),
+    "endDate" TIMESTAMP(3),
+    "note" TEXT,
+    "barberId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AppointmentService_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -262,7 +329,16 @@ CREATE TABLE "Authenticator" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "OrganizationAvailability_organizationId_key" ON "OrganizationAvailability"("organizationId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "UserOrganization_userId_organizationId_key" ON "UserOrganization"("userId", "organizationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationDepartment_organisationId_departmentId_key" ON "OrganizationDepartment"("organisationId", "departmentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AppointmentService_appointmentId_serviceId_key" ON "AppointmentService"("appointmentId", "serviceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserService_userId_serviceId_key" ON "UserService"("userId", "serviceId");
@@ -280,7 +356,10 @@ CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
 
 -- AddForeignKey
-ALTER TABLE "Organization" ADD CONSTRAINT "Organization_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Organization" ADD CONSTRAINT "Organization_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationAvailability" ADD CONSTRAINT "OrganizationAvailability_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserOrganization" ADD CONSTRAINT "UserOrganization_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -289,19 +368,34 @@ ALTER TABLE "UserOrganization" ADD CONSTRAINT "UserOrganization_userId_fkey" FOR
 ALTER TABLE "UserOrganization" ADD CONSTRAINT "UserOrganization_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Department" ADD CONSTRAINT "Department_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "OrganizationDepartment" ADD CONSTRAINT "OrganizationDepartment_organisationId_fkey" FOREIGN KEY ("organisationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationDepartment" ADD CONSTRAINT "OrganizationDepartment_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Blog" ADD CONSTRAINT "Blog_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Blog" ADD CONSTRAINT "Blog_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "AppointmentService" ADD CONSTRAINT "AppointmentService_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AppointmentService" ADD CONSTRAINT "AppointmentService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AppointmentService" ADD CONSTRAINT "AppointmentService_barberId_fkey" FOREIGN KEY ("barberId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE CASCADE ON UPDATE CASCADE;
