@@ -12,7 +12,7 @@ import { BlogsDialog } from "./blog-dialog";
 import { DeleteDialog } from "./delete-dialog";
 
 interface BlogPost {
-  id: number;
+  id: any;
   title: string;
   excerpt: string;
   content: string;
@@ -264,11 +264,10 @@ export default function BlogPageClient({ salonId }: BlogPageClientProps) {
       <BlogsDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        post={selectedPost}
+
         mode={dialogMode}
         onSuccess={handleDialogSuccess}
-        salonId={salonId}
-      />
+        salonId={salonId} post={selectedPost}      />
 
       {/* Delete Dialog */}
       {selectedPost && (
