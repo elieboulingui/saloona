@@ -22,10 +22,12 @@ import {
 import { Loader2, Clock } from "lucide-react";
 import { ImageUpload } from "@/components/image-upload";
 import { Badge } from "@/components/ui/badge";
+
 import { creerBlog } from "../actions/creer-blog";
+import { updateBlog } from "../actions/updateBlog";
 
 interface BlogPost {
-  id?: number;
+  id?: string; // string pour correspondre à Prisma id
   title: string;
   excerpt: string;
   content: string;
@@ -44,7 +46,7 @@ interface Category {
 interface BlogDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  post: BlogPost | null;
+  post: BlogPost | any;
   mode: "create" | "edit";
   onSuccess: (post: BlogPost) => void;
   salonId?: string;
@@ -106,7 +108,7 @@ export function BlogsDialog({
         date: post.date,
         readingTime: post.readingTime,
         image: post.image,
-        categoryId: post.category?.id || (categories[0]?.id || ""),
+        categoryId: post.category?.id || categories[0]?.id || "",
       });
     } else {
       setFormData((prev) => ({
@@ -122,36 +124,60 @@ export function BlogsDialog({
     }
   }, [post, mode, isOpen, categories]);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-  
+
     try {
-      // Validation simple des champs obligatoires
       if (!formData.title || !formData.excerpt || !formData.categoryId) {
         throw new Error("Veuillez remplir tous les champs obligatoires");
       }
-  
+
+      if (!salonId) {
+        throw new Error("Salon non spécifié");
+      }
+
       const postData = {
         ...formData,
         organizationId: salonId,
       };
-  
-      // Appel à creerBlog, qui retourne directement les données JSON
-      const result = await creerBlog(postData);
-  
-      // On appelle onSuccess avec le blog reçu
+
+      let result;
+
+      if (mode === "create") {
+        // Création
+        result = await creerBlog(postData);
+      } else {
+        // Modification
+        if (!post?.id) {
+          throw new Error("ID de l'article manquant pour la modification");
+        }
+        result = await updateBlog({
+          id: post.id,
+          title: postData.title,
+          excerpt: postData.excerpt,
+          content: postData.content,
+          date: postData.date,
+          readingTime: postData.readingTime,
+          image: postData.image,
+          categoryId: postData.categoryId,
+          organizationId: postData.organizationId,
+        });
+      }
+
+      onSuccess(result as any);
+      onClose();
     } catch (err: any) {
       setError(err.message || "Erreur inconnue");
     } finally {
       setIsLoading(false);
     }
   };
-  
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -163,7 +189,6 @@ export function BlogsDialog({
   const handleImageChange = (url: string) => {
     setFormData((prev) => ({ ...prev, image: url }));
   };
-
 
   const isFormDisabled = isLoading || isUploading || isCategoriesLoading;
 
