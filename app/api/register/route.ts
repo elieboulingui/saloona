@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       await tx.organizationDepartment.createMany({
         data: departments.map((dept) => ({
           organisationId: organization.id, // corrigé ici (organizationId et non organisationId)
-          departmentId: dept.id,
+          departmentId: dept.label,
         })),
       });
 
