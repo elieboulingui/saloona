@@ -74,7 +74,7 @@ model Organization {
   products      Product[]
   categories    Category[]
   orders        Order[]
-
+ blogs Blog[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -158,6 +158,21 @@ model Department {
   services      Service[] // un service appartient à un département
 }
 
+model Blog {
+  id             String   @id @default(cuid())
+  title          String
+  excerpt        String
+  content        String
+  date           DateTime
+  readingTime    String
+  image          String
+  category       Category @relation(fields: [categoryId], references: [id])
+  categoryId     String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
 model Notification {
   id        String   @id @default(cuid())
   title     String
@@ -329,6 +344,7 @@ model Category {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   products   Product[]
+   blogs Blog[]
 }
 
 // Ajouter ces champs au modèle Order pour stocker les informations supplémentaires
