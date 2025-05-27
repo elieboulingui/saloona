@@ -6,11 +6,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
-interface NavBlogsProps {
+interface NavFinanceProps {
     salonId: string
 }
 
-const NavBlogs = ({ salonId }: NavBlogsProps) => {
+const NavFinance = ({ salonId }: NavFinanceProps) => {
 
     const pathname = usePathname()
     const [isMounted, setIsMounted] = useState(false)
@@ -35,8 +35,8 @@ const NavBlogs = ({ salonId }: NavBlogsProps) => {
                         </motion.div>
                     </Link>
                     <div>
-                        <h1 className="text-white font-bold text-xl">Blogs</h1>
-                        <p className="text-white/80 text-xs">Gérez vos blogs et disponibilité en toute simplicité</p>
+                        <h1 className="text-white font-bold text-xl">Gestion Financière</h1>
+                        <p className="text-white/80 text-xs">Gérez vos finances en toute simplicité</p>
                     </div>
                 </div>
             </header>
@@ -46,4 +46,4 @@ const NavBlogs = ({ salonId }: NavBlogsProps) => {
     );
 }
 
-export default NavBlogs;
+export default NavFinance;

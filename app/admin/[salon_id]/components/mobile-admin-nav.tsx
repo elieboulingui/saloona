@@ -77,7 +77,7 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       priority: 2
     },
     {
-      name: "Finance",
+      name: "Gestion Financière",
       href: `/admin/${salon_id}/finance`,
       icon: <ChartCandlestick className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/finance`,
