@@ -1,38 +1,39 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, Package, ShoppingCart, Tag } from "lucide-react"
+import { ArrowLeft, Book, Package, ShoppingCart, Tag } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
 interface NavBoutiqueProps {
-  salonId: string   
+  salonId: string
 }
 
-const NavBoutique = ({salonId}:NavBoutiqueProps) => {
+const NavBoutique = ({ salonId }: NavBoutiqueProps) => {
 
-    const pathname = usePathname()
-    const [isMounted, setIsMounted] = useState(false)
-  
-    // Déterminer l'onglet actif
-    const isProductsActive = pathname === `/admin/${salonId}/boutique`
-    const isCategoriesActive = pathname === `/admin/${salonId}/boutique/category`
-    const isOrdersActive = pathname === `/admin/${salonId}/boutique/orders`
-  
-    useEffect(() => {
-      setIsMounted(true)
-    }, [])
-  
-    if (!isMounted) {
-      return null
-    }
+  const pathname = usePathname()
+  const [isMounted, setIsMounted] = useState(false)
 
-    return ( 
+  // Déterminer l'onglet actif
+  const isProductsActive = pathname === `/admin/${salonId}/boutique`
+  const isCategoriesActive = pathname === `/admin/${salonId}/boutique/category`
+  const isOrdersActive = pathname === `/admin/${salonId}/boutique/orders`
+  const isBlogsActive = pathname === `/admin/${salonId}/boutique/blogs`
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return null
+  }
+
+  return (
 
     <>
-          {/* Header */}
-    <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
+      {/* Header */}
+      <header className="bg-amber-500 p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-2">
           <Link href={`/admin/${salonId}`}>
             <motion.div whileTap={{ scale: 0.9 }} className="bg-black/20 p-2 rounded-full">
@@ -60,56 +61,52 @@ const NavBoutique = ({salonId}:NavBoutiqueProps) => {
         )}
       </header>
       <div className="bg-white border-b">
-      <nav className="flex overflow-x-auto">
-        <Link
-          href={`/admin/${salonId}/boutique`}
-          className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
-            isProductsActive
+        <nav className="flex overflow-x-auto">
+          <Link
+            href={`/admin/${salonId}/boutique`}
+            className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${isProductsActive
               ? "border-amber-500 text-amber-600"
               : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
-          }`}
-        >
-          <Package className="h-4 w-4 mr-2" />
-          Produits
-        </Link>
-        <Link
-          href={`/admin/${salonId}/boutique/category`}
-          className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
-            isCategoriesActive
+              }`}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Produits
+          </Link>
+          <Link
+            href={`/admin/${salonId}/boutique/category`}
+            className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${isCategoriesActive
               ? "border-amber-500 text-amber-600"
               : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
-          }`}
-        >
-          <Tag className="h-4 w-4 mr-2" />
-          Catégories
-        </Link>
-        <Link
-          href={`/admin/${salonId}/boutique/blogs`}
-          className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
-            isCategoriesActive
+              }`}
+          >
+            <Tag className="h-4 w-4 mr-2" />
+            Catégories
+          </Link>
+          <Link
+            href={`/admin/${salonId}/boutique/orders`}
+            className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${isOrdersActive
               ? "border-amber-500 text-amber-600"
               : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
-          }`}
-        >
-          <Tag className="h-4 w-4 mr-2" />
-          blogs
-        </Link>
-        <Link
-          href={`/admin/${salonId}/boutique/orders`}
-          className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
-            isOrdersActive
+              }`}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Commandes
+          </Link>
+          <Link
+            href={`/admin/${salonId}/boutique/blogs`}
+            className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${isBlogsActive
               ? "border-amber-500 text-amber-600"
               : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
-          }`}
-        >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Commandes
-        </Link>
-      </nav>
-    </div>
+              }`}
+          >
+            <Book className="h-4 w-4 mr-2" />
+            blogs
+          </Link>
+        </nav>
+      </div>
     </>
 
-     );
+  );
 }
- 
+
 export default NavBoutique;
