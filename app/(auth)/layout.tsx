@@ -16,7 +16,7 @@ export default async function RootLayout({
 
   const session = await auth()
 
-  if (session?.user) return redirect("/admin")
+ 
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gray-50">

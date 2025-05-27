@@ -155,16 +155,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         </html>
       `
 
-      await inngest.send({
-        name: "email/sender",
-        data: {
-          email: email,
-          displayName: name,
-          subject: "Bienvenue dans l'organisation",
-          emailbody: emailTemplate,
-        },
-      })
-    }
+   
 
     // Ajouter l'utilisateur à l'organisation
     const membership = await prisma.userOrganization.create({
