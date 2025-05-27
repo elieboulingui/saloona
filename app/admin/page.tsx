@@ -1,6 +1,3 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
-import { prisma } from "@/utils/prisma"
 import Link from "next/link"
 import Image from "next/image"
 import { Building2, MapPin, Users, Calendar, ShoppingBag, ArrowLeft } from "lucide-react"
@@ -9,41 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CreateOrganizationButton } from "@/components/create-organization-button"
 import { UserSheet } from "@/components/user-sheet"
+import { getUserOrganizations } from "./actions/get-user-organizations"
 
 export default async function AdminPage() {
-
-    const session = await auth()
-
-    if (!session?.user) {
-        redirect("/")
-    }
-
-    const userId = session.user.id
-
-    // Récupérer les organisations dont l'utilisateur est membre
-    const userOrganizations = await prisma.userOrganization.findMany({
-        where: {
-            userId,
-        },
-        include: {
-            organization: {
-                include: {
-                    departments: {
-                        include: {
-                            department: true,
-                        },
-                    },
-                    _count: {
-                        select: {
-                            appointments: true,
-                            products: true,
-                            users: true,
-                        },
-                    },
-                },
-            },
-        },
-    })
+    const userOrganizations = await getUserOrganizations()
 
     if (userOrganizations.length === 0) {
         return (
@@ -64,7 +30,6 @@ export default async function AdminPage() {
     }
 
     return (
-
         <>
             <header className="bg-amber-500 shadow-md">
                 <div className="p-4 flex items-center justify-between container mx-auto max-w-6xl">
@@ -76,7 +41,7 @@ export default async function AdminPage() {
                         </Link>
                         <div>
                             <h1 className="text-white font-bold text-lg">Mes Salons</h1>
-                            <p className="text-white/80 text-xs">Gerer l'ensemble de vos organisations</p>
+                            <p className="text-white/80 text-xs">Gérer l'ensemble de vos organisations</p>
                         </div>
                     </div>
                     <UserSheet salonId={""} />
@@ -104,7 +69,6 @@ export default async function AdminPage() {
                                                     <Building2 className="h-6 w-6 text-amber-500" />
                                                 </div>
                                             )}
-
                                         </div>
                                     </div>
                                     <CardTitle className="text-xl mt-2">{membership.organization.name}</CardTitle>
@@ -134,7 +98,9 @@ export default async function AdminPage() {
                                     <div className="w-full grid grid-cols-3 gap-2 text-center">
                                         <div className="flex flex-col items-center">
                                             <Users className="h-4 w-4 text-amber-500 mb-1" />
-                                            <span className="text-xs text-muted-foreground">{membership.organization._count.users} Staff</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {membership.organization._count.users} Staff
+                                            </span>
                                         </div>
                                         <div className="flex flex-col items-center">
                                             <Calendar className="h-4 w-4 text-amber-500 mb-1" />
@@ -155,8 +121,8 @@ export default async function AdminPage() {
                     ))}
                 </div>
             </div>
-            <CreateOrganizationButton />
 
+            <CreateOrganizationButton />
         </>
     )
 }
