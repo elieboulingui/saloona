@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/utils/prisma";
 import { inngest } from "@/inngest/client";
 
-// Schéma de validation avec departmentLabels
+// Schéma de validation
 const registerSchema = z.object({
   salonName: z.string().min(3),
   address: z.string().min(5),
@@ -19,13 +19,15 @@ const registerSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
     const validationResult = registerSchema.safeParse(body);
 
     if (!validationResult.success) {
       console.log("Validation failed:", validationResult.error.format());
       return NextResponse.json(
-        { message: "Données d'inscription invalides", errors: validationResult.error.format() },
+        {
+          message: "Données d'inscription invalides",
+          errors: validationResult.error.format(),
+        },
         { status: 400 },
       );
     }
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
       password,
     } = validationResult.data;
 
-    // Vérifier si l'email existe déjà
+    // Vérifie si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ message: "Cet email est déjà utilisé" }, { status: 409 });
@@ -49,9 +51,8 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Transaction complète
     const result = await prisma.$transaction(async (tx) => {
-      // Création utilisateur
+      // Crée l'utilisateur
       const user = await tx.user.create({
         data: {
           email,
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
         },
       });
 
-      // Création organisation
+      // Crée l'organisation
       const organization = await tx.organization.create({
         data: {
           name: salonName,
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
         },
       });
 
-      // Création relation user-organization
+      // Lien entre l'utilisateur et l'organisation
       await tx.userOrganization.create({
         data: {
           userId: user.id,
@@ -81,26 +82,43 @@ export async function POST(request: Request) {
         },
       });
 
-      // Récupérer départements existants par label
-      const departments = await tx.department.findMany({
+      // Récupère les départements existants
+      const existingDepartments = await tx.department.findMany({
         where: { label: { in: departmentLabels } },
         select: { id: true, label: true },
       });
 
-      // Vérifier que tous les labels reçus existent
-     
-      // Créer relations organisation-départements
+      const existingLabels = existingDepartments.map((d) => d.label);
+      const missingLabels = departmentLabels.filter((label) => !existingLabels.includes(label));
+
+      // Crée les départements manquants
+      const newDepartments = await Promise.all(
+        missingLabels.map((label) =>
+          tx.department.create({
+            data: {
+              label,
+              icon: "default-icon", // ← valeur par défaut obligatoire
+            },
+            select: { id: true, label: true, icon: true },
+          }),
+        ),
+      );
+      
+
+      const allDepartments = [...existingDepartments, ...newDepartments];
+
+      // Création des relations organisation-département
       await tx.organizationDepartment.createMany({
-        data: departments.map((dept) => ({
-          organisationId: organization.id, // corrigé ici (organizationId et non organisationId)
-          departmentId: dept.label,
+        data: allDepartments.map((dept) => ({
+          organisationId: organization.id, // Assurez-vous que c'est bien `organizationId` dans votre modèle
+          departmentId: dept.id,
         })),
       });
 
       return { user, organization };
     });
 
-    // Préparer le template email
+    // Préparer l'email HTML
     const emailTemplate = `
       <!DOCTYPE html>
       <html>
@@ -114,7 +132,7 @@ export async function POST(request: Request) {
       </html>
     `;
 
-    // Envoi de l’email via Inngest
+    // Envoie l'email avec Inngest
     await inngest.send({
       name: "email/sender",
       data: {
@@ -127,7 +145,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Incription réussie",
+        message: "Inscription réussie",
         userId: result.user.id,
         organisationId: result.organization.id,
       },
