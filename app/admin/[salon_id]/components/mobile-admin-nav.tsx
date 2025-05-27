@@ -3,25 +3,29 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { Wallet, Calendar, BriefcaseBusiness, Store, Users, ListOrdered, Home, Settings } from "lucide-react"
+import { Wallet, Calendar, BriefcaseBusiness, Store, Users, ListOrdered, Home, Settings, Book, ChartCandlestick } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 interface MobileAdminNavProps {
-  salon_id : string
+  salon_id: string
 }
 
-export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
-  
+export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
+
   const pathname = usePathname()
   const { data: session } = useSession()
   const userRole = session?.user?.role
 
-  // Ne pas afficher la navigation dans les pages de boutique
+  // Ne pas afficher la navigation dans les pages 
   if (pathname.includes(`/admin/${salon_id}/boutique`)) {
     return null
   }
-  // Ne pas afficher la navigation dans les pages de boutique
+  // Ne pas afficher la navigation dans les pages 
   if (pathname.includes(`/admin/${salon_id}/calendar`)) {
+    return null
+  }
+  // Ne pas afficher la navigation dans les pages 
+  if (pathname.includes(`/admin/${salon_id}/blogs`)) {
     return null
   }
 
@@ -58,10 +62,31 @@ export function MobileAdminNav({salon_id} : MobileAdminNavProps) {
       roles: ["ADMIN", "BARBER"],
     },
     {
+      name: "Blogs",
+      href: `/admin/${salon_id}/blogs`,
+      icon: <Book className="h-6 w-6" />,
+      active: pathname.includes(`/admin/${salon_id}/blogs`), // Correction ici
+      roles: ["ADMIN"],
+    },
+    {
       name: "Staff",
       href: `/admin/${salon_id}/users`,
-      icon: <Users className="h-6 w-6"/>,
+      icon: <Users className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/users`,
+      roles: ["ADMIN"],
+    },
+    {
+      name: "Gestion Financiere",
+      href: `/admin/${salon_id}/finance`,
+      icon: <ChartCandlestick className="h-6 w-6" />,
+      active: pathname === `/admin/${salon_id}/finance`,
+      roles: ["ADMIN"],
+    },
+    {
+      name: "Portefeuille",
+      href: `/admin/${salon_id}/portefeuille`,
+      icon: <Wallet className="h-6 w-6" />,
+      active: pathname === `/admin/${salon_id}/wallet`,
       roles: ["ADMIN"],
     }
   ]

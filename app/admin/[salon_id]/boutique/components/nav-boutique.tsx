@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, Book, Package, ShoppingCart, Tag } from "lucide-react"
+import { ArrowLeft, Package, ShoppingCart, Tag } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -19,7 +19,6 @@ const NavBoutique = ({ salonId }: NavBoutiqueProps) => {
   const isProductsActive = pathname === `/admin/${salonId}/boutique`
   const isCategoriesActive = pathname === `/admin/${salonId}/boutique/category`
   const isOrdersActive = pathname === `/admin/${salonId}/boutique/orders`
-  const isBlogsActive = pathname === `/admin/${salonId}/boutique/blogs`
 
   useEffect(() => {
     setIsMounted(true)
@@ -91,16 +90,6 @@ const NavBoutique = ({ salonId }: NavBoutiqueProps) => {
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Commandes
-          </Link>
-          <Link
-            href={`/admin/${salonId}/boutique/blogs`}
-            className={`flex items-center px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${isBlogsActive
-              ? "border-amber-500 text-amber-600"
-              : "border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-200"
-              }`}
-          >
-            <Book className="h-4 w-4 mr-2" />
-            blogs
           </Link>
         </nav>
       </div>

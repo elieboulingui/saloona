@@ -30,7 +30,7 @@ import { StatCard } from "./stat-card"
 import { FinancialChart } from "./financial-chart"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { UserSheet } from "@/components/user-sheet"
+import { UserSheet_2 } from "@/components/user-sheet_2"
 
 // Fetcher pour SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -186,7 +186,7 @@ export default function AdminDashboard({ salonId }: AdminDashboardProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <UserSheet salonId={salonId} />
+          <UserSheet_2 salonId={salonId} />
         </div>
       </header>
 
