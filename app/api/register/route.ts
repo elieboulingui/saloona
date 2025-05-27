@@ -1,53 +1,59 @@
-import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { z } from "zod"
-import { prisma } from "@/utils/prisma"
-import { inngest } from "@/inngest/client"
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { z } from "zod";
+import { prisma } from "@/utils/prisma";
+import { inngest } from "@/inngest/client";
 
-// Schéma de validation pour les données d'inscription
+// Schéma de validation
 const registerSchema = z.object({
   salonName: z.string().min(3),
   address: z.string().min(5),
   description: z.string().optional(),
-  departmentIds: z.array(z.string()).min(1),
+  departmentLabels: z.array(z.string().min(1)).min(1),
   fullName: z.string().min(3),
   email: z.string().email(),
   phone: z.string().min(8),
   password: z.string().min(8),
-})
+});
 
 export async function POST(request: Request) {
   try {
-    // Récupérer et valider les données
-    const body = await request.json()
-    const validationResult = registerSchema.safeParse(body)
+    const body = await request.json();
+    const validationResult = registerSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.log("Validation failed:", validationResult.error.format());
       return NextResponse.json(
-        { message: "Données d'inscription invalides", errors: validationResult.error.format() },
+        {
+          message: "Données d'inscription invalides",
+          errors: validationResult.error.format(),
+        },
         { status: 400 },
-      )
+      );
     }
 
-    const { salonName, address, description, departmentIds, fullName, email, phone, password } =
-      validationResult.data
+    const {
+      salonName,
+      address,
+      description,
+      departmentLabels,
+      fullName,
+      email,
+      phone,
+      password,
+    } = validationResult.data;
 
-    // Vérifier si l'email existe déjà
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
-
+    // Vérifie si l'utilisateur existe déjà
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json({ message: "Cet email est déjà utilisé" }, { status: 409 })
+      return NextResponse.json({ message: "Cet email est déjà utilisé" }, { status: 409 });
     }
 
-    // Hacher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Utiliser une approche plus robuste pour les transactions
-    try {
-      // Créer l'utilisateur avec le rôle ADMIN
-      const user = await prisma.user.create({
+    const result = await prisma.$transaction(async (tx) => {
+      // Crée l'utilisateur
+      const user = await tx.user.create({
         data: {
           email,
           name: fullName,
@@ -55,10 +61,10 @@ export async function POST(request: Request) {
           password: hashedPassword,
           role: "ADMIN",
         },
-      })
+      });
 
-      // Créer l'organisation
-      const organization = await prisma.organization.create({
+      // Crée l'organisation
+      const organization = await tx.organization.create({
         data: {
           name: salonName,
           address,
@@ -66,144 +72,93 @@ export async function POST(request: Request) {
           ownerId: user.id,
           verificationStatus: "pending",
         },
-      })
+      });
 
-      // Créer la relation UserOrganization
-      await prisma.userOrganization.create({
+      // Lien entre l'utilisateur et l'organisation
+      await tx.userOrganization.create({
         data: {
           userId: user.id,
           organizationId: organization.id,
         },
-      })
+      });
 
-      // Associer les départements sélectionnés à l'organisation via la table pivot
-      if (departmentIds && departmentIds.length > 0) {
-        // Créer toutes les relations département-organisation en une seule opération
-        await prisma.organizationDepartment.createMany({
-          data: departmentIds.map((departmentId) => ({
-            organisationId: organization.id,
-            departmentId: departmentId,
-          })),
-        })
-      }
+      // Récupère les départements existants
+      const existingDepartments = await tx.department.findMany({
+        where: { label: { in: departmentLabels } },
+        select: { id: true, label: true },
+      });
 
-      // Préparer le template d'email
-      const emailTemplate = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Bienvenue sur notre plateforme</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              margin: 0;
-              padding: 0;
-            }
-            .container {
-              max-width: 600px;
-              margin: 0 auto;
-              padding: 20px;
-            }
-            .header {
-              background-color: #F59E0B;
-              padding: 20px;
-              text-align: center;
-              color: white;
-              border-radius: 8px 8px 0 0;
-            }
-            .content {
-              background-color: #fff;
-              padding: 30px;
-              border: 1px solid #eaeaea;
-              border-top: none;
-              border-radius: 0 0 8px 8px;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 20px;
-              font-size: 12px;
-              color: #666;
-            }
-            .button {
-              display: inline-block;
-              background-color: #F59E0B;
-              color: white;
-              text-decoration: none;
-              padding: 12px 24px;
-              border-radius: 4px;
-              margin: 20px 0;
-              font-weight: bold;
-            }
-            .highlight {
-              color: #F59E0B;
-              font-weight: bold;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Bienvenue sur notre plateforme!</h1>
-            </div>
-            <div class="content">
-              <h2>Bonjour ${fullName},</h2>
-              
-              <p>Nous sommes ravis de vous accueillir! Votre compte pour <span class="highlight">${salonName}</span> a été créé avec succès.</p>
-              
-              <p>Votre demande d'inscription est actuellement <strong>en cours d'examen</strong> par notre équipe. Nous vous contacterons très prochainement pour finaliser votre inscription et vous aider à configurer votre espace salon.</p>
-              
-              <p>Récapitulatif de vos informations :</p>
-              <ul>
-                <li><strong>Salon :</strong> ${salonName}</li>
-                <li><strong>Adresse :</strong> ${address}</li>
-                <li><strong>Email :</strong> ${email}</li>
-                <li><strong>Téléphone :</strong> ${phone}</li>
-              </ul>
-              
-              <p>Si vous avez des questions ou besoin d'assistance, n'hésitez pas à nous contacter.</p>
-              
-              <p>Cordialement,<br>
-              L'équipe</p>
-            </div>
-            <div class="footer">
-              <p>© ${new Date().getFullYear()} Tous droits réservés.</p>
-              <p>Cet email a été envoyé à ${email} car vous vous êtes inscrit sur notre plateforme.</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `
+      const existingLabels = existingDepartments.map((d) => d.label);
+      const missingLabels = departmentLabels.filter((label) => !existingLabels.includes(label));
 
-      // Envoyer l'email de confirmation en utilisant la fonction inngest existante
-      await inngest.send({
-        name: "email/sender",
-        data: {
-          email: email,
-          displayName: fullName,
-          subject: "Bienvenue - Confirmation de création de compte",
-          emailbody: emailTemplate,
-        },
-      })
+      // Crée les départements manquants
+      const newDepartments = await Promise.all(
+        missingLabels.map((label) =>
+          tx.department.create({
+            data: {
+              label,
+              icon: "default-icon", // ← valeur par défaut obligatoire
+            },
+            select: { id: true, label: true, icon: true },
+          }),
+        ),
+      );
+      
 
-      // Réponse de succès
-      return NextResponse.json(
-        {
-          message: "Inscription réussie",
-          userId: user.id,
-          organizationId: organization.id,
-        },
-        { status: 201 },
-      )
-    } catch (transactionError) {
-      console.error("Erreur lors de la transaction:", transactionError)
-      return NextResponse.json({ message: "Une erreur est survenue lors de la création du compte" }, { status: 500 })
-    }
+      const allDepartments = [...existingDepartments, ...newDepartments];
+
+      // Création des relations organisation-département
+      await tx.organizationDepartment.createMany({
+        data: allDepartments.map((dept) => ({
+          organisationId: organization.id, // Assurez-vous que c'est bien `organizationId` dans votre modèle
+          departmentId: dept.id,
+        })),
+      });
+
+      return { user, organization };
+    });
+
+    // Préparer l'email HTML
+    const emailTemplate = `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"></head>
+      <body>
+        <h2>Bienvenue ${result.user.name} !</h2>
+        <p>Votre salon <strong>${result.organization.name}</strong> a bien été enregistré. Nous traitons votre demande.</p>
+        <p>Email : ${result.user.email}<br>Téléphone : ${phone}</p>
+        <p>Merci de votre confiance,<br>L'équipe</p>
+      </body>
+      </html>
+    `;
+
+    // Envoie l'email avec Inngest
+    await inngest.send({
+      name: "email/sender",
+      data: {
+        email: result.user.email,
+        displayName: result.user.name,
+        subject: "Bienvenue - Confirmation de création de compte",
+        emailbody: emailTemplate,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        message: "Inscription réussie",
+        userId: result.user.id,
+        organisationId: result.organization.id,
+      },
+      { status: 201 },
+    );
   } catch (error) {
-    console.error("Erreur d'inscription:", error)
-    return NextResponse.json({ message: "Une erreur est survenue lors de l'inscription" }, { status: 500 })
+    console.error("Erreur lors de l'inscription :", error);
+    return NextResponse.json(
+      {
+        message:
+          error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription",
+      },
+      { status: 500 },
+    );
   }
 }
