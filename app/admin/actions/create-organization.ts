@@ -2,14 +2,13 @@
 
 import { auth } from "@/auth"
 import { prisma } from "@/utils/prisma"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 
 const createOrganizationSchema = z.object({
   salonName: z.string().min(3, "Le nom du salon doit contenir au moins 3 caractères"),
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
   description: z.string().optional(),
-  departmentIds: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
+  departmentLabels: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
 })
 
 export async function createOrganization(formData: FormData) {
@@ -19,19 +18,18 @@ export async function createOrganization(formData: FormData) {
     throw new Error("Utilisateur non authentifié")
   }
 
-  // Extraire les données du FormData
   const rawData = {
     salonName: formData.get("salonName") as string,
     address: formData.get("address") as string,
     description: formData.get("description") as string,
-    departmentIds: formData.getAll("departmentIds") as string[],
+    departmentLabels: formData.getAll("departmentLabels") as string[],
   }
 
-  // Valider les données
+  // Validation des données entrantes
   const validatedData = createOrganizationSchema.parse(rawData)
 
   try {
-    // Créer l'organisation
+    // 1. Création de l'organisation
     const organization = await prisma.organization.create({
       data: {
         name: validatedData.salonName,
@@ -41,27 +39,55 @@ export async function createOrganization(formData: FormData) {
       },
     })
 
-    // Ajouter l'utilisateur comme membre de l'organisation
+    // 2. Ajout de l'utilisateur comme admin de l'organisation
     await prisma.userOrganization.create({
       data: {
         userId: session.user.id,
         organizationId: organization.id,
-        role: "ADMIN", // Changé de "OWNER" à "ADMIN"
+        role: "ADMIN",
       },
     })
 
-    // Associer les départements à l'organisation
-    if (validatedData.departmentIds.length > 0) {
-      await prisma.organizationDepartment.createMany({
-        data: validatedData.departmentIds.map((departmentId) => ({
-          organisationId: organization.id, // Changé de "organizationId" à "organisationId"
-          departmentId,
-        })),
+    // 3. Déduplication des labels pour éviter les doublons
+    const uniqueLabels = Array.from(new Set(validatedData.departmentLabels))
+
+    // 4. Pour chaque label, vérifier et créer département si nécessaire, puis associer à l'organisation
+    for (const label of uniqueLabels) {
+      // a) Chercher un département avec ce label
+      let department = await prisma.department.findFirst({
+        where: { label },
       })
+
+      if (!department) {
+        // b) Créer un département s'il n'existe pas
+        department = await prisma.department.create({
+          data: {
+            label,
+            icon: "", // Adapter ici si besoin
+          },
+        })
+      }
+
+      // c) Vérifier si l'association organisation-département existe déjà
+      const existingLink = await prisma.organizationDepartment.findFirst({
+        where: {
+          organisationId: organization.id,
+          departmentId: department.id,
+        },
+      })
+
+      if (!existingLink) {
+        // d) Créer la relation si elle n'existe pas
+        await prisma.organizationDepartment.create({
+          data: {
+            organisationId: organization.id,
+            departmentId: department.id,
+          },
+        })
+      }
     }
 
-    // Rediriger vers la page admin
-    redirect("/admin")
+    // 5. Redirection après succès
   } catch (error) {
     console.error("Erreur lors de la création de l'organisation:", error)
     throw new Error("Erreur lors de la création du salon")
