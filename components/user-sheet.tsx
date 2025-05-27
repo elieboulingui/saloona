@@ -83,20 +83,6 @@ export function UserSheet({salonId}: UserSheetProps) {
           <p className="text-sm text-muted-foreground">{session.user.email}</p>
         </div>
 
-        <div className="py-6 space-y-4">
-          {menuItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-            >
-              <item.icon className="h-5 w-5 text-amber-500" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-
         <SheetFooter>
           <Button variant="destructive" className="w-full mt-4" onClick={() => signOut({ callbackUrl: "/" })}>
             <LogOut className="h-4 w-4 mr-2" />
