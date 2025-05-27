@@ -17,13 +17,12 @@ import { departments } from "@/data"
 import { createOrganization } from "../actions/create-organization"
 import { toast } from "sonner"
 
-
-// Schéma de validation simplifié - seulement les informations du salon
+// Schéma avec departmentLabels (labels)
 const salonInfoSchema = z.object({
   salonName: z.string().min(3, "Le nom du salon doit contenir au moins 3 caractères"),
   address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
   description: z.string().optional(),
-  departmentIds: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
+  departmentLabels: z.array(z.string()).min(1, "Veuillez sélectionner au moins un département"),
 })
 
 export default function CreateOrganisationPage() {
@@ -41,15 +40,15 @@ export default function CreateOrganisationPage() {
     mode: "onChange",
   })
 
-  // Handle department selection
-  const toggleDepartment = (departmentId: string) => {
-    const newSelectedDepartments = selectedDepartments.includes(departmentId)
-      ? selectedDepartments.filter((id) => id !== departmentId)
-      : [...selectedDepartments, departmentId]
+  // Gestion de la sélection par label
+  const toggleDepartment = (label: string) => {
+    const newSelectedDepartments = selectedDepartments.includes(label)
+      ? selectedDepartments.filter((l) => l !== label)
+      : [...selectedDepartments, label]
 
     setSelectedDepartments(newSelectedDepartments)
-    setValue("departmentIds", newSelectedDepartments)
-    trigger("departmentIds")
+    setValue("departmentLabels", newSelectedDepartments)
+    trigger("departmentLabels")
   }
 
   const onSubmit = (data: z.infer<typeof salonInfoSchema>) => {
@@ -62,19 +61,15 @@ export default function CreateOrganisationPage() {
           formData.append("description", data.description)
         }
 
-        // Ajouter tous les départements sélectionnés
-        data.departmentIds.forEach((id) => {
-          formData.append("departmentIds", id)
+        data.departmentLabels.forEach((label) => {
+          formData.append("departmentLabels", label)
         })
 
         await createOrganization(formData)
 
-        toast.message(
-        "Votre salon a été créé et vous y avez été ajouté comme propriétaire.",
-        )
+        toast.message("Votre salon a été créé et vous y avez été ajouté comme propriétaire.")
       } catch (error) {
-        toast.error("Une erreur est survenue lors de la création du salon.",
-        )
+        toast.error("Une erreur est survenue lors de la création du salon.")
       }
     })
   }
@@ -152,22 +147,22 @@ export default function CreateOrganisationPage() {
                           key={department.id}
                           className={cn(
                             "flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                            selectedDepartments.includes(department.id)
+                            selectedDepartments.includes(department.label)
                               ? "border-amber-500 bg-amber-50"
                               : "border-gray-200 hover:border-amber-200",
                             isPending && "opacity-50 cursor-not-allowed",
                           )}
-                          onClick={() => !isPending && toggleDepartment(department.id)}
+                          onClick={() => !isPending && toggleDepartment(department.label)}
                         >
                           <div
                             className={cn(
                               "w-4 h-4 rounded-full mr-2 flex items-center justify-center border-2 transition-all",
-                              selectedDepartments.includes(department.id)
+                              selectedDepartments.includes(department.label)
                                 ? "border-amber-500 bg-amber-500"
                                 : "border-gray-300",
                             )}
                           >
-                            {selectedDepartments.includes(department.id) && (
+                            {selectedDepartments.includes(department.label) && (
                               <Check className="h-2.5 w-2.5 text-white" />
                             )}
                           </div>
@@ -180,7 +175,7 @@ export default function CreateOrganisationPage() {
                       Aucun département disponible. Veuillez contacter l'administrateur.
                     </p>
                   )}
-                  {errors.departmentIds && <p className="text-sm text-red-500 mt-2">{errors.departmentIds.message}</p>}
+                  {errors.departmentLabels && <p className="text-sm text-red-500 mt-2">{errors.departmentLabels.message}</p>}
                 </div>
 
                 <Button
@@ -205,4 +200,3 @@ export default function CreateOrganisationPage() {
     </>
   )
 }
-
