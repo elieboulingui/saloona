@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Loader2, Calendar, Edit, Trash2, Clock } from "lucide-react";
+import { Plus, Search, Calendar, Edit, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { BlogsDialog } from "./blog-dialog";
 import { DeleteDialog } from "./delete-dialog";
+import { supprimerBlog } from "../actions/deleteblog";
 
 interface BlogPost {
-  id: number;
+  id: any;
   title: string;
   excerpt: string;
   content: string;
@@ -38,35 +39,26 @@ export default function BlogPageClient({ salonId }: BlogPageClientProps) {
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
-    {
-      id: 1,
-      title: "Nouvelle collection printemps",
-      excerpt: "Découvrez nos dernières tendances pour la saison",
-      content: "Contenu détaillé de l'article sur la nouvelle collection...",
-      date: "2023-03-15",
-      readingTime: "3 min",
-      image: "/bg-5.png",
-      category: { id: "1", name: "Nouveautés" }
-    },
-    {
-      id: 2,
-      title: "Événement spécial clients fidèles",
-      excerpt: "Une soirée exclusive réservée à nos meilleurs clients",
-      content: "Détails sur l'événement spécial pour les clients fidèles...",
-      date: "2023-04-02",
-      readingTime: "4 min",
-      image: "/bg-4.png",
-      category: { id: "2", name: "Événements" }
-    }
-  ]);
-  
-  const categories: Category[] = [
-    { id: "1", name: "Nouveautés" },
-    { id: "2", name: "Événements" },
-    { id: "3", name: "Interviews" },
-    { id: "4", name: "Conseils" },
-  ];
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    if (!salonId) return;
+
+    fetch(`/api/blog?id=${salonId}`)
+      .then((res) => res.json())
+      .then((data) => setBlogPosts(data))
+      .catch((err) => console.error("Erreur chargement blog posts:", err));
+  }, [salonId]);
+
+  useEffect(() => {
+    if (!salonId) return;
+
+    fetch(`/api/categories?id=${salonId}`)
+      .then((res) => res.json())
+      .then((data) => setCategories(data.categories || []))
+      .catch((err) => console.error("Erreur chargement catégories:", err));
+  }, [salonId]);
 
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
@@ -90,26 +82,32 @@ export default function BlogPageClient({ salonId }: BlogPageClientProps) {
     setIsDialogOpen(true);
   };
 
-  const handleDeletePost = (postId: number) => {
-    setBlogPosts(blogPosts.filter(post => post.id !== postId));
+  const handleDeletePost = (postId: string) => {
+    setBlogPosts(blogPosts.filter((post) => post.id !== postId));
+    supprimerBlog(postId);
     setShowDeleteDialog(false);
   };
+  
 
   const handleDialogSuccess = (newPostData: any) => {
     if (dialogMode === "create") {
       const newPost: BlogPost = {
         ...newPostData,
-        id: Math.max(...blogPosts.map(p => p.id), 0) + 1,
-        category: categories.find(cat => cat.id === newPostData.categoryId) || categories[0]
+        id: Math.max(...blogPosts.map((p) => p.id), 0) + 1,
+        category: categories.find((cat) => cat.id === newPostData.categoryId) || categories[0],
       };
       setBlogPosts([...blogPosts, newPost]);
     } else {
-      setBlogPosts(blogPosts.map(post => 
-        post.id === newPostData.id ? {
-          ...newPostData,
-          category: categories.find(cat => cat.id === newPostData.categoryId) || post.category
-        } : post
-      ));
+      setBlogPosts(
+        blogPosts.map((post) =>
+          post.id === newPostData.id
+            ? {
+                ...newPostData,
+                category: categories.find((cat) => cat.id === newPostData.categoryId) || post.category,
+              }
+            : post
+        )
+      );
     }
     setIsDialogOpen(false);
   };
@@ -221,10 +219,10 @@ export default function BlogPageClient({ salonId }: BlogPageClientProps) {
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{post.excerpt}</p>
                       <div className="flex items-center text-xs text-gray-500 mt-auto">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {new Date(post.date).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
+                        {new Date(post.date).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
                         })}
                       </div>
                     </div>
@@ -240,10 +238,14 @@ export default function BlogPageClient({ salonId }: BlogPageClientProps) {
             </div>
             <p>Aucun article trouvé</p>
             {(searchTerm || selectedCategory) && (
-              <Button variant="link" className="mt-2 text-amber-500" onClick={() => {
-                setSearchTerm("")
-                setSelectedCategory(null)
-              }}>
+              <Button
+                variant="link"
+                className="mt-2 text-amber-500"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory(null);
+                }}
+              >
                 Réinitialiser les filtres
               </Button>
             )}
