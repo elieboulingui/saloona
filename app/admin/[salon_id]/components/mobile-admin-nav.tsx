@@ -64,7 +64,7 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       name: "Blogs",
       href: `/admin/${salon_id}/blogs`,
       icon: <Book className="h-6 w-6" />,
-      active: pathname.includes(`/admin/${salon_id}/blogs`),
+      active: pathname === `/admin/${salon_id}/blogs`,
       roles: ["ADMIN"],
       priority: 3
     },
@@ -88,7 +88,7 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       name: "Portefeuille",
       href: `/admin/${salon_id}/portefeuille`,
       icon: <Wallet className="h-6 w-6" />,
-      active: pathname === `/admin/${salon_id}/wallet`,
+      active: pathname === `/admin/${salon_id}/portefeuille`,
       roles: ["ADMIN"],
       priority: 3
     }
