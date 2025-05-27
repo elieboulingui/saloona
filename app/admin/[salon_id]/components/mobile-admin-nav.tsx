@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { Wallet, Calendar, BriefcaseBusiness, Store, Users, ListOrdered, Home, Settings, Book, ChartCandlestick } from "lucide-react"
+import { Wallet, Calendar, BriefcaseBusiness, Store, Users, Book, ChartCandlestick } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 interface MobileAdminNavProps {
@@ -11,34 +11,30 @@ interface MobileAdminNavProps {
 }
 
 export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
-
   const pathname = usePathname()
   const { data: session } = useSession()
   const userRole = session?.user?.role
 
+ 
   // Ne pas afficher la navigation dans les pages 
   if (pathname.includes(`/admin/${salon_id}/boutique`)) {
     return null
   }
-  // Ne pas afficher la navigation dans les pages 
   if (pathname.includes(`/admin/${salon_id}/calendar`)) {
     return null
   }
-  // Ne pas afficher la navigation dans les pages 
   if (pathname.includes(`/admin/${salon_id}/blogs`)) {
     return null
   }
-
-  // Définir les éléments de navigation en fonction du rôle
+  
   const navItems = [
-    // Éléments pour tous les rôles (ADMIN et BARBER)
-    // Éléments uniquement pour les ADMIN
     {
       name: "Dashboard",
       href: `/admin/${salon_id}`,
       icon: <Wallet className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}`,
       roles: ["ADMIN", "BARBER"],
+      priority: 1
     },
     {
       name: "Calendrier",
@@ -46,6 +42,7 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       icon: <Calendar className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/calendar`,
       roles: ["ADMIN", "BARBER"],
+      priority: 1
     },
     {
       name: "Services",
@@ -53,6 +50,7 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       icon: <BriefcaseBusiness className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/services`,
       roles: ["ADMIN", "BARBER"],
+      priority: 1
     },
     {
       name: "Boutique",
@@ -60,13 +58,15 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       icon: <Store className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/boutique`,
       roles: ["ADMIN", "BARBER"],
+      priority: 2
     },
     {
       name: "Blogs",
       href: `/admin/${salon_id}/blogs`,
       icon: <Book className="h-6 w-6" />,
-      active: pathname.includes(`/admin/${salon_id}/blogs`), // Correction ici
+      active: pathname.includes(`/admin/${salon_id}/blogs`),
       roles: ["ADMIN"],
+      priority: 3
     },
     {
       name: "Staff",
@@ -74,13 +74,15 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       icon: <Users className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/users`,
       roles: ["ADMIN"],
+      priority: 2
     },
     {
-      name: "Gestion Financiere",
+      name: "Finance",
       href: `/admin/${salon_id}/finance`,
       icon: <ChartCandlestick className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/finance`,
       roles: ["ADMIN"],
+      priority: 3
     },
     {
       name: "Portefeuille",
@@ -88,33 +90,53 @@ export function MobileAdminNav({ salon_id }: MobileAdminNavProps) {
       icon: <Wallet className="h-6 w-6" />,
       active: pathname === `/admin/${salon_id}/wallet`,
       roles: ["ADMIN"],
+      priority: 3
     }
   ]
 
-  // Filtrer les éléments de navigation en fonction du rôle de l'utilisateur
+  // Filtrer par rôle
   const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole || ""))
 
   return (
-    <nav className="fixed bottom-0 left-0 container z-50 mx-auto max-w-6xl right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-2 shadow-lg">
-      {filteredNavItems.map((item) => (
-        <Link key={item.href} href={item.href} className="flex flex-col items-center p-2">
-          <motion.div
-            whileTap={{ scale: 0.9 }}
-            className={`flex flex-col items-center ${item.active ? "text-amber-500" : "text-gray-500"}`}
-          >
-            {item.icon}
-            <span className="text-xs mt-1">{item.name}</span>
-            {item.active && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute bottom-0 w-6 h-1 bg-amber-500 rounded-t-full"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
-          </motion.div>
-        </Link>
-      ))}
-    </nav>
+    <>
+      {/* Version mobile - seulement 5 éléments */}
+      <nav className="md:hidden fixed bottom-0 left-0 container z-50 mx-auto max-w-6xl right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 px-2 shadow-lg">
+        {filteredNavItems
+          .sort((a, b) => a.priority - b.priority)
+          .slice(0, 5)
+          .map((item) => (
+            <NavItem key={item.href} item={item} />
+          ))}
+      </nav>
+
+      {/* Version tablette/desktop - tous les éléments */}
+      <nav className="hidden md:flex fixed bottom-0 left-0 container z-50 mx-auto max-w-6xl right-0 bg-white border-t border-gray-200 justify-around items-center py-2 px-2 shadow-lg">
+        {filteredNavItems.map((item) => (
+          <NavItem key={item.href} item={item} />
+        ))}
+      </nav>
+    </>
   )
 }
 
+// Composant séparé pour un item de navigation
+function NavItem({ item }: { item: any }) {
+  return (
+    <Link href={item.href} className="flex flex-col items-center p-2">
+      <motion.div
+        whileTap={{ scale: 0.9 }}
+        className={`flex flex-col items-center ${item.active ? "text-amber-500" : "text-gray-500"}`}
+      >
+        {item.icon}
+        <span className="text-xs mt-1">{item.name}</span>
+        {item.active && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute bottom-0 w-6 h-1 bg-amber-500 rounded-t-full"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+        )}
+      </motion.div>
+    </Link>
+  )
+}
