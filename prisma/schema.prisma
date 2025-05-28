@@ -80,6 +80,8 @@ model Organization {
 
 
   OrganizationAvailability OrganizationAvailability[]
+
+  Wallet Wallet[]
 }
 
 
@@ -439,4 +441,29 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model Wallet {
+  id             String               @id @default(cuid())
+  balance        Int                  @default(0) // En centimes
+  currency       String               @default("XOF")
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String               @unique
+
+  transactions   WalletTransaction[]
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId    String
+  amount      Int
+  type        String
+  phone       String?
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
 }
