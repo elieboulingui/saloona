@@ -376,37 +376,6 @@ export default function FinancePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category" className="text-xs sm:text-sm font-semibold text-gray-700">
-                      Catégorie
-                    </Label>
-                    <Select
-                      value={newExpense.category}
-                      onValueChange={(value) => setNewExpense({ ...newExpense, category: value })}
-                    >
-                      <SelectTrigger className="bg-white text-gray-700 border-gray-300 shadow-lg rounded-xl focus:shadow-xl focus:border-amber-500 transition-all duration-300">
-                        <SelectValue placeholder="Sélectionnez une catégorie" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 shadow-2xl rounded-xl">
-                        <SelectItem value="achat" className="rounded-lg text-gray-700">
-                          🛒 Achat
-                        </SelectItem>
-                        <SelectItem value="transport" className="rounded-lg text-gray-700">
-                          🚗 Transport
-                        </SelectItem>
-                        <SelectItem value="fourniture" className="rounded-lg text-gray-700">
-                          📝 Fournitures
-                        </SelectItem>
-                        <SelectItem value="facture" className="rounded-lg text-gray-700">
-                          📄 Factures
-                        </SelectItem>
-                        <SelectItem value="autre" className="rounded-lg text-gray-700">
-                          📦 Autre
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="date" className="text-xs sm:text-sm font-semibold text-gray-700">
                       Date
                     </Label>
