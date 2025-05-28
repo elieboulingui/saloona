@@ -387,9 +387,9 @@ export function CalendarPageClient({ salonId }: CalendarPageClientProps) {
             </Button>
 
             <TooltipProvider>
-              <Tooltip>
+              <Tooltip >
                 <TooltipTrigger asChild>
-                  <Button onClick={() => setViewMode("calendar")} className="bg-gray-100 text-black-500">
+                  <Button onClick={() => setViewMode("calendar")} className="bg-gray-100 text-black-500 hover:bg-gray-200">
                     <span className="font-medium">{format(selectedDate, "EEEE d MMMM", { locale: fr })}</span>
                   </Button>
                 </TooltipTrigger>
