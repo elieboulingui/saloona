@@ -11,31 +11,27 @@ interface CreateExpenseProps {
   organizationId: string
 }
 
-export async function createExpense({
-  amount,
-  description,
-  category,
-  date,
-  organizationId,
-}: CreateExpenseProps) {
+// HTTP POST handler for the route
+export async function POST(req: Request) {
   try {
-    // 🔍 Récupérer le wallet lié à l'organisation
+    const body = await req.json()
+    const { amount, description, category, date, organizationId } = body as CreateExpenseProps
+
+    // Find or create wallet
     let wallet = await prisma.wallet.findUnique({
       where: { organizationId },
     })
 
-    // ➕ Si pas de wallet, en créer un pour cette organisation
     if (!wallet) {
       wallet = await prisma.wallet.create({
         data: {
           organizationId,
           balance: 0,
-          currency: 'XOF', // ou la devise que tu veux par défaut
+          currency: 'XOF',
         },
       })
     }
 
-    // 💸 Créer la transaction de type EXPENSE
     await prisma.financeTransaction.create({
       data: {
         type: 'EXPENSE',
@@ -48,11 +44,11 @@ export async function createExpense({
       },
     })
 
-    // Optionnel : revalidation du cache si tu utilises `revalidatePath(...)`
+    // Optionally revalidate path or cache here if needed
 
-    return { success: true }
+    return new Response(JSON.stringify({ success: true }), { status: 200 })
   } catch (error) {
     console.error('Erreur lors de la création de la dépense:', error)
-    return { success: false, error: 'Erreur serveur' }
+    return new Response(JSON.stringify({ success: false, error: 'Erreur serveur' }), { status: 500 })
   }
 }
