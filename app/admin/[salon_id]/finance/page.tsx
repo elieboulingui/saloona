@@ -142,7 +142,7 @@ const transactionsData = [
   // Mars 2025
   { id: 91, type: "recette", amount: 72000, description: "Développement solution e-health", date: "2025-03-31", category: "ehealth" },
   { id: 92, type: "depense", amount: 10200, description: "Certification sécurité ISO", date: "2025-03-30", category: "certification" },
-  { id: 93, type: "recette", amount: 47000, description: "Conseil transformation agile"},
+  { id: 93, type: "recette", amount: 47000, description: "Conseil transformation agile" },
   { id: 93, type: "recette", amount: 47000, description: "Conseil transformation agile", date: "2025-03-29", category: "agile" },
   { id: 94, type: "depense", amount: 7700, description: "Formation Scrum Master", date: "2025-03-28", category: "formation" },
   { id: 95, type: "recette", amount: 40000, description: "Développement solution RH", date: "2025-03-27", category: "rh" },
@@ -303,7 +303,7 @@ export default function FinancePage() {
       <div className="relative z-10 space-y-6 sm:space-y-8">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between">
           {/* Navigation de date */}
-          <div className="flex items-center gap-2 mb-2 md:mb-0">
+          <div className="flex items-center mb-2 md:mb-0">
             <Button
               variant="outline"
               size="sm"
@@ -400,81 +400,78 @@ export default function FinancePage() {
         {/* Cartes de résumé */}
         {viewMode === "day" && (
           <>
-          <div className="flex overflow-x-auto space-x-4 scrollbar-hide md:grid md:grid-cols-3 md:gap-4">
-  <Card className="min-w-[260px] bg-[#FDE7A8] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative">
-    <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    <CardContent className="p-4 sm:p-6 relative z-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Recettes</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800">
-            {totals.recettes.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
-          </p>
-        </div>
-        <div className="bg-amber-500 p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-          <TrendingUp className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+            <div className="flex overflow-x-auto space-x-4 scrollbar-hide md:grid md:grid-cols-3 md:gap-4">
+              <Card className="min-w-[260px] bg-[#FDE7A8] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative">
+                <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="p-4 sm:p-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Recettes</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-800">
+                        {totals.recettes.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
+                      </p>
+                    </div>
+                    <div className="bg-amber-500 p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <TrendingUp className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-  <Card className="min-w-[260px] bg-[#FDDAA8] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative">
-    <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-    <CardContent className="p-4 sm:p-6 relative z-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Dépenses</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800">
-            {totals.depenses.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
-          </p>
-        </div>
-        <div className="bg-amber-500 p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-          <TrendingDown className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+              <Card className="min-w-[260px] bg-[#FDDAA8] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative">
+                <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="p-4 sm:p-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Dépenses</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-800">
+                        {totals.depenses.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
+                      </p>
+                    </div>
+                    <div className="bg-amber-500 p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <TrendingDown className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-  <Card className={`min-w-[260px] bg-[#e8fcf0] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative`}>
-    <div className={`absolute inset-0 ${totals.benefice >= 0 ? "bg-amber-50" : "bg-red-50"} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-    <CardContent className="p-4 sm:p-6 relative z-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Bénéfice</p>
-          <p className={`text-xl sm:text-2xl font-bold ${totals.benefice >= 0 ? "text-gray-800" : "text-red-600"}`}>
-            {totals.benefice.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
-          </p>
-        </div>
-        <div className={`${totals.benefice >= 0 ? "bg-amber-500" : "bg-red-500"} p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-          <DollarSign className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-</div>
+              <Card className={`min-w-[260px] bg-[#e8fcf0] border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group overflow-hidden relative`}>
+                <div className={`absolute inset-0 ${totals.benefice >= 0 ? "bg-amber-50" : "bg-red-50"} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                <CardContent className="p-4 sm:p-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-600 font-medium mb-1">Bénéfice</p>
+                      <p className={`text-xl sm:text-2xl font-bold ${totals.benefice >= 0 ? "text-gray-800" : "text-red-600"}`}>
+                        {totals.benefice.toLocaleString()} <span className="text-sm sm:text-lg text-gray-600">Fcfa</span>
+                      </p>
+                    </div>
+                    <div className={`${totals.benefice >= 0 ? "bg-amber-500" : "bg-red-500"} p-2 sm:p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <DollarSign className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Onglets et bouton d'ajout */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex bg-white border-gray-300 rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-lg">
+            <div className="flex items-center justify-between gap-4 w-full">
+              <div className="flex w-full sm:w-auto bg-white border border-gray-300 rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-lg">
                 <Button
                   variant={activeTab === "recettes" ? "default" : "ghost"}
                   onClick={() => setActiveTab("recettes")}
-                  className={`rounded-xl px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-all duration-300 ${
-                    activeTab === "recettes"
+                  className={`flex-1 sm:flex-none rounded-xl px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-all duration-300 ${activeTab === "recettes"
                       ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
                       : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   💰 Recettes
                 </Button>
                 <Button
                   variant={activeTab === "depenses" ? "default" : "ghost"}
                   onClick={() => setActiveTab("depenses")}
-                  className={`rounded-xl px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-all duration-300 ${
-                    activeTab === "depenses"
+                  className={`flex-1 sm:flex-none rounded-xl px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-all duration-300 ${activeTab === "depenses"
                       ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
                       : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   💸 Dépenses
                 </Button>
@@ -535,7 +532,7 @@ export default function FinancePage() {
             {activeTab === "depenses" && (
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <div className="sm:flex justify-end ">
+                  <div className="flex justify-end ">
                     <Button
                       size="icon"
                       className="rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 w-12 h-12 sm:w-14 sm:h-14"
