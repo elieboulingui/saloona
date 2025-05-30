@@ -357,11 +357,11 @@ export function CalendarPageClient({ salonId }: CalendarPageClientProps) {
             </motion.div>
           </Link>
           <div>
-          <h1 className="text-white font-bold text-xl">Calendrier</h1>
-          <p className="text-white/80 text-xs">{format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}</p>
+            <h1 className="text-white font-bold text-xl">Calendrier</h1>
+            <p className="text-white/80 text-xs">{format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })}</p>
+          </div>
         </div>
-        </div>
-       
+
         <div className="flex gap-2">
           <Button onClick={handleCreateAppointment} variant="outline" size="icon" className="rounded-full">
             <Plus className="h-5 w-5 text-black" />
