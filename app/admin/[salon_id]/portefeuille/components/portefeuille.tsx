@@ -13,22 +13,42 @@ import { Textarea } from "@/components/ui/textarea"
 import { ChevronLeft, ChevronRight, Plus, Wallet, ArrowDownLeft, CreditCard, Phone } from "lucide-react"
 
 // Données d'exemple pour le portefeuille
-
-
-interface BlogPageClientProps {
-  salonId?: string;
+interface Transaction {
+  id: number
+  type: "entree" | "retrait"
+  amount: number
+  phone: string
+  date: string
+  description: string
+}
+interface BoutiqueAdminPageClientProps {
+  salonId: string
 }
 
-
-export default function PortefeuillePage({ salonId }: BlogPageClientProps)  {
-  const [transactionsData, setTransactionsData] = useState<
-  { id: number; type: "entree" | "retrait"; amount: number; phone: string; date: string; description: string }[]
->([])
-
+export default function PortefeuillePage({salonId}: BoutiqueAdminPageClientProps) {
   const [activeTab, setActiveTab] = useState<"entrees" | "retraits">("entrees")
   const [filterPeriod, setFilterPeriod] = useState<"jour" | "semaine" | "mois" | "annee">("jour")
   const [selectedDate, setSelectedDate] = useState(new Date("2024-05-27"))
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  
+
+  useEffect(() => {
+    async function fetchTransactions() {
+      try {
+        const response = await fetch(`/api/portefeuille?id=${salonId}`)
+        const data = await response.json()
+  
+        if (data && data.transactions) {
+          setTransactions(data.transactions)
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du portefeuille :", error)
+      }
+    }
+  
+    fetchTransactions()
+  }, [salonId])
   const [newWithdrawal, setNewWithdrawal] = useState({
     amount: "",
     phone: "",
@@ -36,31 +56,6 @@ export default function PortefeuillePage({ salonId }: BlogPageClientProps)  {
     date: new Date().toISOString().split("T")[0],
   })
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await fetch(`/api/portefeuille?id=${salonId}`) // remplace par ton endpoint réel
-        const data = await response.json()
-  
-        // Formatage si besoin (optionnel)
-        const formatted = data.map((item: any, index: number) => ({
-          id: item.id ?? index + 1,
-          type: item.type === "entree" ? "entree" : "retrait",
-          amount: Number(item.amount),
-          phone: item.phone,
-          date: item.date,
-          description: item.description,
-        }))
-  
-        setTransactionsData(formatted)
-      } catch (error) {
-        console.error("Erreur lors du chargement des transactions :", error)
-      }
-    }
-  
-    fetchTransactions()
-  }, [])
-  
   // Fonction pour filtrer les transactions selon la période
   const getFilteredTransactions = useMemo(() => {
     const now = selectedDate
@@ -89,10 +84,11 @@ export default function PortefeuillePage({ salonId }: BlogPageClientProps)  {
         filterDate = startOfDay
     }
 
-    return transactionsData.filter((transaction) => {
+    return transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.date)
       return transactionDate >= filterDate && transactionDate <= now
     })
+    
   }, [filterPeriod, selectedDate])
 
   // Calculs des totaux
