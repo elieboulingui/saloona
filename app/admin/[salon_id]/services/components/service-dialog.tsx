@@ -30,7 +30,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
     durationMin: "",
     durationMax: "",
     image: "",
-    departmentId: "",
+    department: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -45,7 +45,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
         durationMin: service.durationMin?.toString() || "",
         durationMax: service.durationMax?.toString() || "",
         image: service.image || "",
-        departmentId: service.departmentId || service.department?.id || "",
+        department: service.department || service.department?.label || "",
       })
     } else {
       // Réinitialiser le formulaire en mode création
@@ -56,7 +56,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
         durationMin: "",
         durationMax: "",
         image: "",
-        departmentId: departments && departments.length > 0 ? departments[0].id : "",
+        department: departments && departments.length > 0 ? departments[0].label : "",
       })
     }
   }, [service, mode, isOpen, departments])
@@ -86,7 +86,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
         !formData.price ||
         !formData.durationMin ||
         !formData.durationMax ||
-        !formData.departmentId
+        !formData.department
       ) {
         setError("Veuillez remplir tous les champs obligatoires")
         setIsLoading(false)
@@ -108,6 +108,7 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
             durationMin: Number(formData.durationMin),
             durationMax: Number(formData.durationMax),
           }),
+          
         })
 
         if (!response.ok) {
@@ -205,18 +206,19 @@ export function ServiceDialog({ isOpen, onClose, service, mode, salonId, departm
 
             <div className="space-y-2">
               <Label htmlFor="departmentId">Département *</Label>
-              <Select value={formData.departmentId} onValueChange={handleDepartmentChange} disabled={isFormDisabled}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments?.map((department: any) => (
-                    <SelectItem key={department.id} value={department.id}>
-                      {department.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Select value={formData.department} onValueChange={handleDepartmentChange} disabled={isFormDisabled}>
+  <SelectTrigger>
+    <SelectValue placeholder="Sélectionner un département" />
+  </SelectTrigger>
+  <SelectContent>
+    {departments?.map((department: any) => (
+      <SelectItem key={department.id} value={department.label}>
+        {department.label}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
             </div>
           </div>
 

@@ -3,19 +3,18 @@ import { prisma } from "@/utils/prisma"
 import { auth } from "@/auth"
 
 // GET /api/organizations/[id]/services - Get all services for an organization
-export async function GET(request: Request,
+export async function GET(
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-
-    const {id  : organizationId } = await params
-
+    const { id: organizationId } = await params
     const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    // Vérifier si l'utilisateur est membre de l'organisation
     const userMembership = await prisma.userOrganization.findFirst({
       where: {
         userId: session.user.id,
@@ -24,10 +23,12 @@ export async function GET(request: Request,
     })
 
     if (!userMembership) {
-      return NextResponse.json({ error: "Accès non autorisé à cette organisation" }, { status: 403 })
+      return NextResponse.json(
+        { error: "Accès non autorisé à cette organisation" },
+        { status: 403 }
+      )
     }
 
-    // Récupérer tous les services de l'organisation
     const services = await prisma.service.findMany({
       where: {
         organizationId,
@@ -56,27 +57,38 @@ export async function GET(request: Request,
     return NextResponse.json(services)
   } catch (error) {
     console.error("Erreur lors de la récupération des services:", error)
-    return NextResponse.json({ error: "Une erreur est survenue lors de la récupération des services" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Une erreur est survenue lors de la récupération des services" },
+      { status: 500 }
+    )
   }
 }
 
 // POST /api/organizations/[id]/services - Create a new service for an organization
-export async function POST(request: Request,
+export async function POST(
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-
-    const {id  : organizationId } = await params
-
+    const { id: organizationId } = await params
     const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
     const body = await request.json()
-    const { name, description, price, durationMin, durationMax, image, departmentId } = body
+    const {
+      name,
+      description,
+      price,
+      durationMin,
+      durationMax,
+      image,
+      department: departmentLabel,
+    } = body
 
-    // Vérifier si l'utilisateur est administrateur de l'organisation
+    // Vérifie si l'utilisateur est ADMIN dans l'organisation
     const userMembership = await prisma.userOrganization.findFirst({
       where: {
         userId: session.user.id,
@@ -88,30 +100,47 @@ export async function POST(request: Request,
     if (!userMembership) {
       return NextResponse.json(
         { error: "Vous n'avez pas les droits pour créer des services dans cette organisation" },
-        { status: 403 },
+        { status: 403 }
       )
     }
 
-    // Validation des données
-    if (!name || !price || !durationMin || !durationMax || !departmentId) {
-      return NextResponse.json({ error: "Données manquantes pour créer un service" }, { status: 400 })
+    if (!name || !price || !durationMin || !durationMax || !departmentLabel) {
+      return NextResponse.json(
+        { error: "Données manquantes pour créer un service" },
+        { status: 400 }
+      )
     }
 
-    // Vérifier si le département existe et appartient à l'organisation
-    const department = await prisma.department.findUnique({
+    // 1. Trouver le département par label
+    const department = await prisma.department.findFirst({
       where: {
-        id: departmentId,
+        label: departmentLabel,
       },
     })
 
     if (!department) {
       return NextResponse.json(
-        { error: "Département non trouvé ou n'appartient pas à cette organisation" },
-        { status: 404 },
+        { error: "Département introuvable" },
+        { status: 404 }
       )
     }
 
-    // Créer le service
+    // 2. Vérifier l'association avec l'organisation
+    const orgDept = await prisma.organizationDepartment.findFirst({
+      where: {
+        organisationId: organizationId,
+        departmentId: department.id,
+      },
+    })
+
+    if (!orgDept) {
+      return NextResponse.json(
+        { error: "Ce département n'est pas lié à cette organisation" },
+        { status: 403 }
+      )
+    }
+
+    // 3. Créer le service
     const service = await prisma.service.create({
       data: {
         name,
@@ -121,7 +150,7 @@ export async function POST(request: Request,
         durationMax: Number(durationMax),
         image,
         department: {
-          connect: { id: departmentId },
+          connect: { id: department.id },
         },
         organization: {
           connect: { id: organizationId },
@@ -135,6 +164,9 @@ export async function POST(request: Request,
     return NextResponse.json(service)
   } catch (error) {
     console.error("Erreur lors de la création du service:", error)
-    return NextResponse.json({ error: "Une erreur est survenue lors de la création du service" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Une erreur est survenue lors de la création du service" },
+      { status: 500 }
+    )
   }
 }
