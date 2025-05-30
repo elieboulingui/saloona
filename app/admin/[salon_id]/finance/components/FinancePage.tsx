@@ -28,28 +28,29 @@ import {
   isSameYear,
 } from "date-fns"
 import { ChevronLeft, ChevronRight, Plus, TrendingUp, TrendingDown, DollarSign, CalendarIcon, Receipt } from 'lucide-react'
+import { createExpense } from "../action/route"
+import { Skeleton } from "@/components/ui/skeleton"
 
-// Données d'exemple étendues pour les finances
 interface Transaction {
   id: number;
-  type: 'recette' | 'depense';
+  type: 'REVENUE' | 'EXPENSE';
   amount: number;
   description: string;
   date: string;
   category: string;
 }
-interface finance {
-  salonId : string
+
+interface FinanceProps {
+  salonId: string;
 }
 
-
-export default function FinancePage({  salonId}: finance) {
+export default function FinancePage({ salonId }: FinanceProps) {
   const [activeTab, setActiveTab] = useState<"recettes" | "depenses">("recettes")
   const [filterPeriod, setFilterPeriod] = useState<"jour" | "semaine" | "mois" | "annee">("jour")
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true); // facultatif
-  const [error, setError] = useState(null); // facultatif
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<"day" | "calendar">("day")
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [newExpense, setNewExpense] = useState({
@@ -58,87 +59,83 @@ export default function FinancePage({  salonId}: finance) {
     category: "",
     date: new Date().toISOString().split("T")[0],
   })
+
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`api/financialmanagement?id=${salonId}`);
+        setLoading(true)
+        const response = await fetch(`/api/financialmanagement?id=${salonId}`)
+        
         if (!response.ok) {
-          throw new Error('Erreur lors du chargement des données');
+          throw new Error('Erreur lors du chargement des données')
         }
-        const data = await response.json();
-        setTransactionsData(data);
-      } catch (err:any) {
-        setError(err.message);
+        
+        const data = await response.json()
+        setTransactionsData(data)
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchTransactions();
-  }, []);
-  // Fonction pour filtrer les transactions selon la période
-  const getFilteredTransactions = useMemo(() => {
-    const selectedDateObj = selectedDate
+    fetchData()
+  }, [salonId])
 
+  const filteredTransactions = useMemo(() => {
+    if (loading) return []
+    
     return transactionsData.filter((transaction) => {
-      const transactionDate = new Date(transaction.date as string)
-
+      const transactionDate = new Date(transaction.date)
       if (isNaN(transactionDate.getTime())) return false
 
       switch (filterPeriod) {
-        case "jour":
-          return isSameDay(transactionDate, selectedDateObj)
-        case "semaine":
-          return isSameWeek(transactionDate, selectedDateObj, { locale: fr })
-        case "mois":
-          return isSameMonth(transactionDate, selectedDateObj)
-        case "annee":
-          return isSameYear(transactionDate, selectedDateObj)
-        default:
-          return isSameDay(transactionDate, selectedDateObj)
+        case "jour": return isSameDay(transactionDate, selectedDate)
+        case "semaine": return isSameWeek(transactionDate, selectedDate, { locale: fr })
+        case "mois": return isSameMonth(transactionDate, selectedDate)
+        case "annee": return isSameYear(transactionDate, selectedDate)
+        default: return isSameDay(transactionDate, selectedDate)
       }
     })
-  }, [filterPeriod, selectedDate])
+  }, [transactionsData, filterPeriod, selectedDate, loading])
 
-  // Calculs des totaux
   const totals = useMemo(() => {
-    const filtered = getFilteredTransactions
-    const recettes = filtered.filter((t) => t.type === "recette").reduce((sum, t) => sum + t.amount, 0)
-    const depenses = filtered.filter((t) => t.type === "depense").reduce((sum, t) => sum + t.amount, 0)
-    const benefice = recettes - depenses
+    const recettes = filteredTransactions
+      .filter(t => t.type === "REVENUE")
+      .reduce((sum, t) => sum + t.amount, 0)
 
-    return { recettes, depenses, benefice }
-  }, [getFilteredTransactions])
+    const depenses = filteredTransactions
+      .filter(t => t.type === "EXPENSE")
+      .reduce((sum, t) => sum + t.amount, 0)
 
-  // Transactions filtrées par type actif
+    return {
+      recettes,
+      depenses,
+      benefice: recettes - depenses
+    }
+  }, [filteredTransactions])
+
   const displayedTransactions = useMemo(() => {
-    return getFilteredTransactions.filter((t) =>
-      activeTab === "recettes" ? t.type === "recette" : t.type === "depense",
+    return filteredTransactions.filter(t => 
+      activeTab === "recettes" ? t.type === "REVENUE" : t.type === "EXPENSE"
     )
-  }, [getFilteredTransactions, activeTab])
+  }, [filteredTransactions, activeTab])
 
-  // Navigation selon la période
   const navigateDate = (direction: "prev" | "next") => {
     const increment = direction === "next" ? 1 : -1
-
-    switch (filterPeriod) {
-      case "jour":
-        setSelectedDate(addDays(selectedDate, increment))
-        break
-      case "semaine":
-        setSelectedDate(addWeeks(selectedDate, increment))
-        break
-      case "mois":
-        setSelectedDate(addMonths(selectedDate, increment))
-        break
-      case "annee":
-        setSelectedDate(addYears(selectedDate, increment))
-        break
-    }
+    setSelectedDate(prev => {
+      switch (filterPeriod) {
+        case "jour": return addDays(prev, increment)
+        case "semaine": return addWeeks(prev, increment)
+        case "mois": return addMonths(prev, increment)
+        case "annee": return addYears(prev, increment)
+        default: return addDays(prev, increment)
+      }
+    })
   }
 
-  // Formatage de la date selon la période
-  const formatDisplayDate = () => {
+  const formatDisplayDate = useMemo(() => {
     switch (filterPeriod) {
       case "jour":
         return format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })
@@ -153,48 +150,90 @@ export default function FinancePage({  salonId}: finance) {
       default:
         return format(selectedDate, "EEEE d MMMM yyyy", { locale: fr })
     }
-  }
+  }, [filterPeriod, selectedDate])
 
-  // Vérifier si c'est la période actuelle
-  const isCurrentPeriod = () => {
+  const isCurrentPeriod = useMemo(() => {
     const now = new Date()
     switch (filterPeriod) {
-      case "jour":
-        return isToday(selectedDate)
-      case "semaine":
-        return isSameWeek(selectedDate, now, { locale: fr })
-      case "mois":
-        return isSameMonth(selectedDate, now)
-      case "annee":
-        return isSameYear(selectedDate, now)
-      default:
-        return isToday(selectedDate)
+      case "jour": return isToday(selectedDate)
+      case "semaine": return isSameWeek(selectedDate, now, { locale: fr })
+      case "mois": return isSameMonth(selectedDate, now)
+      case "annee": return isSameYear(selectedDate, now)
+      default: return isToday(selectedDate)
+    }
+  }, [filterPeriod, selectedDate])
+
+  const handleSubmitExpense = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await createExpense({
+        amount: parseInt(newExpense.amount),
+        organizationId: salonId,
+        description: newExpense.description,
+        category: newExpense.category,
+        date: newExpense.date,
+      })
+      setTransactionsData(prev => [...prev, {
+        id: Date.now(),
+        type: "EXPENSE",
+        amount: parseInt(newExpense.amount),
+        description: newExpense.description,
+        date: newExpense.date,
+        category: newExpense.category
+      }])
+      setIsSheetOpen(false)
+      setNewExpense({
+        amount: "",
+        description: "",
+        category: "",
+        date: new Date().toISOString().split("T")[0],
+      })
+    } catch (err) {
+      setError("Erreur lors de l'ajout de la dépense")
     }
   }
 
-  const handleSubmitExpense = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Nouvelle dépense:", newExpense)
-    setIsSheetOpen(false)
-    setNewExpense({
-      amount: "",
-      description: "",
-      category: "",
-      date: new Date().toISOString().split("T")[0],
-    })
+  if (loading) {
+    return (
+      <div className="py-5 space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-5 text-center space-y-4">
+        <div className="text-red-500 font-medium">{error}</div>
+        <Button 
+          onClick={() => window.location.reload()}
+          variant="outline"
+        >
+          Réessayer
+        </Button>
+      </div>
+    )
   }
 
   return (
     <div className="py-5">
       <div className="relative z-10 space-y-6 sm:space-y-8">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start sm:items-center justify-between">
-          {/* Navigation de date */}
           <div className="flex items-center mb-2 md:mb-0">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSelectedDate(new Date())}
-              className={isCurrentPeriod() ? "bg-amber-100 border-amber-300" : ""}
+              className={isCurrentPeriod ? "bg-amber-100 border-amber-300" : ""}
             >
               {filterPeriod === "jour"
                 ? "Aujourd'hui"
@@ -217,7 +256,7 @@ export default function FinancePage({  salonId}: finance) {
                       onClick={() => setViewMode(viewMode === "calendar" ? "day" : "calendar")}
                       className="bg-gray-100 text-black hover:bg-gray-200"
                     >
-                      <span className="font-medium">{formatDisplayDate()}</span>
+                      <span className="font-medium">{formatDisplayDate}</span>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -232,7 +271,6 @@ export default function FinancePage({  salonId}: finance) {
             </div>
           </div>
 
-          {/* En-tête avec filtres */}
           <div className="flex gap-3 w-full sm:w-auto">
             <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <Select
@@ -261,7 +299,6 @@ export default function FinancePage({  salonId}: finance) {
           </div>
         </div>
 
-        {/* Calendrier */}
         {viewMode === "calendar" && (
           <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-300">
             <Calendar
@@ -283,7 +320,6 @@ export default function FinancePage({  salonId}: finance) {
           </div>
         )}
 
-        {/* Cartes de résumé */}
         {viewMode === "day" && (
           <>
             <div className="flex overflow-x-auto space-x-4 scrollbar-hide md:grid md:grid-cols-3 md:gap-4">
@@ -364,7 +400,6 @@ export default function FinancePage({  salonId}: finance) {
               </div>
             </div>
 
-            {/* Tableau des transactions */}
             <Card className="bg-white border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden">
               <CardContent className="p-0">
                 <Table>
@@ -414,7 +449,6 @@ export default function FinancePage({  salonId}: finance) {
               </CardContent>
             </Card>
 
-            {/* Bouton d'ajout - affiché seulement pour les dépenses */}
             {activeTab === "depenses" && (
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
