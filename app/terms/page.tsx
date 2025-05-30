@@ -1,3 +1,4 @@
+import Header from "@/components/header";
 import Link from "next/link";
 
 export default function ConditionUtilisation() {
@@ -139,42 +140,32 @@ export default function ConditionUtilisation() {
     ]
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-                <Link href="/" className="absolute top-4 left-4 bg-amber-500 text-white font-medium px-4 py-2 rounded-full shadow-md hover:bg-amber-600 transition-colors flex items-center">
-                    <span className="mr-1">←</span> Retour
-                </Link>
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-amber-600 mb-4">Conditions Générales d'Utilisation</h1>
-                    <p className="text-lg text-gray-600">Dernière mise à jour : 27 mai 2025</p>
-                </div>
 
-                <div className="space-y-8">
-                    {sections.map((section, index) => (
-                        <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden border border-amber-100">
-                            <div className="p-6">
-                                <h2 className="text-2xl font-semibold text-amber-600 mb-4">{section.title}</h2>
-                                <div className="text-gray-700">{section.content}</div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+        <div>
+            <Header />
 
-                <div className="mt-12 text-center">
-
-                    <div className="mt-12 text-center">
-
-                        <Link
-                            href="/"
-                            className="inline-block bg-orange-500 text-white font-medium px-8 py-3 rounded-full shadow-md hover:bg-orange-600 transition-colors">
-
-                            <span className="mr-1">←</span> Retour à l'accueil
-                        </Link>
+            <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+                
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl font-bold text-amber-600 mb-4">Conditions Générales d'Utilisation</h1>
+                        <p className="text-lg text-gray-600">Dernière mise à jour : 27 mai 2025</p>
                     </div>
-                </div>
 
-                <div className="mt-12 text-center text-gray-500 text-sm">
-                    <p>© {new Date().getFullYear()} Saloona. Tous droits réservés.</p>
+                    <div className="space-y-8">
+                        {sections.map((section, index) => (
+                            <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden border border-amber-100">
+                                <div className="p-6">
+                                    <h2 className="text-2xl font-semibold text-amber-600 mb-4">{section.title}</h2>
+                                    <div className="text-gray-700">{section.content}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-12 text-center text-gray-500 text-sm">
+                        <p>© {new Date().getFullYear()} Saloona. Tous droits réservés.</p>
+                    </div>
                 </div>
             </div>
         </div>

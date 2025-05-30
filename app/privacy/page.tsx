@@ -1,3 +1,4 @@
+import Header from "@/components/header"
 import Link from "next/link"
 
 export default function PrivacyPage() {
@@ -162,69 +163,57 @@ export default function PrivacyPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-                <Link
-                    href="/"
-                    className="absolute top-4 left-4 bg-amber-500 text-white font-medium px-4 py-2 rounded-full shadow-md hover:bg-amber-600 transition-colors flex items-center"
-                >
-                    <span className="mr-1">←</span> Retour
-                </Link>
 
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-amber-600 mb-4">Politique de Confidentialité</h1>
-                    <p className="text-lg text-gray-600">Dernière mise à jour : 27 mai 2025</p>
-                </div>
+        <div>
+            <Header />
 
-                <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-amber-100">
-                    <p className="leading-relaxed">
-                        La présente Politique de Confidentialité décrit comment Saloona, soutenu par SAMBA TECH PRO, collecte,
-                        utilise, partage et protège les données personnelles de ses utilisateurs dans le cadre de l'utilisation de
-                        l'application mobile et du site web associés (ci-après « l'Application »).
-                    </p>
-                </div>
+            <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
 
-                <div className="space-y-8">
-                    {sections.map((section, index) => (
-                        <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden border border-amber-100">
-                            <div className="p-6">
-                                <h2 className="text-2xl font-semibold text-amber-600 mb-4">{section.title}</h2>
-                                <div className="text-gray-700">{section.content}</div>
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl font-bold text-amber-600 mb-4">Politique de Confidentialité</h1>
+                        <p className="text-lg text-gray-600">Dernière mise à jour : 27 mai 2025</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg p-8 mb-8 border border-amber-100">
+                        <p className="leading-relaxed">
+                            La présente Politique de Confidentialité décrit comment Saloona, soutenu par SAMBA TECH PRO, collecte,
+                            utilise, partage et protège les données personnelles de ses utilisateurs dans le cadre de l'utilisation de
+                            l'application mobile et du site web associés (ci-après « l'Application »).
+                        </p>
+                    </div>
+
+                    <div className="space-y-8">
+                        {sections.map((section, index) => (
+                            <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden border border-amber-100">
+                                <div className="p-6">
+                                    <h2 className="text-2xl font-semibold text-amber-600 mb-4">{section.title}</h2>
+                                    <div className="text-gray-700">{section.content}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-12 bg-white rounded-xl shadow-md p-8 border border-amber-100">
+                        <h2 className="text-2xl font-semibold text-amber-600 mb-6">Contact :</h2>
+                        <p className="text-gray-700 mb-4">Pour toute question relative à la gestion de vos données personnelles</p>
+                        <div className="space-y-4">
+                            <div className="flex items-center">
+                                <span className="mr-3 text-orange-500">📧</span>
+                                <a href="mailto:contact@saloona.com" className="text-orange-500 hover:text-orange-600 font-medium">
+                                    contact@saloona.com
+                                </a>
+                            </div>
+                            <div className="flex items-center">
+                                <span className="mr-3 text-orange-500">🏢</span>
+                                <span>Libreville, avenue Ange MBA</span>
                             </div>
                         </div>
-                    ))}
-                </div>
-
-                <div className="mt-12 bg-white rounded-xl shadow-md p-8 border border-amber-100">
-                    <h2 className="text-2xl font-semibold text-amber-600 mb-6">Contact :</h2>
-                    <p className="text-gray-700 mb-4">Pour toute question relative à la gestion de vos données personnelles</p>
-                    <div className="space-y-4">
-                        <div className="flex items-center">
-                            <span className="mr-3 text-orange-500">📧</span>
-                            <a href="mailto:contact@saloona.com" className="text-orange-500 hover:text-orange-600 font-medium">
-                                contact@saloona.com
-                            </a>
-                        </div>
-                        <div className="flex items-center">
-                            <span className="mr-3 text-orange-500">🏢</span>
-                            <span>Libreville, avenue Ange MBA</span>
-                        </div>
                     </div>
-                </div>
 
-                <div className="mt-12 text-center">
-
-                    <Link
-                        href="/"
-                        className="inline-block bg-orange-500 text-white font-medium px-8 py-3 rounded-full shadow-md hover:bg-orange-600 transition-colors">
-
-                        <span className="mr-1">←</span> Retour à l'accueil
-                    </Link>
-                </div>
-
-
-                <div className="mt-12 text-center text-gray-500 text-sm">
-                    <p>© {new Date().getFullYear()} Saloona. Tous droits réservés.</p>
+                    <div className="mt-12 text-center text-gray-500 text-sm">
+                        <p>© {new Date().getFullYear()} Saloona. Tous droits réservés.</p>
+                    </div>
                 </div>
             </div>
         </div>
