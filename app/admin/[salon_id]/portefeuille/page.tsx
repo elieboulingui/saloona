@@ -423,14 +423,14 @@ export default function PortefeuillePage() {
             </div>
 
             {/* Onglets et bouton d'ajout */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex bg-white border-gray-300 rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-lg">
+            <div className="flex items-center justify-between gap-4 w-full">
+              <div className="flex w-full sm:w-auto bg-white border border-gray-300 rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-lg">
                 <Button
                   variant={activeTab === "entrees" ? "default" : "ghost"}
                   onClick={() => setActiveTab("entrees")}
-                  className={`rounded-lg sm:rounded-xl px-4 py-2 sm:px-8 sm:py-3 text-xs sm:text-base font-semibold transition-all duration-300 ${activeTab === "entrees"
-                      ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
-                      : "text-gray-700 hover:bg-gray-100"
+                  className={`flex-1 sm:flex-none rounded-lg sm:rounded-xl px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-all duration-300 ${activeTab === "entrees"
+                    ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
+                    : "text-gray-700 hover:bg-gray-100"
                     }`}
                 >
                   💰 Entrée
@@ -438,15 +438,16 @@ export default function PortefeuillePage() {
                 <Button
                   variant={activeTab === "retraits" ? "default" : "ghost"}
                   onClick={() => setActiveTab("retraits")}
-                  className={`rounded-lg sm:rounded-xl px-4 py-2 sm:px-8 sm:py-3 text-xs sm:text-base font-semibold transition-all duration-300 ${activeTab === "retraits"
-                      ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
-                      : "text-gray-700 hover:bg-gray-100"
+                  className={`flex-1 sm:flex-none rounded-lg sm:rounded-xl px-4 sm:px-6 lg:px-8 py-2 sm:py-3 text-xs sm:text-base font-semibold transition-all duration-300 ${activeTab === "retraits"
+                    ? "bg-amber-500 text-white shadow-lg hover:shadow-xl hover:bg-amber-600"
+                    : "text-gray-700 hover:bg-gray-100"
                     }`}
                 >
                   💸 Retrait
                 </Button>
               </div>
             </div>
+
 
             {/* Tableau des transactions */}
             <Card className="bg-white border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden">
