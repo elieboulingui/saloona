@@ -50,7 +50,10 @@ enum Role {
   CLIENT
 }
 
-
+enum FinanceTransactionType {
+  REVENUE  // recette
+  EXPENSE  // dépense
+}
 model Organization {
 
   id          String @id @default(cuid())
@@ -80,6 +83,10 @@ model Organization {
 
 
   OrganizationAvailability OrganizationAvailability[]
+
+  Wallet Wallet[]
+
+  FinanceTransaction FinanceTransaction[]
 }
 
 
@@ -439,4 +446,46 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model Wallet {
+  id             String               @id @default(cuid())
+  balance        Int                  @default(0) // En centimes
+  currency       String               @default("XOF")
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String               @unique
+
+  transactions   WalletTransaction[]
+ transaction   FinanceTransaction[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId    String
+  amount      Int
+  type        String
+  phone       String?
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+}
+model FinanceTransaction {
+  id          String   @id @default(cuid())
+  type        FinanceTransactionType
+  amount      Int
+  description String
+  date        DateTime
+  category    String
+
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
