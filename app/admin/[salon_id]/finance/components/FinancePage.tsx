@@ -29,8 +29,7 @@ import {
 } from "date-fns"
 import { ChevronLeft, ChevronRight, Plus, TrendingUp, TrendingDown, DollarSign, CalendarIcon, Receipt } from 'lucide-react'
 import { Skeleton } from "@/components/ui/skeleton"
-import { createExpense } from "../action/route"
-
+import { createExpense } from "../action/createExpense"
 interface Transaction {
   id: number;
   type: 'REVENUE' | 'EXPENSE';
