@@ -5,7 +5,6 @@ const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-    // Extraire organizationId des query params
     const { searchParams } = new URL(request.url)
     const organizationId = searchParams.get('id')
 
@@ -16,7 +15,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Récupérer le wallet lié à l'organisation avec ses transactions (revenus et dépenses)
     const walletWithTransactions = await prisma.wallet.findUnique({
       where: { organizationId },
       include: {
@@ -33,16 +31,9 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    if (!walletWithTransactions) {
-      return NextResponse.json(
-        { error: 'Wallet not found for this organization' },
-        { status: 404 }
-      )
-    }
+    // S'il n'y a pas de wallet, retourner une liste vide au lieu d'une erreur
+    const financeTransactions = walletWithTransactions?.transaction ?? []
 
-    // Extraire les transactions financières
-    const financeTransactions = walletWithTransactions.transaction
-  console.log(financeTransactions)
     return NextResponse.json(financeTransactions)
   } catch (error) {
     console.error('Error fetching finance transactions:', error)

@@ -65,7 +65,9 @@ export default function FinancePage({ salonId }: FinanceProps) {
         setLoading(true)
         const response = await fetch(`/api/financialmanagement?id=${salonId}`)
         
-      
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des données')
+        }
         
         const data = await response.json()
         setTransactionsData(data)
