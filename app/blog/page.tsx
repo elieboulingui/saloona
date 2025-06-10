@@ -46,26 +46,43 @@ const [videoTips, setVideoTips] = useState<VideoTip[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Récupérer les données depuis l'API
-  useEffect(() => {
+
+  
+  const getUrlId = () => {
+    if (typeof window !== 'undefined') {
+     const match = window.location.href.match(/\?id=([^&]+)/);
+       return match ? match[1] : null;
+    }
+    return null;
+  };
+   const id = getUrlId();
+
+   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch('/api/allblog')
+        setIsLoading(true);
+        
+        // Déclarer `apiUrl` en fonction de la présence de `id`
+        const apiUrl = id 
+          ? `/api/urlblog?id=${id}` 
+          : '/api/allblog';
+  
+        const response = await fetch(apiUrl);
         if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des données')
+          throw new Error('Erreur lors de la récupération des données');
         }
-        const data = await response.json()
-        setAllContent(data)
+        
+        const data = await response.json();
+        setAllContent(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue')
+        setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue');
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-
-    fetchContent()
-  }, [])
-
+    };
+  
+    fetchContent();
+  }, [id]);  // ✅ Déclenche un nouvel appel si `id` change
   // Obtenir toutes les catégories uniques
   const allCategories = useMemo(() => {
     const categories = new Set(allContent.map((item) => item.category))
