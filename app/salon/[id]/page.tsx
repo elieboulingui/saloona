@@ -275,8 +275,8 @@ export default function OrganizationDetailsPage() {
                   </div>
                   <div>
                     <span className="mx-1 text-gray-500">•</span>
-                    <Link href={`/salon/${id}/boutique`} className="text-sm font-medium">
-                      Notre boutique
+                    <Link href={"/blog"} className="text-sm font-medium">
+                      Notre Blog
                     </Link>
                   </div>
                 </div>
