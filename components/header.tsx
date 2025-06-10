@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import MenuMobile from "@/components/menu-mobile-sheet"
 import Link from "next/link"
 
-export default function HomePage() {
+export default function Header() {
 
     return (
         <div className="flex flex-col sticky top-0 z-40">

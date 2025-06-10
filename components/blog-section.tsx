@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Play, Clock, ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 
 // Types pour les articles et vidéos
 interface BlogPost {
@@ -94,9 +93,12 @@ export function BlogSection() {
                             Découvrez nos conseils beauté, tutoriels et articles pour prendre soin de vous au quotidien.
                         </p>
                     </div>
-                    <Button variant="link" className="hidden md:flex items-center text-amber-600 mt-4 md:mt-0">
-                        Voir tout <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    <Link href="/blog">
+                        <Button variant="link" className="hidden md:flex items-center text-amber-600 mt-4 md:mt-0">
+                            Voir tout <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    </Link>
+
                 </div>
 
 
