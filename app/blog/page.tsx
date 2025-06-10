@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Play, Clock, Filter, Search, X } from "lucide-react"
 import { motion } from "framer-motion"
 import Header from "@/components/header"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 
 // Types pour les articles et vidéos
 interface BlogPost {
@@ -15,7 +15,9 @@ interface BlogPost {
   title: string
   excerpt: string
   image: string
-  category: string
+  category:{
+    name : string
+  },
   readTime: string
   date: string
   type: "article"
@@ -26,117 +28,62 @@ interface VideoTip {
   title: string
   thumbnail: string
   duration: string
-  category: string
+  category:{
+    name : string
+  },
   type: "video"
 }
 
 type ContentItem = BlogPost | VideoTip
 
-// Données simulées
-const blogPosts: BlogPost[] = [
-  {
-    id: "1",
-    title: "Comment prendre soin de vos cheveux bouclés",
-    excerpt: "Découvrez les meilleures techniques pour entretenir vos boucles naturelles...",
-    image: "/placeholder.svg?height=200&width=300",
-    category: "Cheveux",
-    readTime: "5 min",
-    date: "12 avril 2023",
-    type: "article",
-  },
-  {
-    id: "2",
-    title: "Les tendances maquillage de l'été",
-    excerpt: "Les couleurs et techniques qui feront sensation cette saison...",
-    image: "/placeholder.svg?height=200&width=300",
-    category: "Maquillage",
-    readTime: "4 min",
-    date: "28 mars 2023",
-    type: "article",
-  },
-  {
-    id: "3",
-    title: "Routine de soins pour une peau éclatante",
-    excerpt: "Les étapes essentielles pour une peau saine et lumineuse...",
-    image: "/placeholder.svg?height=200&width=300",
-    category: "Soins",
-    readTime: "7 min",
-    date: "15 février 2023",
-    type: "article",
-  },
-  {
-    id: "4",
-    title: "Comment choisir la couleur de vos cheveux",
-    excerpt: "Découvrez les tendances et conseils pour choisir la couleur de vos cheveux...",
-    image: "/placeholder.svg?height=200&width=300",
-    category: "Cheveux",
-    readTime: "6 min",
-    date: "12 avril 2023",
-    type: "article",
-  },
-]
-
-const videoTips: VideoTip[] = [
-  {
-    id: "5",
-    title: "Comment réaliser un chignon parfait en 5 minutes",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    duration: "4:30",
-    category: "Coiffure",
-    type: "video",
-  },
-  {
-    id: "6",
-    title: "Tutoriel maquillage naturel pour tous les jours",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    duration: "7:15",
-    category: "Maquillage",
-    type: "video",
-  },
-  {
-    id: "7",
-    title: "Massage facial anti-âge à faire soi-même",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    duration: "5:45",
-    category: "Bien-être",
-    type: "video",
-  },
-  {
-    id: "8",
-    title: "Comment choisir la couleur de vos cheveux",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    duration: "6:30",
-    category: "Cheveux",
-    type: "video",
-  },
-]
-
 export default function Blog() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+const [videoTips, setVideoTips] = useState<VideoTip[]>([])
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [allContent, setAllContent] = useState<ContentItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Combiner tous les contenus
-  const allContent: ContentItem[] = [...blogPosts, ...videoTips]
+  // Récupérer les données depuis l'API
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const response = await fetch('/api/allblog')
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des données')
+        }
+        const data = await response.json()
+        setAllContent(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchContent()
+  }, [])
 
   // Obtenir toutes les catégories uniques
   const allCategories = useMemo(() => {
     const categories = new Set(allContent.map((item) => item.category))
     return Array.from(categories).sort()
-  }, [])
+  }, [allContent])
 
   // Filtrer le contenu
   const filteredContent = useMemo(() => {
     return allContent.filter((item) => {
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(item.category)
-      const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(item.type)
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(item.category.name)
+      const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(item.category.name)
       const searchMatch =
         searchQuery === "" ||
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.type === "article" && (item as BlogPost).excerpt.toLowerCase().includes(searchQuery.toLowerCase()))
+        (item.type === item.category.name && (item as BlogPost).excerpt.toLowerCase().includes(searchQuery.toLowerCase()))
       return categoryMatch && typeMatch && searchMatch
     })
-  }, [selectedCategories, selectedTypes, searchQuery])
+  }, [allContent, selectedCategories, selectedTypes, searchQuery])
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
@@ -154,14 +101,20 @@ export default function Blog() {
   }
 
   const renderContentCard = (item: ContentItem) => {
-    if (item.type === "article") {
+    if (item.type === item.category.name) {
       const post = item as BlogPost
       return (
         <Card key={post.id} className="overflow-hidden border-none shadow-sm h-full py-0">
           <div className="relative h-48">
-            <Image src={post.image || "/placeholder.svg"} alt={post.title} fill className="object-cover" />
+            <Image 
+              src={post.image || "/placeholder.svg"} 
+              alt={post.title} 
+              fill 
+              className="object-cover" 
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
             <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-full text-xs font-medium">
-              {post.category}
+              {post.category.name}
             </div>
             <div className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium">
               Article
@@ -180,33 +133,63 @@ export default function Blog() {
         </Card>
       )
     } else {
-      const video = item as VideoTip
+      const post = item as BlogPost
       return (
-        <Card key={video.id} className="overflow-hidden border-none shadow-sm h-full py-0">
+        <Card key={post.id} className="overflow-hidden border-none shadow-sm h-full py-0">
           <div className="relative h-48">
-            <Image src={video.thumbnail || "/placeholder.svg"} alt={video.title} fill className="object-cover" />
+            <Image 
+              src={post.image || "/placeholder.svg"} 
+              alt={post.title} 
+              fill 
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
             <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-full text-xs font-medium">
-              {video.category}
+              {post.category.name}
             </div>
             <div className="absolute top-3 right-3 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-              Vidéo
+              image
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-black/50 rounded-full p-3">
-                <Play className="h-6 w-6 text-white fill-white" />
-              </div>
+             
             </div>
           </div>
           <CardContent className="p-4">
-            <h3 className="font-bold text-lg mb-2 line-clamp-2">{video.title}</h3>
+            <h3 className="font-bold text-lg mb-2 line-clamp-2">{post.title}</h3>
             <div className="flex items-center text-xs text-gray-500">
               <Clock className="h-3 w-3 mr-1" />
-              <span>{video.duration}</span>
+              <span>{post.type}</span>
             </div>
           </CardContent>
         </Card>
       )
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center p-6 bg-red-50 rounded-lg max-w-md">
+          <h2 className="text-xl font-bold text-red-600 mb-2">Erreur</h2>
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="text-amber-600 border-amber-600 hover:bg-amber-50"
+          >
+            Réessayer
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -331,27 +314,28 @@ export default function Blog() {
                       Soins: "✨",
                       Coiffure: "💅",
                       "Bien-être": "🧘‍♀️",
+                      // Ajoutez d'autres catégories et icônes au besoin
                     }
 
                     return (
                       <button
-                        key={category}
-                        onClick={() => toggleCategory(category)}
+                        key={category.name}
+                        onClick={() => toggleCategory(category.name)}
                         className={`group relative overflow-hidden px-2 py-2 rounded-xl border-2 transition-all duration-300 ${
-                          selectedCategories.includes(category)
+                          selectedCategories.includes(category  .name)
                             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg transform scale-105"
                           : "bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:shadow-md"
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-lg">
-                            {categoryIcons[category as keyof typeof categoryIcons] || "🏷️"}
+                            {categoryIcons[category as unknown as keyof typeof categoryIcons] || "🏷️"}
                           </span>
-                          <span className="font-medium">{category}</span>
+                          <span className="font-medium">{category.name}</span>
                           <Badge
                             variant="secondary"
                             className={`ml-2 px-2 py-0.5 text-xs ${
-                              selectedCategories.includes(category)
+                              selectedCategories.includes(category.name)
                                 ? "bg-white/20 text-white"
                                 : "bg-gray-100 text-gray-600"
                             }`}
@@ -369,7 +353,7 @@ export default function Blog() {
         </div>
 
         {/* Grille de contenu filtré */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContent.map((item, index) => (
             <motion.div
               key={item.id}
@@ -383,7 +367,7 @@ export default function Blog() {
         </div>
 
         {/* Message si aucun résultat */}
-        {filteredContent.length === 0 && (
+        {filteredContent.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <div className="text-gray-500 mb-4">
               <Filter className="h-12 w-12 mx-auto mb-4 opacity-50" />
